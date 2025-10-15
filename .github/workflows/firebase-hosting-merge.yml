@@ -1,0 +1,41 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main  # deploy when code is pushed to main branch
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # Optional: Install dependencies if you have a build step (skip if static HTML/CSS/JS)
+      - name: Install dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+          fi
+
+      # Optional: Build your project if you have a build command
+      - name: Build project
+        run: |
+          if [ -f package.json ] && grep -q "\"build\":" package.json; then
+            npm run build
+          fi
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ESHOOOBODANRAKHI }}"
+          channelId: live
+          projectId: eshoobodanrakhi
