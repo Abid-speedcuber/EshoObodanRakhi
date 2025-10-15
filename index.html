@@ -1,89 +1,3260 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+<html lang="en">
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.4.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.4.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.4.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esho Obodan Rakhi</title>
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+  <!-- Capacitor Core (loaded differently for production) -->
+  <script src="capacitor.js"></script>
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EOR Fund">
+
+  <!--<link rel="stylesheet" href="tailwind.css">-->
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="desktop-padding">
+  <!-- This notification element replaces all javascript 'alert()' calls -->
+  <div id="notification" class="hide"></div>
+
+  <div class="mobile-container bg-white min-h-screen">
+
+    <!-- Top Bar -->
+    <div class="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-4 sticky top-0 z-50 shadow-lg">
+      <div class="flex justify-between items-center">
+        <button id="totalFundBtn" class="text-left">
+          <div class="text-lg font-bold" id="appTitle">Esho Obodan Rakhi<br><span class="text-sm opacity-90">আসো অবদান রাখি</span></div>
+          <div class="text-xs opacity-90 underline decoration-2 underline-offset-2" id="totalFundDisplay">৳ 0</div>
+        </button>
+        <div class="flex items-center gap-2">
+          <button id="loginTopBtn"
+            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition hide flex items-center h-10">Login</button>
+          <button id="refreshBtn"
+            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition flex items-center h-10 mr-2"><img
+              src="svgs/icon-refresh.svg"></button>
+          <button id="settingsBtn"
+            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition flex items-center h-10"><img
+              src="svgs/icon-settings.svg"></button>
+        </div>
+      </div>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+    <!-- Main Navigation -->
+    <div class="grid grid-cols-3 gap-2 p-4 bg-green-50">
+      <button data-section="fund" class="nav-btn bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center">
+        <div class="text-3xl mb-1" style="justify-items: center;"><img src="svgs/icon-fund.svg" style="
+          height: 45px;
+          width: 45px;
+          "></div>
+        <div class="text-sm font-semibold text-gray-700">Fund History</div>
+      </button>
+      <button data-section="notices"
+        class="nav-btn bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center">
+        <div class="text-3xl mb-1" style="justify-items: center;"><img src="svgs/announcement-icon.svg"
+            style="height: 45px; width: 45px;"></div>
+        <div class="text-sm font-semibold text-gray-700">Activities</div>
+      </button>
+      <button data-section="blood"
+        class="nav-btn bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center">
+        <div class="text-3xl mb-1" style="justify-items: center;"><img src="svgs/blood-donation-icon.svg"
+            style="height: 45px; width: 45px;"></div>
+        <div class="text-sm font-semibold text-gray-700">Blood Donors</div>
+      </button>
+    </div>
+
+    <!-- Main content area where sections will be displayed -->
+    <main id="mainContent" class="p-4">
+      <!-- Fund History Section -->
+      <div id="fundSection" class="section hide">
+        <div class="bg-white rounded-xl shadow-lg p-3 mb-3">
+          <div class="flex justify-between items-center mb-2">
+            <button id="prevMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
+                src="svgs/icon-previous.svg"></button>
+            <h2 id="currentMonthDisplay" class="text-base font-bold text-gray-800"></h2>
+            <button id="nextMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
+                src="svgs/icon-next.svg"></button>
+          </div>
+          <div id="adminControls" class="hide mb-2 text-center">
+            <button data-modal="addIncomeModal" class="bg-green-600 text-white px-4 py-2 rounded-lg mr-2 text-sm"
+              id="addIncomeBtn">+Collection</button>
+            <button data-modal="addExpenseModal" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
+              id="addExpenseBtn">+Sadakah</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-bold text-green-700">Collection</h3>
+            <button id="copyIncomeBtn"
+              class="bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-200 transition">
+              <img src="svgs/icon-copy.svg"> Copy List
+            </button>
+          </div>
+          <div id="incomeList" class="space-y-2"></div>
+          <div class="mt-3 pt-3 border-t border-gray-200">
+            <div class="flex justify-between font-bold text-green-700">
+              <span>Total Collection:</span>
+              <span id="totalIncome">৳ 0</span>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-gray-200">
+            <div class="text-sm text-gray-700">
+              <div id="donationInfoText" class="font-semibold mb-2">You can also contribute by donating to:</div>
+              <div class="space-y-1">
+                <div>+880 1937-222273 - nogod</div>
+                <div>+880 1515-214867 - bkash</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <h3 class="text-lg font-bold text-red-700 mb-3">Sadakah</h3>
+          <div id="expenseList" class="space-y-2"></div>
+          <div class="mt-3 pt-3 border-t border-gray-200">
+            <div class="flex justify-between font-bold text-red-700">
+              <span>Total Sadakah:</span>
+              <span id="totalExpense">৳ 0</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-3">
+            <span class="font-bold text-gray-700">Monthly economy:</span>
+            <span id="monthlyBalance" class="text-xl font-bold">৳ 0</span>
+          </div>
+          <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+            <span class="font-bold text-blue-700">Net worth at month end:</span>
+            <span id="netWorth" class="text-xl font-bold text-blue-700">৳ 0</span>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-4 text-center" style="justify-items:center;">
+          <button id="showYearlyChartBtn"
+            class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+            <img src="svgs/overview-icon.svg" style="width: 20px; height: 20px;"> View Yearly Overview
+          </button>
+        </div>
+      </div>
+
+      <!-- Blood Donors Section -->
+      <div id="bloodSection" class="section hide">
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Blood Donors</h2>
+            <button id="myDonorBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hide">My
+              Profile</button>
+          </div>
+          <div id="donorPromptMessage"
+            class="hide bg-blue-50 border-l-4 border-blue-500 p-3 text-sm text-blue-800 mb-4">
+            To be a blood donor, click on "My Profile" and add your phone number and location.
+          </div>
+        </div>
+        <div id="bloodFilterContainer" class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <div class="flex items-center gap-2">
+            <select id="bloodFilter" class="flex-1 p-3 border border-gray-300 rounded-lg">
+              <option value="all">All Blood Groups</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+            <input type="text" id="bloodSearch" placeholder="Search donors..." class="hide flex-1 p-3 border border-gray-300 rounded-lg">
+            <button id="bloodSearchBtn" class="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition flex-shrink-0">
+              <img src="svgs/icon-search.svg" alt="Search" style="width: 20px; height: 20px;">
+            </button>
+            <button id="bloodClearBtn" class="hide bg-white text-white p-3 rounded-lg hover:bg-gray-100 transition flex-shrink-0">
+              <img src="svgs/icon-close.svg" alt="Clear" style="width: 20px; height: 20px;">
+            </button>
+          </div>
+        </div>
+        <div id="donorsList" class="space-y-3"></div>
+      </div>
+
+      <!-- Notices Section -->
+      <div id="noticesSection" class="section hide">
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <h2 class="text-xl font-bold text-gray-800 mb-3">Fund Activities</h2>
+          <button id="postNoticeBtn" data-modal="postNoticeModal"
+            class="bg-green-600 text-white px-4 py-2 rounded-lg w-full hide">Post Activity</button>
+        </div>
+        <div id="noticesList" class="space-y-4"></div>
+      </div>
+    </main>
+
+    <!-- All Modals -->
+    <div id="loginModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">Login</h2>
+        <form id="loginForm">
+          <input type="email" id="loginEmail" placeholder="Email" class="modal-input" required>
+          <div class="relative mb-4">
+            <input type="password" id="loginPassword" placeholder="Password" class="modal-input mb-0" required>
+            <button type="button" id="toggleLoginPassword"
+              class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+              <img src="svgs/icon-eye.svg" id="loginEyeIcon" style="width: 20px; height: 20px;" alt="Show password">
+            </button>
+          </div>
+          <button id="forgotPasswordBtn" type="button" class="w-full text-right text-orange-600 font-semibold text-sm mb-3">Forgot Password?</button>
+          <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold mb-4">Login</button>
+        </form>
+
+        <!-- OR Divider -->
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex-1 h-px bg-gray-300"></div>
+          <span class="text-gray-500 text-sm">or</span>
+          <div class="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        <!-- START: Continue with Google button -->
+        <button id="googleLoginBtn" type="button" class="w-full bg-white border border-gray-300 py-3 rounded-lg font-semibold mb-4 flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+          <img src="svgs/icon-google.svg" alt="G" style="width:18px;height:18px;">
+          <span>Continue with Google</span>
+        </button>
+        <!-- END: Continue with Google button -->
+
+        <button id="showSignupBtn" class="w-full text-blue-600 py-2 font-semibold">Don't have an account? Sign up</button>
+        <button data-close-modal class="w-full mt-2 text-gray-600 py-2">Cancel</button>
+      </div>
+    </div>
+
+    <div id="signupModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">Sign Up</h2>
+        <form id="signupForm">
+          <input type="text" id="signupName" placeholder="Full Name" class="modal-input" required>
+          <input type="email" id="signupEmail" placeholder="Email" class="modal-input" required>
+          <div class="relative mb-3">
+            <input type="password" id="signupPassword" placeholder="Password" class="modal-input mb-0" required>
+            <button type="button" id="toggleSignupPassword"
+              class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+              <img src="svgs/icon-eye.svg" id="signupEyeIcon" style="width: 20px; height: 20px;" alt="Show password">
+            </button>
+          </div>
+          <div class="relative mb-4">
+            <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" class="modal-input mb-0"
+              required>
+            <button type="button" id="toggleSignupConfirmPassword"
+              class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+              <img src="svgs/icon-eye.svg" id="signupConfirmEyeIcon" style="width: 20px; height: 20px;"
+                alt="Show password">
+            </button>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold mb-3">Sign
+            Up</button>
+        </form>
+        <button id="showLoginBtn" class="w-full text-green-600 py-2 font-semibold">Already have an account?
+          Login</button>
+        <button data-close-modal class="w-full mt-2 text-gray-600 py-2">Cancel</button>
+      </div>
+    </div>
+
+    <div id="forgotPasswordModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">Forgot Password</h2>
+        <p class="text-sm text-gray-600 mb-4">Enter your email address and we'll send you a password reset link.</p>
+        <form id="forgotPasswordForm">
+          <input type="email" id="forgotEmail" placeholder="Email" class="modal-input mb-4" required>
+          <button type="submit" class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold mb-3">Send Reset
+            Link</button>
+        </form>
+        <button id="backToLoginBtn" class="w-full text-green-600 py-2 font-semibold">Back to Login</button>
+        <button data-close-modal class="w-full mt-2 text-gray-600 py-2">Cancel</button>
+      </div>
+    </div>
+
+    <div id="addIncomeModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">Add Collection</h2>
+        <form id="addIncomeForm">
+          <input type="hidden" id="incomeId">
+          <input type="text" id="incomeName" placeholder="Donor Name" class="modal-input" required>
+          <input type="number" id="incomeAmount" placeholder="Amount (৳)" class="modal-input" required>
+          <label class="flex items-center mb-4 cursor-pointer">
+            <input type="checkbox" id="incomeHighlighted" class="mr-2 w-5 h-5">
+            <span class="text-gray-700">Highlight this entry</span>
+          </label>
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold">Add</button>
+            <button type="button" data-close-modal
+              class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="addExpenseModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">Add Sadakah</h2>
+        <form id="addExpenseForm">
+          <input type="hidden" id="expenseId">
+          <input type="text" id="expenseDesc" placeholder="Description" class="modal-input" required>
+          <input type="number" id="expenseAmount" placeholder="Amount (৳)" class="modal-input" required>
+          <label class="flex items-center mb-4 cursor-pointer">
+            <input type="checkbox" id="expenseHighlighted" class="mr-2 w-5 h-5">
+            <span class="text-gray-700">Highlight this entry</span>
+          </label>
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold">Add</button>
+            <button type="button" data-close-modal
+              class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="donorProfileModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">My Donor Profile</h2>
+        <form id="donorProfileForm">
+          <input type="hidden" id="donorId">
+          <input type="text" id="donorName" placeholder="Full Name" class="modal-input" required>
+          <input type="tel" id="donorPhone" placeholder="Phone Number" class="modal-input" required>
+          <select id="donorBloodGroup" class="modal-input" required>
+            <option value="" disabled selected>Select Blood Group</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+          </select>
+          <input type="text" id="donorLocation" placeholder="Location" class="modal-input" required>
+          <label class="flex items-center mb-4 cursor-pointer">
+            <input type="checkbox" id="donorAvailable" class="mr-2 w-5 h-5">
+            <span class="text-gray-700">Available to donate</span>
+          </label>
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold">Save</button>
+            <button type="button" id="deleteDonorBtn"
+              class="bg-red-600 text-white px-4 py-3 rounded-lg font-semibold hide">Delete</button>
+          </div>
+          <button type="button" data-close-modal class="w-full mt-3 text-gray-600 py-2">Cancel</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="postNoticeModal" class="modal hide">
+      <div class="modal-content">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">Post Activity</h2>
+        <form id="postNoticeForm">
+          <input type="hidden" id="noticeId">
+          <textarea id="noticeText" placeholder="What's happening?" class="modal-input h-32" required></textarea>
+          <div class="flex gap-2 mt-4">
+            <button type="submit" class="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold">Post</button>
+            <button type="button" data-close-modal
+              class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="yearlyChartModal" class="modal hide">
+      <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">Yearly Overview</h2>
+        <div class="flex justify-between items-center mb-3">
+          <button id="prevYearBtn"
+            class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-semibold">←</button>
+          <h3 class="text-lg font-bold text-gray-800"><span id="currentYearDisplay"></span></h3>
+          <button id="nextYearBtn"
+            class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-semibold">→</button>
+        </div>
+        <canvas id="yearlyChart" width="1000" height="1000" class="w-full"></canvas>
+        <div class="flex justify-center gap-6 mt-3 text-sm">
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-green-500 rounded mr-2"></div><span>Collection</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-red-500 rounded mr-2"></div><span>Sadakah</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-blue-500 rounded mr-2"></div><span>Total Fund</span>
+          </div>
+        </div>
+        <button type="button" data-close-modal
+          class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+      </div>
+    </div>
+
+    <div id="completeHistoryModal" class="modal hide">
+      <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-800">ফান্ডের সম্পূর্ণ তথ্য</h2>
+          <button id="copyHistoryBtn"
+            class="bg-green-400 text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-500 transition flex items-center gap-1">
+            <img src="svgs/icon-copy.svg"> Copy
+          </button>
+        </div>
+        <div class="flex items-center justify-between mb-3 bg-gray-100 p-3 rounded-lg">
+          <span class="text-sm font-semibold text-gray-700">History Mode:</span>
+          <button id="historyModeToggle"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+            Yearly Brief
+          </button>
+        </div>
+        <div id="completeHistoryContent" class="text-sm text-gray-700 space-y-2 mb-4"></div>
+        <button type="button" data-close-modal
+          class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal hide">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Settings</h2>
+      <div class="flex items-center justify-between mb-4">
+        <span class="font-semibold text-gray-700">Bengali Mode</span>
+        <label class="flex items-center cursor-pointer">
+          <input type="checkbox" id="bengaliModeToggle" class="mr-2 w-5 h-5">
+          <span class="text-gray-700">Enable</span>
+        </label>
+      </div>
+      <button id="loginBtn"
+        class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold mb-2 hide">Login</button>
+      <button id="logoutBtn"
+        class="w-full bg-red-600 text-white py-3 rounded-lg font-semibold mb-2 hide">Logout</button>
+      <button data-close-modal class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
+  <script type="module">
+    // --- SUPABASE CONFIG (Your settings are here) ---
+    const SUPABASE_URL = "https://kszhmrhlsoqfxkcopvoe.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtzemhtcmhsc29xZnhrY29wdm9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjU5MTcsImV4cCI6MjA3NTU0MTkxN30.8TLXLfVbPiwtzpa_4wEYzC9Lfqm58Z7ICIaUQsa0izA";
+
+    const { createClient } = supabase;
+    
+    // Check if running in Capacitor (mobile app)
+    if (typeof window.Capacitor === 'undefined') {
+      window.Capacitor = { 
+        Plugins: {},
+        isNativePlatform: () => false 
+      };
+    }
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- APPLICATION LOGIC ---
+    const App = {
+      // --- STATE ---
+      state: {
+        currentUser: null,
+        userProfile: null, // { id, name, role }
+        isAdmin: false,
+        currentMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start at current month
+        allDonors: [],
+        totalFund: 0,
+        activeSection: 'blood',
+        currentYear: new Date().getFullYear(),
+        isLoading: {
+          fund: false,
+          donors: false,
+          notices: false,
+        },
+        allFundData: [], // Store all fund data for offline access
+        cachedMonthlyData: {}, // Store monthly aggregated data
+      },
+
+      // --- DOM ELEMENTS ---
+      elements: {
+        notification: document.getElementById('notification'),
+        authBtn: document.getElementById('authBtn'),
+        totalFundDisplay: document.getElementById('totalFundDisplay'),
+        mainContent: document.getElementById('mainContent'),
+        currentMonthDisplay: document.getElementById('currentMonthDisplay'),
+        incomeList: document.getElementById('incomeList'),
+        expenseList: document.getElementById('expenseList'),
+        totalIncome: document.getElementById('totalIncome'),
+        totalExpense: document.getElementById('totalExpense'),
+        monthlyBalance: document.getElementById('monthlyBalance'),
+        donorsList: document.getElementById('donorsList'),
+        noticesList: document.getElementById('noticesList'),
+        adminControls: document.getElementById('adminControls'),
+        myDonorBtn: document.getElementById('myDonorBtn'),
+        postNoticeBtn: document.getElementById('postNoticeBtn'),
+        deleteDonorBtn: document.getElementById('deleteDonorBtn'),
+        yearlyChart: document.getElementById('yearlyChart'),
+        currentYearDisplay: document.getElementById('currentYearDisplay'),
+      },
+
+      // --- INITIALIZATION ---
+      init() {
+        this.registerServiceWorker();
+        this.bindEvents();
+        this.setupScrollBehavior();
+        
+        // Load cached total fund immediately for offline support
+        const cachedTotal = localStorage.getItem('totalFund');
+        if (cachedTotal) {
+          this.state.totalFund = parseFloat(cachedTotal);
+          this.elements.totalFundDisplay.textContent = `৳ ${parseFloat(cachedTotal).toLocaleString()}`;
+        }
+        
+        // Load cached fund data
+        const cachedAllData = localStorage.getItem('allFundData');
+        if (cachedAllData) {
+          this.state.allFundData = JSON.parse(cachedAllData);
+        }
+        
+        const cachedMonthly = localStorage.getItem('cachedMonthlyData');
+        if (cachedMonthly) {
+          this.state.cachedMonthlyData = JSON.parse(cachedMonthly);
+        }
+
+        // --- Setup Deep Link Listener for Mobile App ---
+        if (typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform?.()) {
+          const { App, Browser } = window.Capacitor.Plugins;
+          
+          App.addListener('appUrlOpen', async (data) => {
+            console.log('App opened with URL:', data.url);
+            
+            // Close the browser if it's still open
+            try {
+              await Browser.close();
+            } catch (e) {
+              // Browser might already be closed
+            }
+            
+            // Extract hash from URL (format: com.eor.app://oauth#access_token=...)
+            const url = data.url;
+            const hashIndex = url.indexOf('#');
+            
+            if (hashIndex !== -1) {
+              const hash = url.substring(hashIndex);
+              
+              // Handle OAuth callback
+              if (hash.includes('access_token')) {
+                try {
+                  // Parse the hash manually
+                  const params = new URLSearchParams(hash.substring(1));
+                  const accessToken = params.get('access_token');
+                  const refreshToken = params.get('refresh_token');
+                  
+                  if (accessToken) {
+                    // Set the session manually
+                    const { data: sessionData, error } = await db.auth.setSession({
+                      access_token: accessToken,
+                      refresh_token: refreshToken
+                    });
+                    
+                    if (error) throw error;
+                    
+                    await this.handleAuthStateChange();
+                    this.hideAllModals();
+                    this.showNotification('Login successful!');
+                  }
+                } catch (err) {
+                  console.error('OAuth error:', err);
+                  this.showNotification('Login failed: ' + err.message, true);
+                }
+              }
+              // Handle password reset
+              else if (hash.includes('type=recovery')) {
+                try {
+                  const params = new URLSearchParams(hash.substring(1));
+                  const accessToken = params.get('access_token');
+                  const refreshToken = params.get('refresh_token');
+                  
+                  if (accessToken) {
+                    await db.auth.setSession({
+                      access_token: accessToken,
+                      refresh_token: refreshToken
+                    });
+                    
+                    this.showNotification('Please set your new password');
+                    this.showModal('settingsModal');
+                  }
+                } catch (err) {
+                  console.error('Password reset error:', err);
+                  this.showNotification('Password reset link invalid', true);
+                }
+              }
+            }
+          });
+        }
+        
+        // --- Finish OAuth redirect when user returns from Google (Web) ---
+        // This will parse URL fragments returned by Supabase after OAuth and store the session.
+        // We ignore errors because if there's no oauth data in URL, that's fine.
+        (async () => {
+          try {
+            await db.auth.getSessionFromUrl({ storeSession: true });
+          } catch (err) {
+            // ignore: no session in URL or parsing failed
+          }
+          await this.handleAuthStateChange(); // Initial check after attempting to finish OAuth
+        })();
+
+        this.setupLanguageToggle();
+        
+        // Show blood section by default (will be overridden for admins in handleAuthStateChange)
+        this.showSection('blood');
+      },
+
+      // --- AUTHENTICATION ---
+      async handleAuthStateChange() {
+        // Get current session (works for both password sign-in and OAuth stored session)
+        const { data: { session } } = await db.auth.getSession();
+        this.state.currentUser = session?.user || null;
+
+        if (this.state.currentUser) {
+          // Try to fetch profile row in 'users' table
+          const { data, error } = await db.from('users').select('name, role').eq('id', this.state.currentUser.id).single();
+
+          if (error && error.code === 'PGRST116') {
+            // single() returns error if no rows — we'll handle missing profile below
+          }
+
+          if (!data) {
+            // No profile row found: try to create one (use user's metadata or email as name fallback)
+            const profileName = (this.state.currentUser.user_metadata && (this.state.currentUser.user_metadata.full_name || this.state.currentUser.user_metadata.name)) || this.state.currentUser.email || 'User';
+            const { error: insertError } = await db.from('users').insert({ id: this.state.currentUser.id, name: profileName, role: 'user' });
+            if (insertError) {
+              console.error('Failed to create users profile:', insertError);
+              // not fatal — continue
+              this.state.userProfile = { id: this.state.currentUser.id, name: profileName, role: 'user' };
+              this.state.isAdmin = false;
+            } else {
+              this.state.userProfile = { id: this.state.currentUser.id, name: profileName, role: 'user' };
+              this.state.isAdmin = false;
+            }
+          } else {
+            this.state.userProfile = { id: this.state.currentUser.id, ...data };
+            this.state.isAdmin = data?.role === 'admin';
+          }
+        } else {
+          this.state.userProfile = null;
+          this.state.isAdmin = false;
+        }
+
+        this.updateUI();
+        
+        // Set initial section based on admin status
+        if (this.state.isAdmin) {
+          this.showSection('fund');
+        } else {
+          this.showSection('blood');
+        }
+        
+        this.loadDataForActiveSection();
+        this.calculateTotalFund();
+      },
+
+async signup(name, emailOrPhone, password) {
+  // Detect if input is phone number
+  const isPhone = /^[\d+]/.test(emailOrPhone.trim());
+  
+  let signupResult;
+  if (isPhone) {
+    const phone = emailOrPhone.startsWith('+') ? emailOrPhone : `+88${emailOrPhone}`;
+    signupResult = await db.auth.signUp({ phone, password });
+  } else {
+    signupResult = await db.auth.signUp({ email: emailOrPhone, password });
+  }
+  
+  if (signupResult.error) {
+    this.hideAllModals();
+    return this.showNotification(signupResult.error.message, true);
+  }
+
+  const { error: profileError } = await db.from('users').insert({ 
+    id: signupResult.data.user.id, 
+    name, 
+    role: 'user' 
+  });
+  
+  if (profileError) {
+    this.hideAllModals();
+    return this.showNotification(profileError.message, true);
+  }
+
+  this.hideAllModals();
+  if (isPhone) {
+    this.showNotification('Account created! Check your phone for OTP verification code.');
+  } else {
+    this.showNotification('Account created! Activate your account from the email we sent you through Supabase and then login with your credentials.');
+  }
+  setTimeout(() => this.showModal('loginModal'), 1000);
+},
+
+async login(emailOrPhone, password) {
+  // Detect if input is phone number (starts with + or contains only digits)
+  const isPhone = /^[\d+]/.test(emailOrPhone.trim());
+  
+  let authResult;
+  if (isPhone) {
+    // For phone login, we need to use signInWithPassword with phone format
+    const phone = emailOrPhone.startsWith('+') ? emailOrPhone : `+88${emailOrPhone}`;
+    authResult = await db.auth.signInWithPassword({ phone, password });
+  } else {
+    authResult = await db.auth.signInWithPassword({ email: emailOrPhone, password });
+  }
+  
+  if (authResult.error) {
+    this.hideAllModals();
+    return this.showNotification(authResult.error.message, true);
+  }
+  this.hideAllModals();
+  this.showNotification('Login successful!');
+  this.handleAuthStateChange();
+},
+
+      // Start OAuth sign-in flow with Google
+      async signInWithGoogle() {
+        try {
+          // Detect if running in native app or web
+          const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform?.();
+          
+          if (isNative) {
+            // For mobile app: use skipBrowserRedirect to get the OAuth URL
+            const { data, error } = await db.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: 'com.eor.app://oauth',
+                skipBrowserRedirect: true
+              }
+            });
+            
+            if (error) {
+              this.showNotification(error.message, true);
+              return;
+            }
+            
+            // Open the OAuth URL in system browser
+            const { Browser } = window.Capacitor.Plugins;
+            await Browser.open({ url: data.url, presentationStyle: 'popover' });
+            
+            this.showNotification('Redirecting to Google...');
+          } else {
+            // For web: normal OAuth flow
+            const { error } = await db.auth.signInWithOAuth({
+              provider: 'google',
+              options: { redirectTo: window.location.origin }
+            });
+            
+            if (error) {
+              this.showNotification(error.message, true);
+            } else {
+              this.showNotification('Redirecting to Google for sign-in...');
+            }
+          }
+        } catch (err) {
+          console.error('Google sign-in error', err);
+          this.showNotification('Google sign-in failed: ' + err.message, true);
+        }
+      },
+
+      async logout() {
+        await db.auth.signOut();
+        // Reset state manually instead of reloading page for a smoother UX
+        this.state.currentUser = null;
+        this.state.userProfile = null;
+        this.state.isAdmin = false;
+        this.updateUI();
+        this.loadDataForActiveSection(); // Reload public data
+        this.showNotification('Logged out successfully.');
+      },
+
+      // --- DATA FETCHING & RENDERING ---
+      loadDataForActiveSection() {
+        switch (this.state.activeSection) {
+          case 'fund':
+            this.loadFundData();
+            break;
+          case 'blood': this.loadDonors(); break;
+          case 'notices': this.loadNotices(); break;
+        }
+      },
+
+      async calculateTotalFund() {
+        let data = [];
+        const { data: freshData, error } = await db.from('fund').select('type, amount');
+        
+        if (error || !freshData) {
+          // Use cached data if network fails
+          const cached = localStorage.getItem('allFundData');
+          data = cached ? JSON.parse(cached) : [];
+        } else {
+          data = freshData;
+          // Save to cache
+          localStorage.setItem('allFundData', JSON.stringify(freshData));
+          this.state.allFundData = freshData;
+        }
+
+        const total = data.reduce((acc, entry) => {
+          if (entry.type === 'income') return acc + entry.amount;
+          if (entry.type === 'expense') return acc - entry.amount;
+          return acc;
+        }, 0);
+        this.state.totalFund = total;
+        this.elements.totalFundDisplay.textContent = `৳ ${total.toLocaleString()}`;
+        
+        // Save total to cache
+        localStorage.setItem('totalFund', total.toString());
+      },
+
+      async loadFundData() {
+        if (this.state.isLoading.fund) return;
+        this.state.isLoading.fund = true;
+        this.renderLoader('fund');
+        this.updateMonthDisplay();
+
+        const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
         try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+          // Try to fetch all fund data to update cache
+          const { data: allData, error: allError } = await db.from('fund').select('*').order('month', { ascending: true }).order('timestamp', { ascending: true });
+          if (!allError && allData) {
+            localStorage.setItem('allFundData', JSON.stringify(allData));
+            this.state.allFundData = allData;
+            
+            // Cache monthly aggregated data
+            const monthlyCache = {};
+            allData.forEach(entry => {
+              if (!monthlyCache[entry.month]) {
+                monthlyCache[entry.month] = [];
+              }
+              monthlyCache[entry.month].push(entry);
+            });
+            localStorage.setItem('cachedMonthlyData', JSON.stringify(monthlyCache));
+            this.state.cachedMonthlyData = monthlyCache;
+            
+            // Get current month data
+            const monthData = allData.filter(d => d.month === monthKey);
+            this.renderFundData(monthData);
+          } else {
+            throw new Error('Failed to fetch data');
+          }
+          await this.calculateNetWorth();
+        } catch (err) {
+          console.log('Loading from cache due to:', err);
+          // Load from cache
+          const allCached = JSON.parse(localStorage.getItem('allFundData') || '[]');
+          const monthlyCache = JSON.parse(localStorage.getItem('cachedMonthlyData') || '{}');
+          
+          this.state.allFundData = allCached;
+          this.state.cachedMonthlyData = monthlyCache;
+          
+          const monthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
+          this.renderFundData(monthData);
+          await this.calculateNetWorth();
         }
-      });
-    </script>
-  </body>
+        this.state.isLoading.fund = false;
+      },
+
+      renderFundData(data) {
+        const income = data.filter(d => d.type === 'income');
+        const expense = data.filter(d => d.type === 'expense');
+        this.renderFundList(income, this.elements.incomeList, 'green');
+        this.renderFundList(expense, this.elements.expenseList, 'red');
+        this.updateFundTotals(income, expense);
+      },
+
+
+async loadDonors() {
+  if (this.state.isLoading.donors) return;
+  this.state.isLoading.donors = true;
+  this.renderLoader('blood');
+  try {
+    const { data, error } = await db.from('donors').select('*').order('name');
+    if (error) throw error;
+    localStorage.setItem('donorsData', JSON.stringify(data));
+    this.state.allDonors = data || [];
+  } catch {
+    this.state.allDonors = JSON.parse(localStorage.getItem('donorsData') || '[]');
+  }
+  // Randomize donors before rendering
+  this.state.allDonors = this.shuffleDonors(this.state.allDonors);
+  this.filterAndRenderDonors();
+  
+  // Check if non-admin user has donor profile and show/hide prompt
+  const promptMsg = document.getElementById('donorPromptMessage');
+  if (promptMsg) {
+    const isBn = localStorage.getItem('lang') === 'bn';
+    // Hide prompt for admins
+    if (this.state.isAdmin) {
+      promptMsg.classList.add('hide');
+    } else if (!this.state.currentUser) {
+      // Show for non-logged-in users
+      promptMsg.classList.remove('hide');
+      promptMsg.textContent = isBn ? 'ব্লাড ডোনার তালিকায় যুক্ত হতে লগইন করে আপনার ব্লাড ডোনার প্রোফাইল কমপ্লিট করুন' : 'To be a blood donor, login and complete your donor profile';
+    } else {
+      // For logged-in non-admin users, check if they have a profile
+      try {
+        const { data } = await db.from('donors').select('*').eq('user_id', this.state.currentUser.id).single();
+        if (!data) {
+          promptMsg.classList.remove('hide');
+          promptMsg.textContent = isBn ? 'ব্লাড ডোনার হতে "আমার প্রোফাইল" ক্লিক করে আপনার ফোন নম্বর এবং লোকেশন যুক্ত করুন' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
+        } else {
+          promptMsg.classList.add('hide');
+        }
+      } catch {
+        // If error checking profile, show prompt
+        promptMsg.classList.remove('hide');
+        promptMsg.textContent = isBn ? 'ব্লাড ডোনার হতে "আমার প্রোফাইল" ক্লিক করে আপনার ফোন নম্বর এবং লোকেশন যুক্ত করুন' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
+      }
+    }
+  }
+  
+  this.state.isLoading.donors = false;
+},
+
+      async loadNotices() {
+        if (this.state.isLoading.notices) return;
+        this.state.isLoading.notices = true;
+        this.renderLoader('notices');
+        try {
+          const { data, error } = await db.from('notices').select('*').order('timestamp', { ascending: false }).limit(20);
+          if (error) throw error;
+          localStorage.setItem('noticesData', JSON.stringify(data));
+          this.renderNotices(data);
+        } catch {
+          const cached = JSON.parse(localStorage.getItem('noticesData') || '[]');
+          this.renderNotices(cached);
+        }
+        this.state.isLoading.notices = false;
+      },
+
+
+      // --- UI & RENDERING ---
+      updateUI() {
+        // Auth controls are now inside Settings only
+        document.getElementById('settingsBtn').classList.remove('hide');
+        document.getElementById('loginTopBtn').classList.toggle('hide', this.state.currentUser);
+        document.getElementById('loginBtn').classList.toggle('hide', this.state.currentUser);
+        document.getElementById('logoutBtn').classList.toggle('hide', !this.state.currentUser);
+
+        // Admin controls
+        this.elements.adminControls.classList.toggle('hide', !this.state.isAdmin);
+
+        // User-specific buttons
+        if (this.state.isAdmin) {
+          this.elements.myDonorBtn.classList.remove('hide');
+          const isBn = localStorage.getItem('lang') === 'bn';
+          this.elements.myDonorBtn.textContent = isBn ? '+ ডোনার প্রোফাইল যুক্ত করুন' : '+ Add Donor Profile';
+          this.elements.myDonorBtn.onclick = async () => {
+            await this.populateDonorForm();
+            this.showModal('donorProfileModal');
+          };
+        } else {
+          this.elements.myDonorBtn.classList.toggle('hide', !this.state.currentUser);
+          this.updateMyProfileButtonText();
+          this.elements.myDonorBtn.onclick = async () => {
+            await this.populateDonorForm();
+            this.showModal('donorProfileModal');
+          };
+        }
+
+        this.elements.postNoticeBtn.classList.toggle('hide', !this.state.currentUser);
+      },
+
+      updateMonthDisplay() {
+        this.elements.currentMonthDisplay.textContent = this.state.currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+        this.elements.currentYearDisplay.textContent = this.state.currentYear;
+      },
+
+      renderFundList(items, element, color) {
+        if (items.length === 0) {
+          const isBn = localStorage.getItem('lang') === 'bn';
+          const noEntriesText = color === 'green'
+            ? (isBn ? 'কোনো এন্ট্রি নেই' : 'No collection entries')
+            : (isBn ? 'কোনো এন্ট্রি নেই' : 'No sadakah entries');
+          element.innerHTML = `<div class="text-gray-400 text-center py-4">${noEntriesText}</div>`;
+          return;
+        }
+        element.innerHTML = items.map((item, index) => {
+          const textColor = item.highlighted ? 'text-red-600' : 'text-gray-800';
+          // Convert to Bangladesh time (UTC+6)
+          const bdTime = new Date(new Date(item.timestamp).getTime() + (6 * 60 * 60 * 1000));
+          const formattedTime = bdTime.toLocaleString('en-GB', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+          });
+          return `
+                <div class="bg-${color}-50 p-1.5 rounded-lg text-sm relative group" title="${formattedTime}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <span class="font-semibold text-gray-600">${index + 1}.</span>
+                            <span class="ml-2 ${textColor}">${item.name || item.description}</span>
+                            ${color === 'red' ? `<div class="text-xs text-gray-500 mt-1">${formattedTime}</div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <div class="font-bold text-${color}-700">৳ ${item.amount}</div>
+                            ${this.state.isAdmin ? `
+                                <button data-edit-fund="${item.id}" data-fund-type="${item.type}" class="ml-1 text-blue-500 hover:text-blue-700" style="width: 20px; height: 20px;"><img src="svgs/icon-edit.svg" style="width: 16px; height: 16px;"></button>
+                                <button data-delete-fund="${item.id}" class="text-red-500 hover:text-red-700" style="width: 20px; height: 20px;"><img src="svgs/icon-delete.svg" style="width: 16px; height: 16px;"></button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ${color === 'green' ? `<div class="absolute left-0 top-full mt-1 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">${formattedTime}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+      },
+
+      updateFundTotals(income, expense) {
+        const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
+        const totalExpense = expense.reduce((sum, item) => sum + item.amount, 0);
+        const balance = totalIncome - totalExpense;
+
+        this.elements.totalIncome.textContent = `৳ ${totalIncome}`;
+        this.elements.totalExpense.textContent = `৳ ${totalExpense}`;
+        this.elements.monthlyBalance.textContent = `৳ ${balance}`;
+        this.elements.monthlyBalance.style.color = balance >= 0 ? 'var(--brand-green-dark)' : '#dc2626';
+      },
+
+      async calculateNetWorth() {
+        const currentMonthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        
+        let data = [];
+        
+        try {
+          // Try to get fresh data
+          const { data: freshData, error } = await db.from('fund').select('type, amount, month').lte('month', currentMonthKey);
+          
+          if (!error && freshData) {
+            data = freshData;
+          } else {
+            throw new Error('Network error');
+          }
+        } catch (err) {
+          // Use cached data
+          const allCached = this.state.allFundData.length > 0 
+            ? this.state.allFundData 
+            : JSON.parse(localStorage.getItem('allFundData') || '[]');
+          
+          data = allCached.filter(entry => entry.month <= currentMonthKey);
+        }
+
+        const netWorth = data.reduce((acc, entry) => {
+          if (entry.type === 'income') return acc + entry.amount;
+          if (entry.type === 'expense') return acc - entry.amount;
+          return acc;
+        }, 0);
+
+        const netWorthElement = document.getElementById('netWorth');
+        if (netWorthElement) {
+          netWorthElement.textContent = `৳ ${netWorth.toLocaleString()}`;
+          netWorthElement.style.color = netWorth >= 0 ? '#2563eb' : '#dc2626';
+        }
+      },
+
+      highlightMatch(text, searchTerm) {
+        if (!searchTerm || !text) return text;
+        
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark style="background-color: #fef08a; padding: 2px 0;">$1</mark>');
+      },
+
+      filterAndRenderDonors() {
+        const filterValue = document.getElementById('bloodFilter').value;
+        const searchValue = document.getElementById('bloodSearch').value.trim().toLowerCase();
+        
+        let filteredDonors = this.state.allDonors;
+        
+        // Apply blood group filter if not in search mode
+        if (!searchValue && filterValue !== 'all') {
+          filteredDonors = filteredDonors.filter(d => d.blood_group === filterValue);
+        }
+        
+        // Apply search filter
+        if (searchValue) {
+          filteredDonors = filteredDonors.filter(d => {
+            const name = (d.name || '').toLowerCase();
+            const phone = (d.phone || '').toLowerCase();
+            const location = (d.location || '').toLowerCase();
+            const bloodGroup = (d.blood_group || '').toLowerCase();
+            
+            return name.includes(searchValue) || 
+                   phone.includes(searchValue) || 
+                   location.includes(searchValue) ||
+                   bloodGroup.includes(searchValue);
+          });
+        }
+        
+        // Randomize the donor list only if not searching
+        if (!searchValue) {
+          filteredDonors = this.shuffleDonors(filteredDonors);
+        }
+        
+        if (filteredDonors.length === 0) {
+          this.elements.donorsList.innerHTML = `<div class="text-gray-400 text-center py-8">No donors found</div>`;
+          return;
+        }
+
+        const isBn = localStorage.getItem('lang') === 'bn';
+        this.elements.donorsList.innerHTML = filteredDonors.map(donor => {
+          const isAdminProfile = donor.created_by_admin;
+          const availableClass = donor.available ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-300';
+          const availableText = donor.available ? (isBn ? '✔অ্যাভেইলেবল' : '✔ Available') : (isBn ? '✖ অ্যাভেইলেবল নয়' : '✖ Not Available');
+          const availableColor = donor.available ? 'text-green-700' : 'text-gray-500';
+          const nameColor = isAdminProfile ? 'text-gray-500' : 'text-gray-800';
+          const adminBadge = isAdminProfile ? '<span class="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded ml-2">Admin</span>' : '';
+
+          const searchValue = document.getElementById('bloodSearch').value.trim().toLowerCase();
+          const highlightedName = searchValue ? this.highlightMatch(donor.name, searchValue) : donor.name;
+          const highlightedLocation = searchValue ? this.highlightMatch(donor.location || 'N/A', searchValue) : (donor.location || 'N/A');
+          const highlightedPhone = searchValue ? this.highlightMatch(donor.phone || 'N/A', searchValue) : (donor.phone || 'N/A');
+          const highlightedBloodGroup = searchValue ? this.highlightMatch(donor.blood_group, searchValue) : donor.blood_group;
+          
+          return `
+<div class="bg-white rounded-xl shadow-lg p-3 border-l-4 ${availableClass}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="flex items-center">
+                                  <h3 class="font-bold text-lg ${nameColor}">${highlightedName}${!donor.available ? ' <span class="text-sm font-normal text-gray-500">(not available)</span>' : ''}</h3>
+                                </div>
+                                <div class="text-sm text-gray-600 flex items-center gap-1"><img src="svgs/icon-location.svg"> ${highlightedLocation}</div>
+                            </div>
+                            <div class="text-2xl font-bold text-red-600">${highlightedBloodGroup}</div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between">
+  <a href="tel:${donor.phone}" class="text-sm text-gray-700 hover:text-blue-600 flex items-center gap-1"><img src="svgs/icon-call.svg"> ${highlightedPhone}</a>
+  <div class="flex gap-1">
+    <button class="copy-phone-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition" data-phone="${donor.phone}"><img src="svgs/icon-copy.svg"></button>
+    ${this.state.isAdmin ? `<button class="edit-donor-btn text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition" data-donor-id="${donor.id}"><img src="svgs/icon-edit.svg"></button>` : ''}
+  </div>
+</div>
+                        </div>
+                    </div>
+                `;
+        }).join('');
+
+        // Bind event listeners for dynamic buttons
+        document.querySelectorAll('.copy-phone-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            navigator.clipboard.writeText(btn.dataset.phone).then(() => this.showNotification('Copied!'));
+          });
+        });
+
+        document.querySelectorAll('.edit-donor-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const donorId = btn.dataset.donorId;
+            await this.populateDonorForm(donorId);
+            this.showModal('donorProfileModal');
+          });
+        });
+      },
+
+      renderNotices(notices) {
+        if (notices.length === 0) {
+          const isBn = localStorage.getItem('lang') === 'bn';
+          const noActivitiesText = isBn ? 'কোনো কার্যক্রম নেই' : 'No activities yet';
+          this.elements.noticesList.innerHTML = `<div class="text-gray-400 text-center py-8">${noActivitiesText}</div>`;
+          return;
+        }
+        this.elements.noticesList.innerHTML = notices.map(notice => {
+          // Convert to Bangladesh time (UTC+6)
+          const bdTime = new Date(new Date(notice.timestamp).getTime() + (6 * 60 * 60 * 1000));
+          const formattedTime = bdTime.toLocaleString('en-GB', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+          });
+          return `
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                                ${notice.author_name ? notice.author_name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-800">${notice.author_name || 'Anonymous'}</div>
+                                <div class="text-xs text-gray-500">${formattedTime}</div>
+                            </div>
+                        </div>
+                        ${this.state.isAdmin ? `
+                            <div class="flex gap-1">
+                                <button class="edit-notice-btn text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition" data-notice-id="${notice.id}">
+                                    <img src="svgs/icon-edit.svg" style="width: 16px; height: 16px;">
+                                </button>
+                                <button class="bump-notice-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition" data-notice-id="${notice.id}" title="Bump to top"><img src="svgs/icon-bump.svg"></button>
+                                <button class="delete-notice-btn text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 transition" data-notice-id="${notice.id}">
+                                    <img src="svgs/icon-delete.svg" style="width: 16px; height: 16px;">
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <p class="text-gray-700 whitespace-pre-wrap">${notice.text || ''}</p>
+                </div>
+            `;
+        }).join('');
+
+        // Bind event listeners for admin actions
+        if (this.state.isAdmin) {
+          document.querySelectorAll('.edit-notice-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.editNotice(btn.dataset.noticeId));
+          });
+          document.querySelectorAll('.bump-notice-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.bumpNotice(btn.dataset.noticeId));
+          });
+          document.querySelectorAll('.delete-notice-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.deleteNotice(btn.dataset.noticeId));
+          });
+        }
+      },
+
+      async loadYearlyChartData() {
+        const year = this.state.currentYear;
+        let data = [];
+        
+        try {
+          const { data: freshData, error } = await db.from('fund').select('*').gte('month', `${year}-01`).lte('month', `${year}-12`);
+
+          if (error) throw error;
+          data = freshData;
+        } catch (err) {
+          console.log('Loading chart from cache:', err);
+          // Use cached data
+          const allCached = this.state.allFundData.length > 0 
+            ? this.state.allFundData 
+            : JSON.parse(localStorage.getItem('allFundData') || '[]');
+          
+          data = allCached.filter(entry => {
+            const entryYear = parseInt(entry.month.split('-')[0]);
+            return entryYear === year;
+          });
+        }
+
+        if (!data || data.length === 0) {
+          console.log('No data available for year:', year);
+          const canvas = this.elements.yearlyChart;
+          if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '20px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available for this year', canvas.width / 2, canvas.height / 2);
+          }
+          return;
+        }
+
+        // Initialize arrays for 12 months
+        const monthlyIncome = new Array(12).fill(0);
+        const monthlyExpense = new Array(12).fill(0);
+        const monthlyBalance = new Array(12).fill(0);
+
+        // Aggregate data by month
+        data.forEach(entry => {
+          const monthIndex = parseInt(entry.month.split('-')[1]) - 1;
+          if (entry.type === 'income') {
+            monthlyIncome[monthIndex] += entry.amount;
+          } else if (entry.type === 'expense') {
+            monthlyExpense[monthIndex] += entry.amount;
+          }
+        });
+
+        // Calculate cumulative balance
+        let cumulativeBalance = 0;
+
+        // Get balance from previous years
+        const { data: previousData } = await db.from('fund').select('type, amount').lt('month', `${year}-01`);
+        if (previousData) {
+          cumulativeBalance = previousData.reduce((acc, entry) => {
+            return entry.type === 'income' ? acc + entry.amount : acc - entry.amount;
+          }, 0);
+        }
+
+        for (let i = 0; i < 12; i++) {
+          cumulativeBalance += monthlyIncome[i] - monthlyExpense[i];
+          monthlyBalance[i] = cumulativeBalance;
+        }
+
+        this.renderYearlyChart(monthlyIncome, monthlyExpense, monthlyBalance);
+      },
+
+      renderYearlyChart(income, expense, balance) {
+        const canvas = this.elements.yearlyChart;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        // Store data for hover detection
+        this.chartData = { income, expense, balance };
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 80;
+        const rightPadding = 50;
+        const chartWidth = width - padding - rightPadding;
+        const chartHeight = height - padding - 50;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        // Find max value for scaling
+        const actualMaxValue = Math.max(...income, ...expense, ...balance.map(Math.abs));
+        const actualMinValue = Math.min(0, ...balance);
+        const maxValue = actualMaxValue * 1.1;
+        const minValue = actualMinValue * 1.1;
+        const range = maxValue - minValue;
+
+        // Helper function to get Y coordinate
+        const getY = (value) => {
+          return padding + chartHeight - ((value - minValue) / range) * chartHeight;
+        };
+
+        // Helper function to get X coordinate
+        const getX = (index) => {
+          return padding + (index / 11) * chartWidth;
+        };
+
+        // Draw grid lines
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+          const y = padding + (i / 5) * chartHeight;
+          ctx.beginPath();
+          ctx.moveTo(padding, y);
+          ctx.lineTo(padding + chartWidth, y);
+          ctx.stroke();
+        }
+
+        // Draw zero line if balance goes negative
+        if (minValue < 0) {
+          ctx.strokeStyle = '#9ca3af';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          const zeroY = getY(0);
+          ctx.moveTo(padding, zeroY);
+          ctx.lineTo(padding + chartWidth, zeroY);
+          ctx.stroke();
+        }
+
+        // Draw lines
+        const drawLine = (data, color, lineWidth = 2) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lineWidth;
+          ctx.beginPath();
+          data.forEach((value, i) => {
+            const x = getX(i);
+            const y = getY(value);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+
+          // Draw points
+          ctx.fillStyle = color;
+          data.forEach((value, i) => {
+            const x = getX(i);
+            const y = getY(value);
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        };
+
+        drawLine(income, '#10b981', 3); // Green
+        drawLine(expense, '#ef4444', 3); // Red
+        drawLine(balance, '#3b82f6', 3); // Blue
+
+        // Draw month labels
+        ctx.fillStyle = '#6b7280';
+        ctx.font = 'bold 20px system-ui';
+        ctx.textAlign = 'center';
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        months.forEach((month, i) => {
+          const x = padding + (i / 11) * chartWidth;
+          ctx.fillText(month, x, height - 50 + 20);
+        });
+
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 18px system-ui';
+        for (let i = 0; i <= 5; i++) {
+          const value = minValue + (range * i / 5);
+          const y = padding + chartHeight - (i / 5) * chartHeight;
+          ctx.fillText(Math.round(value).toLocaleString(), padding - 10, y + 4);
+        }
+
+        // Add click functionality to show values
+        const handleClick = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+          
+          // Scale coordinates
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          const scaledX = mouseX * scaleX;
+          const scaledY = mouseY * scaleY;
+          
+          let clickedPoint = null;
+          let minDistance = 40; // pixels - larger hitbox for clicks
+          
+          // Check all points
+          [income, expense, balance].forEach((data, dataIndex) => {
+            data.forEach((value, i) => {
+              const x = getX(i);
+              const y = getY(value);
+              const distance = Math.sqrt(Math.pow(scaledX - x, 2) + Math.pow(scaledY - y, 2));
+              
+              if (distance < minDistance) {
+                minDistance = distance;
+                const labels = ['Collection', 'Sadakah', 'Total Fund'];
+                const isBn = localStorage.getItem('lang') === 'bn';
+                const labelsBn = ['কালেকশন', 'সাদাকাহ', 'ফান্ডে মোট অর্থ'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                clickedPoint = {
+                  x, y, value,
+                  label: isBn ? labelsBn[dataIndex] : labels[dataIndex],
+                  month: months[i]
+                };
+              }
+            });
+          });
+          
+          // Store clicked point
+          canvas.clickedPoint = clickedPoint;
+          
+          // Redraw chart with clicked point highlighted
+          this.renderYearlyChart(income, expense, balance);
+          
+          if (clickedPoint) {
+            // Draw highlight circle at clicked point
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
+            ctx.beginPath();
+            ctx.arc(clickedPoint.x, clickedPoint.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.beginPath();
+            ctx.arc(clickedPoint.x, clickedPoint.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw tooltip
+            const tooltipText = `${clickedPoint.month}: ৳ ${Math.round(clickedPoint.value).toLocaleString()}`;
+            const tooltipWidth = ctx.measureText(tooltipText).width + 20;
+            const tooltipHeight = 30;
+            let tooltipX = clickedPoint.x - tooltipWidth / 2;
+            let tooltipY = clickedPoint.y - 40;
+            
+            // Keep tooltip inside canvas
+            if (tooltipX < 10) tooltipX = 10;
+            if (tooltipX + tooltipWidth > width - 10) tooltipX = width - tooltipWidth - 10;
+            if (tooltipY < 10) tooltipY = clickedPoint.y + 20;
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(tooltipText, tooltipX + tooltipWidth / 2, tooltipY + 20);
+            
+            ctx.fillStyle = '#10b981';
+            ctx.font = '12px system-ui';
+            ctx.fillText(clickedPoint.label, tooltipX + tooltipWidth / 2, tooltipY + tooltipHeight + 15);
+          }
+        };
+        
+        // Remove old listeners if exist
+        const oldClick = canvas.clickHandler;
+        if (oldClick) canvas.removeEventListener('click', oldClick);
+        
+        // Add new listener
+        canvas.clickHandler = handleClick;
+        canvas.addEventListener('click', handleClick);
+        canvas.style.cursor = 'pointer';
+      },
+
+      changeYear(delta) {
+        this.state.currentYear += delta;
+        // Don't go before 2017 or beyond current year
+        if (this.state.currentYear < 2017) this.state.currentYear = 2017;
+        if (this.state.currentYear > new Date().getFullYear()) this.state.currentYear = new Date().getFullYear();
+
+        this.elements.currentYearDisplay.textContent = this.state.currentYear;
+        this.loadYearlyChartData();
+      },
+
+      renderLoader(section) {
+        const sectionMap = {
+          fund: [this.elements.incomeList, this.elements.expenseList],
+          blood: [this.elements.donorsList],
+          notices: [this.elements.noticesList]
+        };
+        sectionMap[section].forEach(el => el.innerHTML = '<div class="loader"></div>');
+      },
+
+      // --- EVENT BINDING & HANDLERS ---
+      convertBengaliToEnglishNumber(input) {
+        const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        let result = input;
+        bengaliDigits.forEach((bn, i) => {
+          result = result.replace(new RegExp(bn, 'g'), englishDigits[i]);
+        });
+        return result;
+      },
+
+      bindEvents() {
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.addEventListener('click', () => this.showSection(btn.dataset.section));
+        });
+        // Set initial active tab
+        this.updateActiveTab();
+        document.getElementById('refreshBtn').addEventListener('click', () => this.refreshApp());
+        document.getElementById('settingsBtn').addEventListener('click', () => this.showModal('settingsModal'));
+        document.getElementById('loginTopBtn').addEventListener('click', () => this.showModal('loginModal'));
+        document.getElementById('loginBtn').addEventListener('click', () => this.showModal('loginModal'));
+        document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+
+        // Google OAuth button in login modal
+        const googleBtn = document.getElementById('googleLoginBtn');
+        if (googleBtn) {
+          googleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.signInWithGoogle();
+          });
+        }
+
+
+        // Modals
+        document.getElementById('showSignupBtn').addEventListener('click', () => this.showModal('signupModal'));
+        document.getElementById('showLoginBtn').addEventListener('click', () => this.showModal('loginModal'));
+        document.getElementById('forgotPasswordBtn').addEventListener('click', () => this.showModal('forgotPasswordModal'));
+        document.getElementById('backToLoginBtn').addEventListener('click', () => this.showModal('loginModal'));
+
+        // Show/Hide Password toggles
+        document.getElementById('toggleLoginPassword').addEventListener('click', () => {
+          const input = document.getElementById('loginPassword');
+          const icon = document.getElementById('loginEyeIcon');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.src = 'svgs/icon-eye-slash.svg';
+          } else {
+            input.type = 'password';
+            icon.src = 'svgs/icon-eye.svg';
+          }
+        });
+        document.getElementById('toggleSignupPassword').addEventListener('click', () => {
+          const input = document.getElementById('signupPassword');
+          const icon = document.getElementById('signupEyeIcon');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.src = 'svgs/icon-eye-slash.svg';
+          } else {
+            input.type = 'password';
+            icon.src = 'svgs/icon-eye.svg';
+          }
+        });
+        document.getElementById('toggleSignupConfirmPassword').addEventListener('click', () => {
+          const input = document.getElementById('signupConfirmPassword');
+          const icon = document.getElementById('signupConfirmEyeIcon');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.src = 'svgs/icon-eye-slash.svg';
+          } else {
+            input.type = 'password';
+            icon.src = 'svgs/icon-eye.svg';
+          }
+        });
+        document.querySelectorAll('[data-modal]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (btn.dataset.modal === 'donorProfileModal' && btn.id !== 'myDonorBtn') await this.populateDonorForm();
+            
+            // Reset income modal when opening for new entry
+            if (btn.dataset.modal === 'addIncomeModal') {
+              const isBn = localStorage.getItem('lang') === 'bn';
+              document.getElementById('incomeId').value = '';
+              document.querySelector('#addIncomeModal h2').textContent = isBn ? 'কালেকশন যুক্ত করুন' : 'Add Collection';
+              document.querySelector('#addIncomeForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
+              document.getElementById('addIncomeForm').reset();
+            }
+            
+            // Reset expense modal when opening for new entry
+            if (btn.dataset.modal === 'addExpenseModal') {
+              const isBn = localStorage.getItem('lang') === 'bn';
+              document.getElementById('expenseId').value = '';
+              document.querySelector('#addExpenseModal h2').textContent = isBn ? 'সাদাকাহ যুক্ত করুন' : 'Add Sadakah';
+              document.querySelector('#addExpenseForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
+              document.getElementById('addExpenseForm').reset();
+            }
+            
+            this.showModal(btn.dataset.modal);
+          });
+        });
+        document.querySelectorAll('[data-close-modal]').forEach(btn => {
+          btn.addEventListener('click', () => this.hideAllModals());
+        });
+
+        // Forms
+document.getElementById('signupForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = e.target.elements.signupName.value.trim();
+  const emailOrPhone = e.target.elements.signupEmail.value.trim();
+  const pass = e.target.elements.signupPassword.value;
+  const confirmPass = e.target.elements.signupConfirmPassword.value;
+
+  if (!name) {
+    this.hideAllModals();
+    return this.showNotification('Please enter your full name', true);
+  }
+  if (pass.length < 6) {
+    this.hideAllModals();
+    return this.showNotification('Password must be at least 6 characters long', true);
+  }
+  if (pass !== confirmPass) {
+    this.hideAllModals();
+    return this.showNotification('Passwords do not match', true);
+  }
+  this.signup(name, emailOrPhone, pass);
+});
+document.getElementById('loginForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const emailOrPhone = e.target.elements.loginEmail.value.trim();
+  const password = e.target.elements.loginPassword.value;
+  if (!emailOrPhone || !password) {
+    this.hideAllModals();
+    return this.showNotification('Please enter both email/phone and password', true);
+  }
+  this.login(emailOrPhone, password);
+});
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const email = e.target.elements.forgotEmail.value.trim();
+          if (!email) {
+            this.hideAllModals();
+            return this.showNotification('Please enter your email', true);
+          }
+          // Detect if running in native app or web
+          const isNative = typeof window.Capacitor !== 'undefined';
+          const redirectTo = isNative ? 'com.eor.app://reset-password' : window.location.origin;
+          
+          const { error } = await db.auth.resetPasswordForEmail(email, {
+            redirectTo
+          });
+          if (error) {
+            this.hideAllModals();
+            return this.showNotification(error.message, true);
+          }
+          this.hideAllModals();
+          this.showNotification('Password reset link sent to your email!');
+          e.target.reset();
+        });
+        document.getElementById('addIncomeForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const incomeId = document.getElementById('incomeId').value;
+          const name = e.target.elements.incomeName.value;
+          const amountInput = this.convertBengaliToEnglishNumber(e.target.elements.incomeAmount.value);
+          const amount = parseFloat(amountInput);
+          const highlighted = e.target.elements.incomeHighlighted.checked;
+
+          if (incomeId) {
+            // Update existing entry
+            await this.updateFundEntry(incomeId, { name, amount, highlighted });
+          } else {
+            // Add new entry
+            await this.addFundEntry('income', { name, amount, highlighted });
+          }
+          e.target.reset();
+          document.getElementById('incomeId').value = '';
+        });
+        document.getElementById('addExpenseForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const expenseId = document.getElementById('expenseId').value;
+          const description = e.target.elements.expenseDesc.value;
+          const amountInput = this.convertBengaliToEnglishNumber(e.target.elements.expenseAmount.value);
+          const amount = parseFloat(amountInput);
+          const highlighted = e.target.elements.expenseHighlighted.checked;
+
+          if (expenseId) {
+            // Update existing entry
+            await this.updateFundEntry(expenseId, { description, amount, highlighted });
+          } else {
+            // Add new entry
+            await this.addFundEntry('expense', { description, amount, highlighted });
+          }
+          e.target.reset();
+          document.getElementById('expenseId').value = '';
+        });
+        document.getElementById('postNoticeForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const text = e.target.elements.noticeText.value.trim();
+          const noticeId = document.getElementById('noticeId').value;
+
+          if (!text) return this.showNotification('Please add some text.', true);
+
+          if (noticeId) {
+            // Update existing notice
+            const { error } = await db.from('notices').update({ text }).eq('id', parseInt(noticeId));
+            if (error) return this.showNotification(error.message, true);
+            this.showNotification('Activity updated!');
+          } else {
+            // Create new notice
+            const { error } = await db.from('notices').insert({
+              text,
+              author_name: this.state.userProfile.name,
+              author_id: this.state.currentUser.id
+            });
+            if (error) return this.showNotification(error.message, true);
+            this.showNotification('Activity posted!');
+          }
+
+          this.hideAllModals();
+          this.loadNotices();
+          e.target.reset();
+          document.getElementById('noticeId').value = '';
+        });
+        document.getElementById('donorProfileForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const donorId = document.getElementById('donorId').value;
+
+          const profile = {
+            name: e.target.elements.donorName.value,
+            phone: e.target.elements.donorPhone.value,
+            blood_group: e.target.elements.donorBloodGroup.value,
+            location: e.target.elements.donorLocation.value,
+            available: e.target.elements.donorAvailable.checked,
+          };
+
+          if (donorId) {
+            // Update existing profile (admin or user's own)
+            const { error } = await db.from('donors').update(profile).eq('id', parseInt(donorId));
+            if (error) return this.showNotification(error.message, true);
+          } else {
+            // Create new profile
+            profile.user_id = this.state.isAdmin ? null : this.state.currentUser.id;
+            profile.created_by_admin = this.state.isAdmin;
+            const { error } = await db.from('donors').insert(profile);
+            if (error) return this.showNotification(error.message, true);
+          }
+
+          this.showNotification('Profile saved!');
+          this.hideAllModals();
+          this.loadDonors();
+        });
+        this.elements.deleteDonorBtn.addEventListener('click', async () => {
+          if (!confirm('Are you sure you want to delete this donor profile?')) return;
+          const donorId = document.getElementById('donorId').value;
+          if (!donorId) return;
+          const { error } = await db.from('donors').delete().eq('id', parseInt(donorId));
+          if (error) return this.showNotification(error.message, true);
+          this.showNotification('Profile deleted.');
+          this.hideAllModals();
+          this.loadDonors();
+        });
+
+
+        // Other interactions
+        document.getElementById('prevMonthBtn').addEventListener('click', () => this.changeMonth(-1));
+        document.getElementById('nextMonthBtn').addEventListener('click', () => this.changeMonth(1));
+        document.getElementById('prevYearBtn').addEventListener('click', () => this.changeYear(-1));
+        document.getElementById('nextYearBtn').addEventListener('click', () => this.changeYear(1));
+        this.elements.mainContent.addEventListener('click', e => {
+          if (e.target.dataset.deleteFund) this.deleteFundEntry(e.target.dataset.deleteFund);
+          if (e.target.dataset.editFund) this.editFundEntry(e.target.dataset.editFund, e.target.dataset.fundType);
+          // Handle clicks on img inside buttons
+          if (e.target.tagName === 'IMG' && e.target.parentElement.dataset.deleteFund) {
+            this.deleteFundEntry(e.target.parentElement.dataset.deleteFund);
+          }
+          if (e.target.tagName === 'IMG' && e.target.parentElement.dataset.editFund) {
+            this.editFundEntry(e.target.parentElement.dataset.editFund, e.target.parentElement.dataset.fundType);
+          }
+        });
+        document.getElementById('bloodFilter').addEventListener('change', () => {
+          this.state.allDonors = this.shuffleDonors(this.state.allDonors);
+          this.filterAndRenderDonors();
+        });
+        
+        // Blood search toggle
+        document.getElementById('bloodSearchBtn').addEventListener('click', () => {
+          const searchInput = document.getElementById('bloodSearch');
+          const filterSelect = document.getElementById('bloodFilter');
+          const searchBtn = document.getElementById('bloodSearchBtn');
+          const clearBtn = document.getElementById('bloodClearBtn');
+          
+          searchInput.classList.remove('hide');
+          filterSelect.classList.add('hide');
+          searchBtn.classList.add('hide');
+          clearBtn.classList.remove('hide');
+          searchInput.focus();
+        });
+        
+        // Blood search input
+        document.getElementById('bloodSearch').addEventListener('input', () => {
+          this.filterAndRenderDonors();
+        });
+        
+        // Blood search blur
+        document.getElementById('bloodSearch').addEventListener('blur', () => {
+          const searchInput = document.getElementById('bloodSearch');
+          if (!searchInput.value.trim()) {
+            setTimeout(() => {
+              const filterSelect = document.getElementById('bloodFilter');
+              const searchBtn = document.getElementById('bloodSearchBtn');
+              const clearBtn = document.getElementById('bloodClearBtn');
+              
+              searchInput.classList.add('hide');
+              filterSelect.classList.remove('hide');
+              searchBtn.classList.remove('hide');
+              clearBtn.classList.add('hide');
+              this.filterAndRenderDonors();
+            }, 200);
+          }
+        });
+        
+        // Blood search clear
+        document.getElementById('bloodClearBtn').addEventListener('click', () => {
+          const searchInput = document.getElementById('bloodSearch');
+          searchInput.value = '';
+          searchInput.focus();
+          this.filterAndRenderDonors();
+        });        document.getElementById('showYearlyChartBtn').addEventListener('click', () => {
+          this.showModal('yearlyChartModal');
+          this.loadYearlyChartData();
+        });
+        document.getElementById('totalFundBtn').addEventListener('click', () => this.showCompleteHistory());
+        document.getElementById('copyIncomeBtn').addEventListener('click', () => this.copyIncomeList());
+        document.getElementById('copyHistoryBtn').addEventListener('click', () => this.copyCompleteHistory());
+      },
+
+      async updateFundEntry(id, details) {
+        const { error } = await db.from('fund').update(details).eq('id', parseInt(id));
+
+        if (error) {
+          this.showNotification(error.message, true);
+        } else {
+          this.showNotification('Entry updated successfully.');
+          this.hideAllModals();
+          this.loadFundData();
+          this.calculateTotalFund();
+        }
+      },
+
+      async editFundEntry(id, type) {
+        const { data, error } = await db.from('fund').select('*').eq('id', parseInt(id)).single();
+        if (error) return this.showNotification(error.message, true);
+
+        const isBn = localStorage.getItem('lang') === 'bn';
+        
+        if (type === 'income') {
+          document.getElementById('incomeId').value = id;
+          document.getElementById('incomeName').value = data.name || '';
+          document.getElementById('incomeAmount').value = data.amount || '';
+          document.getElementById('incomeHighlighted').checked = data.highlighted || false;
+          
+          // Update modal title
+          const modalTitle = document.querySelector('#addIncomeModal h2');
+          modalTitle.textContent = isBn ? 'কালেকশন এডিট করুন' : 'Edit Collection';
+          
+          // Update submit button
+          const submitBtn = document.querySelector('#addIncomeForm button[type="submit"]');
+          submitBtn.textContent = isBn ? 'আপডেট করুন' : 'Update';
+          
+          this.showModal('addIncomeModal');
+        } else if (type === 'expense') {
+          document.getElementById('expenseId').value = id;
+          document.getElementById('expenseDesc').value = data.description || '';
+          document.getElementById('expenseAmount').value = data.amount || '';
+          document.getElementById('expenseHighlighted').checked = data.highlighted || false;
+          
+          // Update modal title
+          const modalTitle = document.querySelector('#addExpenseModal h2');
+          modalTitle.textContent = isBn ? 'সাদাকাহ এডিট করুন' : 'Edit Sadakah';
+          
+          // Update submit button
+          const submitBtn = document.querySelector('#addExpenseForm button[type="submit"]');
+          submitBtn.textContent = isBn ? 'আপডেট করুন' : 'Update';
+          
+          this.showModal('addExpenseModal');
+        }
+      },
+
+      async addFundEntry(type, details) {
+        const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        const { error } = await db.from('fund').insert({
+          ...details,
+          month: monthKey,
+          type: type,
+          updated_by: this.state.currentUser.id,
+        });
+
+        if (error) {
+          this.showNotification(error.message, true);
+        } else {
+          this.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} added successfully.`);
+          this.hideAllModals();
+          this.loadFundData();
+          this.calculateTotalFund();
+        }
+      },
+
+      async deleteFundEntry(id) {
+        if (!this.state.isAdmin || !confirm('Are you sure you want to delete this entry?')) return;
+        const { error } = await db.from('fund').delete().eq('id', id);
+        if (error) {
+          this.showNotification(error.message, true);
+        } else {
+          this.showNotification('Entry deleted.');
+          this.loadFundData();
+          this.calculateTotalFund();
+        }
+      },
+
+      async editNotice(noticeId) {
+        const { data, error } = await db.from('notices').select('*').eq('id', parseInt(noticeId)).single();
+        if (error) return this.showNotification(error.message, true);
+
+        document.getElementById('noticeId').value = noticeId;
+        document.getElementById('noticeText').value = data.text || '';
+
+        // Update modal title
+        const modalTitle = document.querySelector('#postNoticeModal h2');
+        const isBn = localStorage.getItem('lang') === 'bn';
+        modalTitle.textContent = isBn ? 'কার্যক্রম এডিট করুন' : 'Edit Activity';
+
+        // Update submit button text
+        const submitBtn = document.querySelector('#postNoticeForm button[type="submit"]');
+        submitBtn.textContent = isBn ? 'আপডেট করুন' : 'Update';
+
+        this.showModal('postNoticeModal');
+      },
+
+      async bumpNotice(noticeId) {
+        if (!confirm('Bump this activity to the top? (Original timestamp will be kept)')) return;
+
+        const { data, error } = await db.from('notices').select('*').eq('id', parseInt(noticeId)).single();
+        if (error) return this.showNotification(error.message, true);
+
+        // Delete and re-insert to bump to top
+        const { error: deleteError } = await db.from('notices').delete().eq('id', parseInt(noticeId));
+        if (deleteError) return this.showNotification(deleteError.message, true);
+
+        const { error: insertError } = await db.from('notices').insert({
+          text: data.text,
+          author_name: data.author_name,
+          author_id: data.author_id,
+          timestamp: data.timestamp // Keep original timestamp
+        });
+
+        if (insertError) return this.showNotification(insertError.message, true);
+
+        this.showNotification('Activity bumped to top!');
+        this.loadNotices();
+      },
+
+      async deleteNotice(noticeId) {
+        if (!confirm('Are you sure you want to delete this activity?')) return;
+
+        const { error } = await db.from('notices').delete().eq('id', parseInt(noticeId));
+        if (error) return this.showNotification(error.message, true);
+
+        this.showNotification('Activity deleted.');
+        this.loadNotices();
+      },
+
+async populateDonorForm(donorId = null) {
+  const form = document.getElementById('donorProfileForm');
+  form.reset();
+  this.elements.deleteDonorBtn.classList.add('hide');
+  document.getElementById('donorId').value = '';
+
+        if (donorId) {
+          // Admin editing someone else's profile
+          const { data } = await db.from('donors').select('*').eq('id', donorId).single();
+          if (data) {
+            form.elements.donorName.value = data.name || '';
+            form.elements.donorPhone.value = data.phone || '';
+            form.elements.donorBloodGroup.value = data.blood_group || '';
+            form.elements.donorLocation.value = data.location || '';
+            form.elements.donorAvailable.checked = data.available;
+            document.getElementById('donorId').value = donorId;
+            this.elements.deleteDonorBtn.classList.remove('hide');
+          }
+        } else if (this.state.currentUser && !this.state.isAdmin) {
+          // Regular user editing their own profile
+          const { data } = await db.from('donors').select('*').eq('user_id', this.state.currentUser.id).single();
+          if (data) {
+            form.elements.donorName.value = data.name || '';
+            form.elements.donorPhone.value = data.phone || '';
+            form.elements.donorBloodGroup.value = data.blood_group || '';
+            form.elements.donorLocation.value = data.location || '';
+            form.elements.donorAvailable.checked = data.available;
+            document.getElementById('donorId').value = data.id;
+            this.elements.deleteDonorBtn.classList.remove('hide');
+          } else {
+            form.elements.donorName.value = this.state.userProfile?.name || '';
+          }
+        }
+      },
+
+      changeMonth(delta) {
+        this.state.currentMonth.setMonth(this.state.currentMonth.getMonth() + delta);
+        // Prevent going before June 2017
+        if (this.state.currentMonth < new Date(2017, 5, 1)) {
+          this.state.currentMonth = new Date(2017, 5, 1);
+        }
+        // Prevent going beyond current month
+        const now = new Date();
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (this.state.currentMonth > currentMonthStart) {
+          this.state.currentMonth = currentMonthStart;
+        }
+        this.loadFundData();
+      },
+
+      // --- UTILITIES ---
+      showSection(sectionId) {
+        this.state.activeSection = sectionId;
+        document.querySelectorAll('.section').forEach(s => s.classList.add('hide'));
+        const section = document.getElementById(`${sectionId}Section`);
+        if (section) {
+          section.classList.remove('hide');
+          section.classList.add('fade-in');
+        }
+        this.updateActiveTab();
+        this.loadDataForActiveSection();
+      },
+
+      updateActiveTab() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          if (btn.dataset.section === this.state.activeSection) {
+            btn.classList.add('bg-emerald-100', 'border-2', 'border-emerald-500');
+            btn.classList.remove('bg-white');
+          } else {
+            btn.classList.remove('bg-emerald-100', 'border-2', 'border-emerald-500');
+            btn.classList.add('bg-white');
+          }
+        });
+      },
+
+      showModal(modalId) {
+        this.hideAllModals();
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          // Calculate scrollbar width
+          const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+          document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+          
+          modal.classList.remove('hide');
+          document.body.classList.add('modal-open');
+          
+          // Close on outside click
+          setTimeout(() => {
+            modal.addEventListener('click', (e) => {
+              if (e.target === modal) {
+                this.hideAllModals();
+              }
+            });
+          }, 0);
+        }
+      },
+
+      hideAllModals() {
+        document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hide'));
+        document.body.classList.remove('modal-open');
+        document.documentElement.style.setProperty('--scrollbar-width', '0px');
+      },
+
+      showNotification(message, isError = false) {
+        const el = this.elements.notification;
+        el.textContent = message;
+        el.className = isError ? 'error' : 'success';
+        el.classList.remove('hide');
+        setTimeout(() => el.classList.add('hide'), 3000);
+      },
+
+      async copyIncomeList() {
+        const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        const { data, error } = await db.from('fund').select('*').eq('month', monthKey).eq('type', 'income').order('timestamp', { ascending: true });
+
+        if (error || !data || data.length === 0) {
+          return this.showNotification('No collection data to copy', true);
+        }
+
+        // Get current date in Bangladesh time (UTC+6)
+        const now = new Date();
+        const bdTime = new Date(now.getTime() + (6 * 60 * 60 * 1000));
+        const monthName = bdTime.toLocaleString('en-US', { month: 'long' });
+        const date = bdTime.getDate();
+        
+        const dateHeader = `আজ ${monthName} এর ${date} তারিখ:\n\n`;
+        const collectionList = data.map((item, index) => `${index + 1}. ${item.name}- ${item.amount} tk`).join('\n');
+        
+        let text = dateHeader + collectionList;
+        
+        // Only add admin suffix if user is admin
+        if (this.state.isAdmin) {
+          text += '\n\nঅনেক ভাইরা বাকি, আমরা আল্লাহর জন্য নিয়াত করি দেওয়ার ভাইরা। এই কাজ গুলোতো আপনাদের সদাকার মাধ্যমে হচ্ছে আল্লাহর তৌফিকে। \n+880 1937-222273 - nogod \n+880 1515-214867 - bkash\n\nআমাদের ফান্ডের ওয়েবসাইট লিংকঃ eshoobodanrakhi.web.app';
+        } else {
+          text += '';
+        }
+
+        try {
+          await navigator.clipboard.writeText(text);
+          this.showNotification('Collection list copied to clipboard!');
+        } catch (err) {
+          this.showNotification('Failed to copy to clipboard', true);
+        }
+      },
+
+      async showCompleteHistory() {
+        this.showModal('completeHistoryModal');
+        const content = document.getElementById('completeHistoryContent');
+        const modeToggle = document.getElementById('historyModeToggle');
+        const isBn = localStorage.getItem('lang') === 'bn';
+        let isYearlyBrief = true;
+        modeToggle.textContent = isBn ? 'সংক্ষিপ্ত' : 'Yearly Brief';
+        content.innerHTML = '<div class="loader"></div>';
+
+        let data = [];
+        
+        try {
+          const { data: freshData, error } = await db.from('fund').select('*').order('month', { ascending: true }).order('timestamp', { ascending: true });
+          
+          if (error) throw error;
+          data = freshData;
+          
+          // Update cache
+          localStorage.setItem('allFundData', JSON.stringify(freshData));
+          this.state.allFundData = freshData;
+        } catch (err) {
+          console.log('Loading history from cache:', err);
+          // Use cached data
+          data = this.state.allFundData.length > 0 
+            ? this.state.allFundData 
+            : JSON.parse(localStorage.getItem('allFundData') || '[]');
+        }
+
+        if (!data || data.length === 0) {
+          content.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 2rem;">কোনো তথ্য নেই</div>';
+          return;
+        }
+
+        modeToggle.addEventListener('click', () => {
+          isYearlyBrief = !isYearlyBrief;
+          const isBn = localStorage.getItem('lang') === 'bn';
+          if (isYearlyBrief) {
+            modeToggle.textContent = isBn ? 'সংক্ষিপ্ত' : 'Yearly Brief';
+            modeToggle.classList.remove('bg-gray-600');
+            modeToggle.classList.add('bg-blue-600');
+          } else {
+            modeToggle.textContent = isBn ? 'বিস্তারিত' : 'Elaborate';
+            modeToggle.classList.remove('bg-blue-600');
+            modeToggle.classList.add('bg-gray-600');
+          }
+          renderHistory(isYearlyBrief);
+        });
+
+        const renderHistory = (isYearlyBrief) => {
+          // Group by month
+          const monthlyData = {};
+          data.forEach(entry => {
+            if (!monthlyData[entry.month]) {
+              monthlyData[entry.month] = { income: 0, expenses: [] };
+            }
+            if (entry.type === 'income') {
+              monthlyData[entry.month].income += entry.amount;
+            } else {
+              monthlyData[entry.month].expenses.push(entry);
+            }
+          });
+
+          // Build the history HTML
+          let html = '';
+          let runningBalance = 0;
+          const months = Object.keys(monthlyData).sort();
+          const currentYear = new Date().getFullYear();
+
+if (isYearlyBrief) {
+          // Calculate previous year's balance
+          const previousYearMonths = months.filter(m => parseInt(m.split('-')[0]) < currentYear);
+          previousYearMonths.forEach(month => {
+            const monthData = monthlyData[month];
+            runningBalance += monthData.income;
+            monthData.expenses.forEach(expense => {
+              runningBalance -= expense.amount;
+            });
+          });
+
+          if (previousYearMonths.length > 0) {
+            const lastYear = currentYear - 1;
+            html += `<div class="font-bold text-purple-700 mb-4">${lastYear} সালের শেষে অবশিষ্ট টাকা: ৳ ${runningBalance.toLocaleString()}</div>`;
+          }
+
+          html += `<div class="font-bold text-gray-800 mb-3">${currentYear} সাল:</div>`;
+
+          // Show only current year
+          const currentYearMonths = months.filter(m => parseInt(m.split('-')[0]) === currentYear);
+          const now = new Date();
+          const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          
+          currentYearMonths.forEach(month => {
+            const monthData = monthlyData[month];
+            const date = new Date(month + '-01');
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            const isCurrentMonth = month === currentMonthKey;
+
+            // For current month, show day + month
+            if (isCurrentMonth) {
+              const today = now.getDate();
+              const monthNameBn = date.toLocaleString('default', { month: 'long' });
+              html += `<div class="font-bold text-gray-700 mt-3 mb-1">${today} ${monthNameBn} পর্যন্ত:</div>`;
+            } else {
+              html += `<div class="font-bold text-gray-700 mt-3 mb-1">${monthName}:</div>`;
+            }
+
+            // For current month, show expenses first, then income
+            if (isCurrentMonth) {
+              if (monthData.expenses.length > 0) {
+                monthData.expenses.forEach(expense => {
+                  runningBalance -= expense.amount;
+                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}</div>`;
+                });
+                html += `<div class="text-blue-600 ml-2 font-semibold">অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}</div>`;
+              }
+
+              if (monthData.income > 0) {
+                runningBalance += monthData.income;
+                html += `<div class="text-green-700 ml-2">কালেকশন: ৳ ${monthData.income.toLocaleString()}</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">মোট হয়: ৳ ${runningBalance.toLocaleString()}</div>`;
+              }
+            } else {
+              // For other months, show income first, then expenses (normal order)
+              if (monthData.income > 0) {
+                runningBalance += monthData.income;
+                html += `<div class="text-green-700 ml-2">কালেকশন: ৳ ${monthData.income.toLocaleString()}</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">মোট হয়: ৳ ${runningBalance.toLocaleString()}</div>`;
+              }
+
+              if (monthData.expenses.length > 0) {
+                monthData.expenses.forEach(expense => {
+                  runningBalance -= expense.amount;
+                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}</div>`;
+                });
+                html += `<div class="text-blue-600 ml-2 font-semibold">অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}</div>`;
+              }
+            }
+          });
+          } else {
+            // Elaborated mode - show all history
+            html += `<div class="font-bold text-gray-800 mb-3">সম্পূর্ণ তথ্য:</div>`;
+
+            months.forEach(month => {
+              const monthData = monthlyData[month];
+              const date = new Date(month + '-01');
+              const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+              html += `<div class="font-bold text-gray-700 mt-3 mb-1">${monthName}:</div>`;
+
+              if (monthData.income > 0) {
+                runningBalance += monthData.income;
+                html += `<div class="text-green-700 ml-2">কালেকশন: ৳ ${monthData.income.toLocaleString()}</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">মোট হয়: ৳ ${runningBalance.toLocaleString()}</div>`;
+              }
+
+              if (monthData.expenses.length > 0) {
+                monthData.expenses.forEach(expense => {
+                  runningBalance -= expense.amount;
+                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}</div>`;
+                });
+                html += `<div class="text-blue-600 ml-2 font-semibold">অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}</div>`;
+              }
+            });
+          }
+
+          content.innerHTML = html || '<div class="text-gray-400">কোনো তথ্য নেই</div>';
+        };
+
+        // Initial render (yearly brief by default)
+        renderHistory(isYearlyBrief);
+      },
+
+      async copyCompleteHistory() {
+        const modeToggle = document.getElementById('historyModeToggle');
+        const isBn = localStorage.getItem('lang') === 'bn';
+        const isYearlyBrief = modeToggle.textContent === (isBn ? 'সংক্ষিপ্ত' : 'Yearly Brief');
+
+        let data = [];
+        
+        try {
+          const { data: freshData, error } = await db.from('fund').select('*').order('month', { ascending: true }).order('timestamp', { ascending: true });
+          
+          if (error) throw error;
+          data = freshData;
+        } catch (err) {
+          console.log('Copying from cache:', err);
+          // Use cached data
+          data = this.state.allFundData.length > 0 
+            ? this.state.allFundData 
+            : JSON.parse(localStorage.getItem('allFundData') || '[]');
+        }
+
+        if (!data || data.length === 0) {
+          return this.showNotification('No history data to copy', true);
+        }
+
+        // Group by month
+        const monthlyData = {};
+        data.forEach(entry => {
+          if (!monthlyData[entry.month]) {
+            monthlyData[entry.month] = { income: 0, expenses: [] };
+          }
+          if (entry.type === 'income') {
+            monthlyData[entry.month].income += entry.amount;
+          } else {
+            monthlyData[entry.month].expenses.push(entry);
+          }
+        });
+
+        // Build the text
+        let text = '';
+        let runningBalance = 0;
+        const months = Object.keys(monthlyData).sort();
+        const currentYear = new Date().getFullYear();
+
+if (isYearlyBrief) {
+          // Calculate previous year's balance
+          const previousYearMonths = months.filter(m => parseInt(m.split('-')[0]) < currentYear);
+          previousYearMonths.forEach(month => {
+            const monthData = monthlyData[month];
+            runningBalance += monthData.income;
+            monthData.expenses.forEach(expense => {
+              runningBalance -= expense.amount;
+            });
+          });
+
+          if (previousYearMonths.length > 0) {
+            const lastYear = currentYear - 1;
+            text += `${lastYear} সালের শেষে অবশিষ্ট টাকা: ৳ ${runningBalance.toLocaleString()}\n\n`;
+          }
+
+          text += `${currentYear} সাল:\n\n`;
+
+          // Show only current year
+          const currentYearMonths = months.filter(m => parseInt(m.split('-')[0]) === currentYear);
+          const now = new Date();
+          const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          
+          currentYearMonths.forEach(month => {
+            const monthData = monthlyData[month];
+            const date = new Date(month + '-01');
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            const isCurrentMonth = month === currentMonthKey;
+
+            // For current month, show day + month
+            if (isCurrentMonth) {
+              const today = now.getDate();
+              const monthNameBn = date.toLocaleString('default', { month: 'long' });
+              text += `${today} ${monthNameBn} পর্যন্ত:\n`;
+            } else {
+              text += `${monthName}:\n`;
+            }
+
+            // For current month, show expenses first, then income
+            if (isCurrentMonth) {
+              if (monthData.expenses.length > 0) {
+                monthData.expenses.forEach(expense => {
+                  runningBalance -= expense.amount;
+                  text += `সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}\n`;
+                });
+                text += `অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}\n`;
+              }
+
+              if (monthData.income > 0) {
+                runningBalance += monthData.income;
+                text += `কালেকশন: ৳ ${monthData.income.toLocaleString()}\n`;
+                text += `মোট হয়: ৳ ${runningBalance.toLocaleString()}\n`;
+              }
+            } else {
+              // For other months, show income first, then expenses (normal order)
+              if (monthData.income > 0) {
+                runningBalance += monthData.income;
+                text += `কালেকশন: ৳ ${monthData.income.toLocaleString()}\n`;
+                text += `মোট হয়: ৳ ${runningBalance.toLocaleString()}\n`;
+              }
+
+              if (monthData.expenses.length > 0) {
+                monthData.expenses.forEach(expense => {
+                  runningBalance -= expense.amount;
+                  text += `সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}\n`;
+                });
+                text += `অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}\n`;
+              }
+            }
+            
+            text += `\n`;
+          });
+        } else {
+          // Elaborated mode - show all history
+          text += `সম্পূর্ণ তথ্য:\n\n`;
+
+          months.forEach(month => {
+            const monthData = monthlyData[month];
+            const date = new Date(month + '-01');
+            const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            text += `${monthName}:\n`;
+
+            if (monthData.income > 0) {
+              runningBalance += monthData.income;
+              text += `কালেকশন: ৳ ${monthData.income.toLocaleString()}\n`;
+              text += `মোট হয়: ৳ ${runningBalance.toLocaleString()}\n`;
+            }
+
+            if (monthData.expenses.length > 0) {
+              monthData.expenses.forEach(expense => {
+                runningBalance -= expense.amount;
+                text += `সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}\n`;
+              });
+              text += `অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}\n`;
+            }
+            
+            text += `\n`;
+          });
+        }
+
+        try {
+          await navigator.clipboard.writeText(text);
+          this.showNotification('Complete history copied to clipboard!');
+        } catch (err) {
+          this.showNotification('Failed to copy to clipboard', true);
+        }
+      },
+
+      async refreshApp() {
+        this.showNotification('Refreshing app...');
+        
+        // Clear service worker cache
+        if ('serviceWorker' in navigator && 'caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        
+        // Reload the page
+        window.location.reload(true);
+      },
+
+      registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/serviceWorker.js')
+            .then(registration => {
+              console.log('Service Worker registered successfully:', registration.scope);
+            })
+            .catch(error => {
+              console.log('Service Worker registration failed:', error);
+            });
+        }
+      },
+      updateMyProfileButtonText() {
+        if (!this.state.isAdmin && this.state.currentUser) {
+          const isBn = localStorage.getItem('lang') === 'bn';
+          this.elements.myDonorBtn.textContent = isBn ? 'আমার প্রোফাইল' : 'My Profile';
+        }
+      },
+
+            shuffleDonors(array) {
+        // Fisher-Yates shuffle algorithm
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      },
+
+setupScrollBehavior() {
+        const topBar = document.querySelector('.bg-gradient-to-r');
+        let lastScrollTop = 0;
+        const topBarHeight = topBar.offsetHeight;
+        let currentTranslate = 0;
+        
+        // Create placeholder for blood filter
+        const bloodFilterContainer = document.getElementById('bloodFilterContainer');
+        const placeholder = document.createElement('div');
+        placeholder.id = 'bloodFilterPlaceholder';
+        if (bloodFilterContainer) {
+          bloodFilterContainer.parentNode.insertBefore(placeholder, bloodFilterContainer.nextSibling);
+        }
+        
+        // Store original position of blood filter
+        let bloodFilterOriginalTop = 0;
+        
+        // Calculate original position on load and section change
+        const calculateFilterPosition = () => {
+          if (bloodFilterContainer && this.state.activeSection === 'blood') {
+            bloodFilterContainer.classList.remove('sticky');
+            placeholder.classList.remove('active');
+            setTimeout(() => {
+              bloodFilterOriginalTop = bloodFilterContainer.getBoundingClientRect().top + window.pageYOffset;
+            }, 100);
+          }
+        };
+        
+        // Calculate initial position
+        setTimeout(calculateFilterPosition, 500);
+        
+        // Recalculate when switching to blood section
+        const originalShowSection = this.showSection.bind(this);
+        this.showSection = function(sectionId) {
+          originalShowSection(sectionId);
+          if (sectionId === 'blood') {
+            setTimeout(calculateFilterPosition, 300);
+          }
+        };
+        
+        window.addEventListener('scroll', () => {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const scrollDelta = scrollTop - lastScrollTop;
+          
+          // Check if we're in blood section
+          const isBloodSection = this.state.activeSection === 'blood';
+          
+          if (isBloodSection) {
+            // Calculate if filter should be sticky
+            const shouldBeSticky = scrollTop >= bloodFilterOriginalTop;
+            
+            if (shouldBeSticky) {
+              // Filter is sticky
+              if (bloodFilterContainer) {
+                const filterHeight = bloodFilterContainer.offsetHeight;
+                bloodFilterContainer.classList.add('sticky');
+                placeholder.classList.add('active');
+                placeholder.style.height = `${filterHeight}px`;
+              }
+            } else {
+              // Filter is back to original position
+              if (bloodFilterContainer) {
+                bloodFilterContainer.classList.remove('sticky');
+                placeholder.classList.remove('active');
+              }
+            }
+            
+            // Topbar scrolls naturally - remove any transform
+            topBar.style.transform = '';
+            topBar.style.position = 'relative';
+          } else {
+            // Other sections: normal topbar sticky behavior
+            topBar.style.position = '';
+            currentTranslate -= scrollDelta;
+            currentTranslate = Math.max(-topBarHeight, Math.min(0, currentTranslate));
+            topBar.style.transform = `translateY(${currentTranslate}px)`;
+            
+            // Remove sticky from filter if present
+            if (bloodFilterContainer) {
+              bloodFilterContainer.classList.remove('sticky');
+              placeholder.classList.remove('active');
+            }
+          }
+          
+          lastScrollTop = scrollTop;
+        }, { passive: true });
+      },
+
+      setupLanguageToggle() {
+        const toggle = document.getElementById('bengaliModeToggle');
+        const appTitle = document.getElementById('appTitle');
+        const elementsToTranslate = {
+          // --- Navigation / Tabs ---
+          fund: { en: 'Fund History', bn: 'ফান্ড' },
+          notices: { en: 'Activities', bn: 'কার্যক্রম' },
+          blood: { en: 'Blood Donors', bn: 'রক্তদান' },
+
+          // --- Buttons ---
+          income: { en: 'Collection', bn: 'কালেকশন' },
+          expense: { en: 'Sadakah', bn: 'সাদাকাহ' },
+          copyList: { en: '<img src="svgs/icon-copy.svg"> Copy List', bn: '<img src="svgs/icon-copy.svg"> তালিকা কপি করুন' },
+          addIncome: { en: '+ Collection', bn: '+ কালেকশন' },
+          addExpense: { en: '+ Sadakah', bn: '+ সাদাকাহ' },
+          viewOverview: { en: '<img src="svgs/overview-icon.svg" style="width: 20px; height: 20px; display: inline;"> View Yearly Overview', bn: '<img src="svgs/overview-icon.svg" style="width: 20px; height: 20px; display: inline;"> এই বছরের বিবরণ' },
+          myProfile: { en: 'My Profile', bn: 'আমার প্রোফাইল' },
+          postActivity: { en: 'Post Activity', bn: 'কার্যক্রম পোস্ট করুন' },
+          save: { en: 'Save', bn: 'সেভ করুন' },
+          cancel: { en: 'Cancel', bn: 'বাতিল করুন' },
+          delete: { en: 'Delete', bn: 'ডিলিট করুন' },
+          close: { en: 'Close', bn: 'বন্ধ করুন' },
+
+          // --- Authentication ---
+          login: { en: 'Login', bn: 'লগইন করুন' },
+          logout: { en: 'Logout', bn: 'লগআউট করুন' },
+          signup: { en: 'Sign Up', bn: 'সাইন-আপ করুন' },
+          settings: { en: 'Settings', bn: 'সেটিংস' },
+          email: { en: 'Email', bn: 'ইমেইল' },
+          password: { en: 'Password', bn: 'পাসওয়ার্ড' },
+          confirmPassword: { en: 'Confirm Password', bn: 'পাসওয়ার্ড কনফার্ম করুন' },
+          fullName: { en: 'Full Name', bn: 'সম্পূর্ন নাম' },
+          dontHaveAccount: { en: "Don't have an account? Sign up", bn: 'অ্যাকাউন্ট নেই? সাইন-আপ করুন' },
+          alreadyHaveAccount: { en: 'Already have an account? Login', bn: 'অ্যাকাউন্ট আছে? লগইন করুন' },
+          forgotPassword: { en: 'Forgot Password?', bn: 'পাসওয়ার্ড ভুলে গেছেন?' },
+          forgotPasswordTitle: { en: 'Forgot Password', bn: 'পাসওয়ার্ড ভুলে গেছেন' },
+          forgotPasswordDesc: { en: "Enter your email address and we'll send you a password reset link.", bn: 'আপনার ইমেইল লিখুন, আমরা পাসওয়ার্ড রিসেট লিঙ্ক পাঠাবো।' },
+          sendResetLink: { en: 'Send Reset Link', bn: 'রিসেট লিঙ্ক পাঠান' },
+          backToLogin: { en: 'Back to Login', bn: 'লগইনে ফিরে যান' },
+
+          // --- Donor Form ---
+          donorTitle: { en: 'My Donor Profile', bn: 'আমার ডোনার প্রোফাইল' },
+          phoneNumber: { en: 'Phone Number', bn: 'ফোন নাম্বার' },
+          bloodGroup: { en: 'Select Blood Group', bn: 'রক্তের গ্রুপ সিলেক্ট করুন' },
+          location: { en: 'Location', bn: 'লোকেশন' },
+          available: { en: 'Available to donate', bn: 'অ্যাভেইলেবল' },
+          notAvailable: { en: 'Not Available', bn: 'অ্যাভেইলেবল নয়' },
+          allGroups: { en: 'All Blood Groups', bn: 'সকল রক্তের গ্রুপ' },
+
+          // --- Modals ---
+          loginModal: { en: 'Login', bn: 'লগইন করুন' },
+          signupModal: { en: 'Sign Up', bn: 'সাইন-আপ করুন' },
+          addIncomeModal: { en: 'Add Collection', bn: 'কালেকশন যুক্ত করুন' },
+          addExpenseModal: { en: 'Add Sadakah', bn: 'সাদাকাহ যুক্ত করুন' },
+          donorProfileModal: { en: 'My Donor Profile', bn: 'আমার ডোনার প্রোফাইল' },
+          postNoticeModal: { en: 'Post Activity', bn: 'কার্যক্রম পোস্ট করুন' },
+          yearlyChartModal: { en: 'Yearly Overview', bn: 'বাৎসরিক তথ্য' },
+          completeHistoryModal: { en: 'Complete Fund History', bn: 'ফান্ডের সম্পুর্ণ তথ্য' },
+          optionalImage: { en: 'Optional Image:', bn: 'ছবি যুক্ত করুন (অপশনাল)' },
+
+          // --- Chart Labels ---
+          incomeChart: { en: 'Collection', bn: 'কালেকশন' },
+          expenseChart: { en: 'Sadakah', bn: 'সাদাকাহ' },
+          totalFund: { en: 'Total Fund', bn: 'ফান্ডে মোট অর্থ' },
+
+          // --- Notices ---
+          noActivities: { en: 'No activities yet', bn: 'এখনো কোনো কার্যক্রম নেই' },
+          postedBy: { en: 'Posted by', bn: 'পোস্টটি করেছেন' },
+
+          // --- Fund / History Section ---
+          totalIncome: { en: 'Total Collection:', bn: 'মোট কালেকশন' },
+          totalExpense: { en: 'Total Sadakah:', bn: 'মোট সাদাকাহ' },
+          monthlyBalance: { en: 'Monthly economy:', bn: 'মাসিক ইকোনমি' },
+          netWorth: { en: 'Net worth at month end:', bn: 'মাস শেষে অবশিষ্ট অর্থ:' },
+          copyHistory: { en: '<img src="svgs/icon-copy.svg"> Copy', bn: '<img src="svgs/icon-copy.svg"> কপি করুন' },
+          noEntries: { en: 'No entries found', bn: 'কোনো এন্ট্রি নেই' },
+          noDonors: { en: 'No donors found', bn: 'কোনো দাতা নেই' },
+          noHistory: { en: 'No fund history available', bn: 'ফান্ডের তথ্য অ্যাভেইলেবল নেই' },
+          noIncomeEntries: { en: 'No Collection entries', bn: 'কোনো এন্ট্রি নেই' },
+          noExpenseEntries: { en: 'No Sadakah entries', bn: 'কোনো এন্ট্রি নেই' },
+          addDonorProfile: { en: '+ Add Donor Profile', bn: '+ ডোনার প্রোফাইল যুক্ত করুন' },
+
+          // --- Settings ---
+          bengaliMode: { en: 'Bengali Mode', bn: 'বাংলা করুন' },
+          enable: { en: 'Enable', bn: 'চালু করুন' },
+        };
+
+
+
+        const updateLanguage = (isBn) => {
+          document.querySelector('[data-section="fund"] div:last-child').textContent = isBn ? elementsToTranslate.fund.bn : elementsToTranslate.fund.en;
+          document.querySelector('[data-section="notices"] div:last-child').textContent = isBn ? elementsToTranslate.notices.bn : elementsToTranslate.notices.en;
+          document.querySelector('[data-section="blood"] div:last-child').textContent = isBn ? elementsToTranslate.blood.bn : elementsToTranslate.blood.en;
+          document.getElementById('copyIncomeBtn').innerHTML = isBn ? '<img src="svgs/icon-copy.svg" style="display: inline;"> তালিকা কপি করুন' : '<img src="svgs/icon-copy.svg" style="display: inline;"> Copy List';
+          document.getElementById('showYearlyChartBtn').innerHTML = isBn ? '<img src="svgs/overview-icon.svg" style="width: 20px; height: 20px; display: inline;"> এই বছরের বিবরণ' : '<img src="svgs/overview-icon.svg" style="width: 20px; height: 20px; display: inline;"> View Yearly Overview';
+          document.getElementById('copyHistoryBtn').innerHTML = isBn ? '<img src="svgs/icon-copy.svg" style="display: inline;"> কপি করুন' : '<img src="svgs/icon-copy.svg" style="display: inline;"> Copy';
+          appTitle.innerHTML = isBn ? 'এসো অবদান রাখি<br><span class="text-sm opacity-90">Esho Obodan Rakhi</span>' : 'Esho Obodan Rakhi<br><span class="text-sm opacity-90">এসো অবদান রাখি</span>';
+
+          // Fund History Section Headers
+          document.querySelector('#fundSection h3.text-green-700').textContent = isBn ? elementsToTranslate.income.bn : elementsToTranslate.income.en;
+          
+          // Donation info text
+          const donationInfoText = document.getElementById('donationInfoText');
+          if (donationInfoText) {
+            donationInfoText.textContent = isBn ? 'এখানে সাদাকাহ করে আপনিও অবদান রাখতে পারেনঃ' : 'You can also contribute by donating to:';
+          }
+          const donationNumbers = donationInfoText?.nextElementSibling?.querySelectorAll('div');
+          if (donationNumbers && donationNumbers.length >= 2) {
+            donationNumbers[0].textContent = isBn ? '+880 1937-222273 - নগদ' : '+880 1937-222273 - nogod';
+            donationNumbers[1].textContent = isBn ? '+880 1515-214867 - বিকাশ' : '+880 1515-214867 - bkash';
+          }
+          document.querySelector('#fundSection h3.text-red-700').textContent = isBn ? elementsToTranslate.expense.bn : elementsToTranslate.expense.en;
+          document.querySelector('#totalIncome').previousElementSibling.textContent = isBn ? elementsToTranslate.totalIncome.bn : elementsToTranslate.totalIncome.en;
+          document.querySelector('#totalExpense').previousElementSibling.textContent = isBn ? elementsToTranslate.totalExpense.bn : elementsToTranslate.totalExpense.en;
+          document.querySelector('#monthlyBalance').previousElementSibling.textContent = isBn ? elementsToTranslate.monthlyBalance.bn : elementsToTranslate.monthlyBalance.en;
+          document.querySelector('#netWorth').previousElementSibling.textContent = isBn ? elementsToTranslate.netWorth.bn : elementsToTranslate.netWorth.en;
+
+          // Activities Section
+          document.querySelector('#noticesSection h2').textContent = isBn ? 'কার্যক্রম সমূহ' : 'Fund Activities';
+          document.getElementById('postNoticeBtn').textContent = isBn ? elementsToTranslate.postActivity.bn : elementsToTranslate.postActivity.en;
+
+          // Blood Donors Section
+          document.querySelector('#bloodSection h2').textContent = isBn ? elementsToTranslate.blood.bn : elementsToTranslate.blood.en;
+          const donorPrompt = document.getElementById('donorPromptMessage');
+          if (donorPrompt) {
+            donorPrompt.textContent = isBn ? 'ব্লাড ডোনার হওয়ার জন্য "আমার প্রোফাইল" এ ক্লিক করুন এবং আপনার ফোন নম্বর ও লোকেশন যুক্ত করুন।' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
+          }
+          // Update My Profile button
+          App.updateMyProfileButtonText();
+
+          // Donor Profile Modal
+          document.querySelector('#donorProfileModal h2').textContent = isBn ? elementsToTranslate.donorProfileModal.bn : elementsToTranslate.donorProfileModal.en;
+          document.getElementById('donorName').placeholder = isBn ? elementsToTranslate.fullName.bn : elementsToTranslate.fullName.en;
+          document.getElementById('donorPhone').placeholder = isBn ? elementsToTranslate.phoneNumber.bn : elementsToTranslate.phoneNumber.en;
+          document.querySelector('#donorBloodGroup option[value=""]').textContent = isBn ? elementsToTranslate.bloodGroup.bn : elementsToTranslate.bloodGroup.en;
+          document.getElementById('donorLocation').placeholder = isBn ? elementsToTranslate.location.bn : elementsToTranslate.location.en;
+          document.querySelector('#donorProfileForm label span').textContent = isBn ? elementsToTranslate.available.bn : elementsToTranslate.available.en;
+          
+          // Update highlight checkbox labels
+          document.querySelector('#addIncomeForm label span').textContent = isBn ? 'এই এন্ট্রি হাইলাইট করুন' : 'Highlight this entry';
+          document.querySelector('#addExpenseForm label span').textContent = isBn ? 'এই এন্ট্রি হাইলাইট করুন' : 'Highlight this entry';
+          document.querySelector('#donorProfileForm button[type="submit"]').textContent = isBn ? elementsToTranslate.save.bn : elementsToTranslate.save.en;
+
+          // Blood Filter
+          document.querySelector('#bloodFilter option[value="all"]').textContent = isBn ? elementsToTranslate.allGroups.bn : elementsToTranslate.allGroups.en;
+          document.getElementById('bloodSearch').placeholder = isBn ? 'ডোনার খুঁজুন...' : 'Search donors...';
+          document.getElementById('deleteDonorBtn').textContent = isBn ? elementsToTranslate.delete.bn : elementsToTranslate.delete.en;
+
+          // Update donor availability text in rendered list
+          App.filterAndRenderDonors();
+          document.querySelector('#donorProfileModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          // Add Income/Expense Modals
+          document.querySelector('#addIncomeModal h2').textContent = isBn ? 'কালেকশন যুক্ত করুন' : 'Add Collection';
+          document.getElementById('addIncomeBtn').textContent = isBn ? '+কালেকশন' : '+Collection';
+          document.getElementById('incomeName').placeholder = isBn ? 'দাতার নাম' : 'Donor Name';
+          document.getElementById('incomeAmount').placeholder = isBn ? 'পরিমাণ (৳)' : 'Amount (৳)';
+          document.querySelector('#addIncomeForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
+          document.querySelector('#addIncomeModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          document.querySelector('#addExpenseModal h2').textContent = isBn ? 'সাদাকাহ যুক্ত করুন' : 'Add Sadakah';
+          document.getElementById('addExpenseBtn').textContent = isBn ? '+সাদাকাহ' : '+Sadakah';
+          document.getElementById('expenseDesc').placeholder = isBn ? 'বর্ণনা' : 'Description';
+          document.getElementById('expenseAmount').placeholder = isBn ? 'পরিমাণ (৳)' : 'Amount (৳)';
+          document.querySelector('#addExpenseForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
+          document.querySelector('#addExpenseModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          // Post Notice Modal (only update if not in edit mode)
+          if (!document.getElementById('noticeId').value) {
+            document.querySelector('#postNoticeModal h2').textContent = isBn ? elementsToTranslate.postNoticeModal.bn : elementsToTranslate.postNoticeModal.en;
+            document.querySelector('#postNoticeForm button[type="submit"]').textContent = isBn ? 'পোস্ট করুন' : 'Post';
+          }
+          document.getElementById('noticeText').placeholder = isBn ? 'কী ঘটছে?' : "What's happening?";
+          document.querySelector('#postNoticeModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          // Yearly Chart Modal
+          document.querySelector('#yearlyChartModal h2').textContent = isBn ? elementsToTranslate.yearlyChartModal.bn : elementsToTranslate.yearlyChartModal.en;
+          document.querySelector('#yearlyChartModal [data-close-modal]').textContent = isBn ? elementsToTranslate.close.bn : elementsToTranslate.close.en;
+
+          // Top Login Button
+          document.getElementById('loginTopBtn').textContent = isBn ? elementsToTranslate.login.bn : elementsToTranslate.login.en;
+
+          // Settings Modal
+          document.querySelector('#settingsModal h2').textContent = isBn ? 'সেটিংস' : 'Settings';
+          document.querySelector('#settingsModal .flex.items-center.justify-between span').textContent = isBn ? elementsToTranslate.bengaliMode.bn : elementsToTranslate.bengaliMode.en;
+          document.querySelector('#settingsModal label span').textContent = isBn ? elementsToTranslate.enable.bn : elementsToTranslate.enable.en;
+          document.getElementById('loginBtn').textContent = isBn ? elementsToTranslate.login.bn : elementsToTranslate.login.en;
+          document.getElementById('logoutBtn').textContent = isBn ? elementsToTranslate.logout.bn : elementsToTranslate.logout.en;
+          document.querySelector('#settingsModal [data-close-modal]').textContent = isBn ? elementsToTranslate.close.bn : elementsToTranslate.close.en;
+
+          // Login Modal
+          document.querySelector('#loginModal h2').textContent = isBn ? elementsToTranslate.loginModal.bn : elementsToTranslate.loginModal.en;
+          document.getElementById('loginEmail').placeholder = isBn ? elementsToTranslate.email.bn : elementsToTranslate.email.en;
+          document.getElementById('loginPassword').placeholder = isBn ? elementsToTranslate.password.bn : elementsToTranslate.password.en;
+          document.querySelector('#loginForm button[type="submit"]').textContent = isBn ? elementsToTranslate.login.bn : elementsToTranslate.login.en;
+          document.getElementById('showSignupBtn').textContent = isBn ? elementsToTranslate.dontHaveAccount.bn : elementsToTranslate.dontHaveAccount.en;
+          document.querySelector('#loginModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          // Signup Modal
+          document.querySelector('#signupModal h2').textContent = isBn ? elementsToTranslate.signupModal.bn : elementsToTranslate.signupModal.en;
+          document.getElementById('signupName').placeholder = isBn ? elementsToTranslate.fullName.bn : elementsToTranslate.fullName.en;
+          document.getElementById('signupEmail').placeholder = isBn ? elementsToTranslate.email.bn : elementsToTranslate.email.en;
+          document.getElementById('signupPassword').placeholder = isBn ? elementsToTranslate.password.bn : elementsToTranslate.password.en;
+          document.getElementById('signupConfirmPassword').placeholder = isBn ? elementsToTranslate.confirmPassword.bn : elementsToTranslate.confirmPassword.en;
+          document.querySelector('#signupForm button[type="submit"]').textContent = isBn ? elementsToTranslate.signup.bn : elementsToTranslate.signup.en;
+          document.getElementById('showLoginBtn').textContent = isBn ? elementsToTranslate.alreadyHaveAccount.bn : elementsToTranslate.alreadyHaveAccount.en;
+          document.querySelector('#signupModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          // Forgot Password Modal
+          document.getElementById('forgotPasswordBtn').textContent = isBn ? elementsToTranslate.forgotPassword.bn : elementsToTranslate.forgotPassword.en;
+          document.querySelector('#forgotPasswordModal h2').textContent = isBn ? elementsToTranslate.forgotPasswordTitle.bn : elementsToTranslate.forgotPasswordTitle.en;
+          document.querySelector('#forgotPasswordModal p').textContent = isBn ? elementsToTranslate.forgotPasswordDesc.bn : elementsToTranslate.forgotPasswordDesc.en;
+          document.getElementById('forgotEmail').placeholder = isBn ? elementsToTranslate.email.bn : elementsToTranslate.email.en;
+          document.querySelector('#forgotPasswordForm button[type="submit"]').textContent = isBn ? elementsToTranslate.sendResetLink.bn : elementsToTranslate.sendResetLink.en;
+          document.getElementById('backToLoginBtn').textContent = isBn ? elementsToTranslate.backToLogin.bn : elementsToTranslate.backToLogin.en;
+          document.querySelector('#forgotPasswordModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
+
+          // Complete History Modal
+          document.querySelector('#completeHistoryModal [data-close-modal]').textContent = isBn ? elementsToTranslate.close.bn : elementsToTranslate.close.en;
+        };
+
+        const savedLang = localStorage.getItem('lang') || 'en';
+        const isBn = savedLang === 'bn';
+        toggle.checked = isBn;
+        updateLanguage(isBn);
+
+
+        toggle.addEventListener('change', () => {
+          const newLang = toggle.checked ? 'bn' : 'en';
+          localStorage.setItem('lang', newLang);
+          updateLanguage(toggle.checked);
+        });
+      },
+    };
+
+    // Start the application once the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+
 </html>
+
+<!-- Manifest.json:
+
+{
+  "id": "com.eor.app",
+  "name": "Esho Obodan Rakhi - Community Fund & Blood Donation",
+  "short_name": "EOR Fund",
+  "description": "Community fund management and blood donor directory for Esho Obodan Rakhi",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait",
+  "background_color": "#10b981",
+  "theme_color": "#059669",
+  "categories": ["finance", "health", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-app.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-app.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-app.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%23f0fdf4'/%3E%3Crect y='0' width='540' height='80' fill='%2310b981'/%3E%3Ctext x='20' y='45' font-size='24' fill='white' font-family='system-ui' font-weight='bold'%3EEsho Obodan Rakhi%3C/text%3E%3Ctext x='20' y='65' font-size='14' fill='white' opacity='0.9' font-family='system-ui'%3ECommunity Fund Management%3C/text%3E%3C/svg%3E",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Home screen showing fund overview"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Fund History",
+      "short_name": "Fund",
+      "description": "View fund collection and expenses",
+      "url": "/?section=fund",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%2310b981'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E৳%3C/text%3E%3C/svg%3E",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Blood Donors",
+      "short_name": "Donors",
+      "description": "Find blood donors",
+      "url": "/?section=blood",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%23ef4444'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E🩸%3C/text%3E%3C/svg%3E",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Activities",
+      "short_name": "Activities",
+      "description": "View community activities",
+      "url": "/?section=notices",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%233b82f6'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E📢%3C/text%3E%3C/svg%3E",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
+
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--serviceWorker.js
+
+const CACHE_NAME = 'esho-obodan-rakhi-v1';
+const urlsToCache = [
+  '/',
+  '/bEOR.html',
+  '/svgs/icon-settings.svg',
+  '/svgs/icon-fund.svg',
+  '/svgs/announcement-icon.svg',
+  '/svgs/blood-donation-icon.svg',
+  '/svgs/icon-previous.svg',
+  '/svgs/icon-next.svg',
+  '/svgs/icon-copy.svg',
+  '/svgs/icon-location.svg',
+  '/svgs/icon-call.svg',
+  '/svgs/icon-edit.svg',
+  '/svgs/icon-delete.svg',
+  '/svgs/icon-bump.svg',
+  '/svgs/icon-eye.svg',
+  '/svgs/icon-eye-slash.svg',
+  '/svgs/overview-icon.svg',
+  'https://cdn.tailwindcss.com',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+];
+
+// Install event - cache resources
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Cache opened');
+        return cache.addAll(urlsToCache.map(url => {
+          return new Request(url, { cache: 'reload' });
+        })).catch(err => {
+          console.log('Cache addAll error:', err);
+        });
+      })
+  );
+  self.skipWaiting();
+});
+
+// Fetch event - serve from cache, fallback to network
+self.addEventListener('fetch', event => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin) && 
+      !event.request.url.includes('cdn.tailwindcss.com') &&
+      !event.request.url.includes('cdn.jsdelivr.net') &&
+      !event.request.url.includes('supabase.co')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+
+        // Clone the request
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then(response => {
+          // Check if valid response
+          if (!response || response.status !== 200 || response.type === 'error') {
+            return response;
+          }
+
+          // Clone the response
+          const responseToCache = response.clone();
+
+          // Don't cache Supabase API calls
+          if (!event.request.url.includes('supabase.co/rest') && 
+              !event.request.url.includes('supabase.co/auth')) {
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+          }
+
+          return response;
+        }).catch(() => {
+          // If both cache and network fail, show offline page
+          return caches.match('/bEOR.html');
+        });
+      })
+  );
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Background sync for offline data
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-data') {
+    event.waitUntil(syncData());
+  }
+});
+
+async function syncData() {
+  // This will be called when connection is restored
+  console.log('Background sync triggered');
+  // You can add logic here to sync offline data with Supabase
+}
+
+// Push notification support (for future use)
+self.addEventListener('push', event => {
+  const options = {
+    body: event.data ? event.data.text() : 'New update available',
+    icon: '/icon-192.png',
+    badge: '/badge-72.png',
+    vibrate: [200, 100, 200]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('Esho Obodan Rakhi', options)
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow('/')
+  );
+});
+
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+================================================================================
+                        SUPABASE SETUP DOCUMENTATION
+================================================================================
+
+PROJECT DETAILS:
+- Project Name: Community Fund & Blood Donation
+- Database: PostgreSQL (Supabase)
+- Storage: Supabase Storage (for image uploads)
+- Authentication: Supabase Auth
+
+================================================================================
+                            DATABASE TABLES
+================================================================================
+
+TABLE 1: users
+Columns:
+  - id (UUID, PRIMARY KEY) - References auth.users(id) ON DELETE CASCADE
+  - name (TEXT, NOT NULL)
+  - role (TEXT, DEFAULT 'user') - Values: 'user' or 'admin'
+  - created_at (TIMESTAMP, DEFAULT now())
+
+RLS Enabled: YES
+Policies:
+  1. SELECT - "Users can read own profile" - authenticated - auth.uid() = id
+  2. INSERT - "Users can create their own profile" - public - withcheck= true
+---
+
+TABLE 2: fund
+Columns:
+  - id (BIGSERIAL, PRIMARY KEY)
+  - month (TEXT, NOT NULL) - Format: "YYYY-MM" (e.g., "2017-06")
+  - type (TEXT, NOT NULL) - Values: 'income' or 'expense'
+  - name (TEXT) - Name of donor (for income entries)
+  - description (TEXT) - Description (for expense entries)
+  - amount (DECIMAL(10, 2), NOT NULL) - Amount in local currency
+  - highlighted (BOOLEAN, DEFAULT false) - If true, entry text displays in red
+  - timestamp (TIMESTAMP, DEFAULT now())
+  - updated_by (UUID) - References auth.users(id)
+
+RLS Enabled: YES
+Policies:
+  1. SELECT - "Everyone can see fund" - public - (leave empty or true)
+  2. INSERT - "Only admins can add fund" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+  3. UPDATE - "Only admins can update fund" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+  4. DELETE - "Only admins delete fund" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+
+---
+
+TABLE 3: donors
+Columns:
+  - id (BIGSERIAL, PRIMARY KEY)
+  - user_id (UUID, UNIQUE) - References auth.users(id) ON DELETE CASCADE
+  - name (TEXT, NOT NULL)
+  - phone (TEXT, NOT NULL)
+  - blood_group (TEXT, NOT NULL) - Values: 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
+  - location (TEXT, NOT NULL)
+  - available (BOOLEAN, DEFAULT true)
+  - created_by_admin (BOOLEAN, DEFAULT false) - True if admin added this profile
+  - created_at (TIMESTAMP, DEFAULT now())
+
+RLS Enabled: YES
+Policies:
+  1. SELECT - "Everyone can see donors" - public - (leave empty or true)
+  2. INSERT - "Users can create own donor profile" - authenticated - auth.uid() = user_id (USING & WITH CHECK)
+  3. UPDATE - "Users can update own profile" - authenticated - auth.uid() = user_id (USING & WITH CHECK)
+  4. DELETE - "Users can delete own profile" - authenticated - auth.uid() = user_id
+
+---
+
+TABLE 4: notices
+Columns:
+  - id (BIGSERIAL, PRIMARY KEY)
+  - text (TEXT) - Activity description
+  - author_name (TEXT) - Name of the person who posted
+  - author_id (UUID) - References auth.users(id)
+  - timestamp (TIMESTAMP, DEFAULT now())
+
+RLS Enabled: YES
+Policies:
+  1. SELECT - "Everyone can see notices" - public - (leave empty or true)
+  2. INSERT - "Users can post notices" - authenticated - auth.uid() = author_id (USING & WITH CHECK)
+  3. UPDATE - "Only admins can update notices" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+  4. DELETE - "Only admins can delete notices" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+
+================================================================================
+                          STORAGE BUCKETS
+================================================================================
+
+BUCKET 1: notices
+Purpose: Store images uploaded with activity posts
+Settings:
+  - Public: YES (images must be accessible to all)
+  - Path: notices/{timestamp}_{filename}
+  - File types: image/* (PNG, JPG, GIF, etc.)
+
+================================================================================
+                        AUTHENTICATION SETTINGS
+================================================================================
+
+Email/Password Authentication: ENABLED
+- Users can sign up with email and password
+- Email verification: Not required (can be enabled)
+- Users are created in auth.users table automatically
+
+Session Management:
+- Client-side session handling via Supabase Auth
+- Session stored in browser memory (no localStorage/sessionStorage)
+- onAuthStateChange() listener tracks auth state
+
+================================================================================
+                      IMPORTANT NOTES FOR AI MODELS
+================================================================================
+
+1. COLUMN NAMING CONVENTION:
+   - Database uses snake_case (e.g., blood_group, user_id, author_name)
+   - JavaScript code uses camelCase (e.g., bloodGroup, userId, authorName)
+   - ALWAYS convert when reading/writing to database
+
+2. USER AUTHENTICATION:
+   - currentUser is a Supabase auth.users object
+   - User ID: currentUser.id (NOT currentUser.uid)
+   - User email: currentUser.email
+   - Session managed by: auth.onAuthStateChange()
+
+3. DATABASE QUERIES:
+   - Use: db.from('table_name').select(...).eq('column', value)
+   - NOT: db.collection('table_name').doc(...).get()
+   - Supabase returns {data, error} object, NOT a DocumentSnapshot
+
+4. TIMESTAMPS:
+   - Always use ISO 8601 format: new Date().toISOString()
+   - NOT firebase.firestore.FieldValue.serverTimestamp()
+   - When reading: new Date(timestamp_string).toLocaleString()
+
+5. STORAGE:
+   - Upload: db.storage.from('bucket_name').upload(path, file)
+   - Get URL: db.storage.from('bucket_name').getPublicUrl(path)
+   - Images must be in PUBLIC bucket to be accessible
+
+6. RLS POLICIES:
+   - If adding new features, MUST create corresponding RLS policies
+   - Test policies in Supabase dashboard BEFORE testing in app
+   - Common policy checks:
+     * auth.uid() = user_id (user owns the record)
+     * auth.uid() IN (SELECT id FROM users WHERE role = 'admin') (admin check)
+     * true or leave empty (public read access)
+
+7. ERRORS TO WATCH FOR:
+   - "RLS policy violation" = Permission denied by RLS policy
+   - "Column not found" = Using camelCase in DB query
+   - "No session" = User not logged in
+   - "Cannot read property 'from'" = Supabase not initialized
+
+================================================================================
+                      HOW TO UPDATE THIS DOCUMENT
+================================================================================
+
+When making changes:
+- New table? Add it to DATABASE TABLES section with full column definitions
+- New policy? Add it to the table's RLS Policies section
+- New storage bucket? Add it to STORAGE BUCKETS section
+- New auth setting? Add it to AUTHENTICATION SETTINGS section
+- New rules? Add to IMPORTANT NOTES section
+
+================================================================================
+-->

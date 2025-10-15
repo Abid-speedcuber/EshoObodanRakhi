@@ -102,6 +102,16 @@ img {
   justify-content: center;
   z-index: 100;
   padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal.hide {
+  pointer-events: none;
+}
+
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0);
 }
 
 .modal-content {
@@ -148,3 +158,44 @@ img {
       font-size: 16px;
     }
   }
+
+/* Top bar transitions */
+.bg-gradient-to-r {
+  transition: transform 0.1s linear;
+  will-change: transform;
+}
+
+/* Sticky blood filter */
+#bloodFilterContainer.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  border-radius: 0;
+  margin-bottom: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+}
+
+@media (min-width: 768px) {
+  #bloodFilterContainer.sticky {
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 480px;
+  }
+}
+
+#bloodFilterContainer.sticky #bloodFilter {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Placeholder for when filter becomes sticky */
+#bloodFilterPlaceholder {
+  display: none;
+}
+
+#bloodFilterPlaceholder.active {
+  display: block;
+  height: 80px;
+}
