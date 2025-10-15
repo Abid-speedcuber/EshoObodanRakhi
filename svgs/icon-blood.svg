@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1082.576 1691.781" enable-background="new 0 0 1082.576 1691.781" xml:space="preserve">
+<g>
+	<radialGradient id="SVGID_1_" cx="533.7941" cy="1103.9585" r="576.4108" gradientUnits="userSpaceOnUse">
+		<stop  offset="0" style="stop-color:#F18135"/>
+		<stop  offset="1" style="stop-color:#8F0200"/>
+	</radialGradient>
+	<path fill="url(#SVGID_1_)" d="M989.914,913.104C811.95,609.347,629.325,328.54,542.919,45.89
+		C472.698,332.369,284.143,606.81,95.616,913.012c-196.081,318.471,69.844,732.878,447.126,732.878
+		C920.418,1645.891,1178.692,1235.318,989.914,913.104z"/>
+	<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="206.8456" y1="1320.7885" x2="206.8456" y2="580.3895">
+		<stop  offset="0" style="stop-color:#FFFFFF"/>
+		<stop  offset="0.2587" style="stop-color:#FFFFFF"/>
+		<stop  offset="0.4044" style="stop-color:#EFC9C8"/>
+		<stop  offset="0.6998" style="stop-color:#D05F5D"/>
+		<stop  offset="0.9045" style="stop-color:#BD1D1A"/>
+		<stop  offset="1" style="stop-color:#B50300"/>
+	</linearGradient>
+	<path fill="url(#SVGID_2_)" d="M340.341,587.381c-39.869,128.182-71.494,253.345-97.904,375.696
+		c-17.207,79.713-28.814,161.257-23.879,245.954c4.052,69.541-2.123,122.334-34.227,129.743
+		c-51.236,11.824-90.42-42.341-103.874-103.874c-26.55-121.43,25.254-254.079,89.546-377.686
+		C207.46,785.201,273.48,690.929,340.341,587.381z"/>
+	<linearGradient id="SVGID_3_" gradientUnits="userSpaceOnUse" x1="824.7034" y1="1611.5441" x2="824.7034" y2="1296.9102">
+		<stop  offset="0" style="stop-color:#FFFFFF"/>
+		<stop  offset="0.2587" style="stop-color:#FFFFFF"/>
+		<stop  offset="0.4044" style="stop-color:#EFC9C8"/>
+		<stop  offset="0.6998" style="stop-color:#D05F5D"/>
+		<stop  offset="0.9045" style="stop-color:#BD1D1A"/>
+		<stop  offset="1" style="stop-color:#B50300"/>
+	</linearGradient>
+	<path fill="url(#SVGID_3_)" d="M634.703,1619.881c191.608-36.3,316.816-144.548,380-320
+		C932.223,1450.023,808.573,1559.658,634.703,1619.881z"/>
+</g>
+</svg>
