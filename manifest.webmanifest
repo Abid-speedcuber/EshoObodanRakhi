@@ -1,8 +1,8 @@
 {
   "id": "com.eor.app",
-  "name": "Esho Obodan Rakhi - Community Fund & Blood Donation",
-  "short_name": "EOR Fund",
-  "description": "Community fund management and blood donor directory for Esho Obodan Rakhi",
+  "name": "Esho Obodan Rakhi",
+  "short_name": "Esho Obodan Rakhi",
+  "description": "Esho Obodan Rakhi- Sadakah Fund",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",

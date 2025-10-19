@@ -1,3 +1,9 @@
+<!-- To any AI model reading this code, I am a vibe-coder and i almost don't know anything about coding
+      If i ask for any fix, kindly give me the fix in find and replace format inside chat (not artifact)
+      Any Update I ask for must come in both bengali and english mode.
+      If my requested change/update requires an update in supabase settings, then let me know, because i have no konwledge of supabase. I have wrote down all my current settings at the end of the code as comment.
+      -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -20,7 +26,7 @@
   <meta name="apple-mobile-web-app-title" content="EOR Fund">
 
   <!--<link rel="stylesheet" href="tailwind.css">-->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/styles.css">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -40,8 +46,12 @@
         <div class="flex items-center gap-2">
           <button id="loginTopBtn"
             class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition hide flex items-center h-10">Login</button>
+          <button id="adminMenuBtn"
+            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition hide flex items-center h-10">Admin</button>
+          <button id="talibMenuBtn"
+            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition hide flex items-center h-10">Talib</button>
           <button id="refreshBtn"
-            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition flex items-center h-10 mr-2"><img
+            class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition flex items-center h-10"><img
               src="svgs/icon-refresh.svg"></button>
           <button id="settingsBtn"
             class="bg-white text-green-600 px-3 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition flex items-center h-10"><img
@@ -77,6 +87,22 @@
     <main id="mainContent" class="p-4">
       <!-- Fund History Section -->
       <div id="fundSection" class="section hide">
+        <!-- Fund Tabs (Non-Admin Only) -->
+        <div id="fundTabs" class="grid grid-cols-2 gap-2 p-4 bg-green-50 hide">
+          <button id="collectionTabBtn" class="fund-tab-btn bg-white p-3 rounded-xl shadow hover:shadow-lg transition text-center">
+            <div class="text-sm font-semibold text-gray-700">Collection</div>
+            <div class="text-xs text-green-700 font-bold mt-1" id="collectionTabTotal">৳ 0</div>
+            <div class="text-xs text-gray-500" id="collectionTabMonth">৳ 0 this month</div>
+          </button>
+          <button id="sadakahTabBtn" class="fund-tab-btn bg-white p-3 rounded-xl shadow hover:shadow-lg transition text-center">
+            <div class="text-sm font-semibold text-gray-700">Sadakah</div>
+            <div class="text-xs text-red-700 font-bold mt-1" id="sadakahTabTotal">৳ 0</div>
+            <div class="text-xs text-gray-500" id="sadakahTabCount">0 entries</div>
+          </button>
+        </div>
+        
+        <!-- Collection View (default for non-admin) -->
+        <div id="collectionView">
         <div class="bg-white rounded-xl shadow-lg p-3 mb-3">
           <div class="flex justify-between items-center mb-2">
             <button id="prevMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
@@ -100,20 +126,20 @@
               <img src="svgs/icon-copy.svg"> Copy List
             </button>
           </div>
+          <div class="mb-3 pb-3 border-b border-gray-200">
+            <div class="text-sm text-gray-700">
+              <div id="donationInfoText" class="font-semibold mb-2">You can also contribute by donating to:</div>
+              <div class="space-y-1">
+                <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1937-222273"><span class="underline">+880 1937-222273</span> - nogod</div>
+                <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1515-214867"><span class="underline">+880 1515-214867</span> - bkash</div>
+              </div>
+            </div>
+          </div>
           <div id="incomeList" class="space-y-2"></div>
           <div class="mt-3 pt-3 border-t border-gray-200">
             <div class="flex justify-between font-bold text-green-700">
               <span>Total Collection:</span>
               <span id="totalIncome">৳ 0</span>
-            </div>
-          </div>
-          <div class="mt-3 pt-3 border-t border-gray-200">
-            <div class="text-sm text-gray-700">
-              <div id="donationInfoText" class="font-semibold mb-2">You can also contribute by donating to:</div>
-              <div class="space-y-1">
-                <div>+880 1937-222273 - nogod</div>
-                <div>+880 1515-214867 - bkash</div>
-              </div>
             </div>
           </div>
         </div>
@@ -142,6 +168,15 @@
             class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
             <img src="svgs/overview-icon.svg" style="width: 20px; height: 20px;"> View Yearly Overview
           </button>
+        </div>
+        </div>
+        
+        <!-- Sadakah List View (Non-Admin Only) -->
+        <div id="sadakahListView" class="hide">
+          <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+            <h3 class="text-lg font-bold text-red-700 mb-3">All Sadakah History</h3>
+            <div id="allSadakahList" class="space-y-3"></div>
+          </div>
         </div>
       </div>
 
@@ -295,13 +330,14 @@
       </div>
     </div>
 
-    <div id="addExpenseModal" class="modal hide">
+<div id="addExpenseModal" class="modal hide">
       <div class="modal-content">
         <h2 class="text-xl font-bold mb-4 text-gray-800">Add Sadakah</h2>
         <form id="addExpenseForm">
           <input type="hidden" id="expenseId">
-          <input type="text" id="expenseDesc" placeholder="Description" class="modal-input" required>
+          <input type="text" id="expenseDesc" placeholder="Title" class="modal-input" required>
           <input type="number" id="expenseAmount" placeholder="Amount (৳)" class="modal-input" required>
+          <textarea id="expenseAdditionalInfo" placeholder="Additional info (optional)" class="modal-input h-24"></textarea>
           <label class="flex items-center mb-4 cursor-pointer">
             <input type="checkbox" id="expenseHighlighted" class="mr-2 w-5 h-5">
             <span class="text-gray-700">Highlight this entry</span>
@@ -414,6 +450,85 @@
 
   </div>
 
+  <!-- Talib Menu Modal -->
+  <div id="talibMenuModal" class="modal hide">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Talib Menu</h2>
+      <div class="space-y-2">
+        <button class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold cursor-not-allowed text-left px-4" disabled>
+          📝 Notes (Coming Soon)
+        </button>
+      </div>
+      <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
+  <!-- Admin Menu Modal -->
+  <div id="adminMenuModal" class="modal hide">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Menu</h2>
+      <div class="space-y-2">
+        <button id="adminUsersBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-left px-4">
+          👥 Users
+        </button>
+        <button class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold cursor-not-allowed text-left px-4" disabled>
+          📝 Notes (Coming Soon)
+        </button>
+      </div>
+      <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
+  <!-- Admin Users Modal -->
+  <div id="adminUsersModal" class="modal hide">
+    <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Manage Users</h2>
+      <div class="mb-4">
+        <div class="flex items-center gap-2">
+          <input type="text" id="userSearch" placeholder="Search users..." class="flex-1 p-3 border border-gray-300 rounded-lg">
+          <button id="userClearBtn" class="hide bg-white text-white p-3 rounded-lg hover:bg-gray-100 transition flex-shrink-0">
+            <img src="svgs/icon-close.svg" alt="Clear" style="width: 20px; height: 20px;">
+          </button>
+        </div>
+      </div>
+      <div id="usersList" class="space-y-2 mb-4"></div>
+      <button data-close-modal class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
+  <!-- Role Change Confirmation Modal -->
+  <div id="roleConfirmModal" class="modal hide">
+    <div class="modal-content" style="max-width: 500px;">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Confirm Role Change</h2>
+      <p class="text-gray-700 mb-4">Are you sure you want to change this user's role?</p>
+      <div class="flex gap-2">
+        <button id="roleConfirmYes" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Yes, Continue</button>
+        <button id="roleConfirmNo" class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Change Consequences Modal -->
+  <div id="roleConsequencesModal" class="modal hide">
+    <div class="modal-content" style="max-width: 500px;">
+      <h2 class="text-xl font-bold mb-4 text-red-600">⚠️ Important: Understand the Consequences</h2>
+      <div id="roleConsequencesText" class="text-gray-700 mb-4 space-y-2"></div>
+      <div class="flex gap-2">
+        <button id="roleConsequencesConfirm" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">I Understand, Proceed</button>
+        <button id="roleConsequencesCancel" class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="modal hide">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">About Esho Obodan Rakhi</h2>
+      <p class="text-gray-700 mb-4">Placeholder content about the organization and its mission...</p>
+      <button data-close-modal class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
   <!-- Settings Modal -->
   <div id="settingsModal" class="modal hide">
     <div class="modal-content">
@@ -460,6 +575,7 @@
         allDonors: [],
         totalFund: 0,
         activeSection: 'blood',
+        activeFundTab: 'sadakah', // Default for non-admin
         currentYear: new Date().getFullYear(),
         isLoading: {
           fund: false,
@@ -469,12 +585,19 @@
         allFundData: [], // Store all fund data for offline access
         cachedMonthlyData: {}, // Store monthly aggregated data
       },
+      
+      pendingRoleChange: null, // Store pending role change data for confirmation flow
 
       // --- DOM ELEMENTS ---
       elements: {
         notification: document.getElementById('notification'),
         authBtn: document.getElementById('authBtn'),
+        adminMenuBtn: document.getElementById('adminMenuBtn'),
         totalFundDisplay: document.getElementById('totalFundDisplay'),
+        fundTabs: document.getElementById('fundTabs'),
+        collectionView: document.getElementById('collectionView'),
+        sadakahListView: document.getElementById('sadakahListView'),
+        allSadakahList: document.getElementById('allSadakahList'),
         mainContent: document.getElementById('mainContent'),
         currentMonthDisplay: document.getElementById('currentMonthDisplay'),
         incomeList: document.getElementById('incomeList'),
@@ -623,7 +746,12 @@
           if (!data) {
             // No profile row found: try to create one (use user's metadata or email as name fallback)
             const profileName = (this.state.currentUser.user_metadata && (this.state.currentUser.user_metadata.full_name || this.state.currentUser.user_metadata.name)) || this.state.currentUser.email || 'User';
-            const { error: insertError } = await db.from('users').insert({ id: this.state.currentUser.id, name: profileName, role: 'user' });
+            const { error: insertError } = await db.from('users').insert({ 
+              id: this.state.currentUser.id, 
+              name: profileName, 
+              email: this.state.currentUser.email,
+              role: 'user' 
+            });
             if (insertError) {
               console.error('Failed to create users profile:', insertError);
               // not fatal — continue
@@ -647,6 +775,16 @@
         // Set initial section based on admin status
         if (this.state.isAdmin) {
           this.showSection('fund');
+          // Force hide fund tabs and show collection view for admin
+          if (this.elements.fundTabs) {
+            this.elements.fundTabs.classList.add('hide');
+          }
+          if (this.elements.collectionView) {
+            this.elements.collectionView.classList.remove('hide');
+          }
+          if (this.elements.sadakahListView) {
+            this.elements.sadakahListView.classList.add('hide');
+          }
         } else {
           this.showSection('blood');
         }
@@ -674,7 +812,8 @@ async signup(name, emailOrPhone, password) {
 
   const { error: profileError } = await db.from('users').insert({ 
     id: signupResult.data.user.id, 
-    name, 
+    name,
+    email: isPhone ? null : emailOrPhone,
     role: 'user' 
   });
   
@@ -761,13 +900,12 @@ async login(emailOrPhone, password) {
 
       async logout() {
         await db.auth.signOut();
-        // Reset state manually instead of reloading page for a smoother UX
-        this.state.currentUser = null;
-        this.state.userProfile = null;
-        this.state.isAdmin = false;
-        this.updateUI();
-        this.loadDataForActiveSection(); // Reload public data
-        this.showNotification('Logged out successfully.');
+        this.showNotification('Logging out...');
+        // Refresh page and redirect to blood donation
+        setTimeout(() => {
+          window.location.href = window.location.origin + '/?section=blood';
+          window.location.reload();
+        }, 500);
       },
 
       // --- DATA FETCHING & RENDERING ---
@@ -778,6 +916,25 @@ async login(emailOrPhone, password) {
             break;
           case 'blood': this.loadDonors(); break;
           case 'notices': this.loadNotices(); break;
+        }
+      },
+
+      async updateCollectionTabTotal() {
+        try {
+          const { data, error } = await db.from('fund').select('amount, month, type');
+          if (error) throw error;
+          
+          const allIncome = (data || []).filter(d => d.type === 'income');
+          const totalIncome = allIncome.reduce((sum, item) => sum + item.amount, 0);
+          
+          // Current month income
+          const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+          const monthIncome = allIncome.filter(d => d.month === monthKey).reduce((sum, item) => sum + item.amount, 0);
+          
+          document.getElementById('collectionTabTotal').textContent = `৳ ${totalIncome.toLocaleString()}`;
+          document.getElementById('collectionTabMonth').textContent = `৳ ${monthIncome.toLocaleString()} this month`;
+        } catch (err) {
+          console.error('Error updating collection tab:', err);
         }
       },
 
@@ -808,11 +965,60 @@ async login(emailOrPhone, password) {
         localStorage.setItem('totalFund', total.toString());
       },
 
+      async loadAllSadakah() {
+        try {
+          const { data, error } = await db.from('fund').select('*').eq('type', 'expense').order('timestamp', { ascending: false });
+          if (error) throw error;
+          
+          this.renderAllSadakahList(data || []);
+          
+          // Update tab totals
+          const totalAmount = (data || []).reduce((sum, item) => sum + item.amount, 0);
+          const totalCount = (data || []).length;
+          
+          document.getElementById('sadakahTabTotal').textContent = `৳ ${totalAmount.toLocaleString()}`;
+          document.getElementById('sadakahTabCount').textContent = `${totalCount} entries`;
+        } catch (err) {
+          console.error('Error loading sadakah:', err);
+        }
+      },
+
+      renderAllSadakahList(sadakahList) {
+        if (sadakahList.length === 0) {
+          const isBn = localStorage.getItem('lang') === 'bn';
+          this.elements.allSadakahList.innerHTML = `<div class="text-gray-400 text-center py-8">${isBn ? 'কোনো সাদাকাহ নেই' : 'No sadakah entries'}</div>`;
+          return;
+        }
+
+        this.elements.allSadakahList.innerHTML = sadakahList.map(item => {
+          // Use the month field instead of timestamp for display
+          const [year, month] = item.month.split('-');
+          const date = new Date(year, parseInt(month) - 1, 1);
+          const monthName = date.toLocaleString('default', { month: 'long' });
+          const additionalInfo = item.additional_info ? `<div class="text-sm text-gray-600 mt-1">${item.additional_info}</div>` : '';
+          
+          return `
+            <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-300">
+              <div class="flex justify-between items-start mb-1">
+                <span class="font-semibold text-gray-800">${item.description || 'Unnamed'}</span>
+                <span class="font-bold text-blue-700">৳ ${item.amount.toLocaleString()}</span>
+              </div>
+              <div class="text-xs text-gray-500">${monthName} ${year}</div>
+              ${additionalInfo}
+            </div>
+          `;
+        }).join('');
+      },
       async loadFundData() {
         if (this.state.isLoading.fund) return;
         this.state.isLoading.fund = true;
         this.renderLoader('fund');
         this.updateMonthDisplay();
+        
+        // Update collection tab total for non-admin
+        if (!this.state.isAdmin) {
+          this.updateCollectionTabTotal();
+        }
 
         const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
@@ -914,20 +1120,272 @@ async loadDonors() {
   this.state.isLoading.donors = false;
 },
 
-      async loadNotices() {
-        if (this.state.isLoading.notices) return;
-        this.state.isLoading.notices = true;
-        this.renderLoader('notices');
+      async loadUsers() {
+        const usersList = document.getElementById('usersList');
+        usersList.innerHTML = '<div class="loader"></div>';
+        
+        // Setup search functionality
+        const userSearch = document.getElementById('userSearch');
+        const userClearBtn = document.getElementById('userClearBtn');
+        
+        userSearch.value = '';
+        userClearBtn.classList.add('hide');
+        
+        userSearch.addEventListener('input', () => {
+          const searchTerm = userSearch.value.trim().toLowerCase();
+          userClearBtn.classList.toggle('hide', !searchTerm);
+          this.filterUsers(searchTerm);
+        });
+        
+        userClearBtn.addEventListener('click', () => {
+          userSearch.value = '';
+          userClearBtn.classList.add('hide');
+          this.filterUsers('');
+        });
+        
         try {
-          const { data, error } = await db.from('notices').select('*').order('timestamp', { ascending: false }).limit(20);
-          if (error) throw error;
-          localStorage.setItem('noticesData', JSON.stringify(data));
-          this.renderNotices(data);
-        } catch {
-          const cached = JSON.parse(localStorage.getItem('noticesData') || '[]');
-          this.renderNotices(cached);
+          // Fetch users from users table
+          const { data: usersData, error: usersError } = await db.from('users').select('*').order('name');
+          if (usersError) {
+            console.error('Error fetching users:', usersError);
+            throw usersError;
+          }
+          
+          // Try to fetch auth users for emails (this requires service role key, might fail)
+          let emailMap = {};
+          try {
+            const { data: authData } = await db.auth.admin.listUsers();
+            if (authData && authData.users) {
+              authData.users.forEach(authUser => {
+                emailMap[authUser.id] = authUser.email || authUser.phone || 'N/A';
+              });
+            }
+          } catch (authError) {
+            console.warn('Could not fetch auth users (requires service role):', authError);
+            // If we can't get emails, that's okay - we'll show "N/A"
+          }
+          
+          if (!usersData || usersData.length === 0) {
+            usersList.innerHTML = '<div class="text-gray-400 text-center py-4">No users found</div>';
+            return;
+          }
+          
+          // Store users data for filtering
+          this.allUsersData = usersData;
+          this.allUsersEmailMap = emailMap;
+          
+          // Render the users list
+          this.renderUsersList(usersData, emailMap);
+          
+        } catch (err) {
+          console.error('Error loading users:', err);
+          usersList.innerHTML = '<div class="text-red-500 text-center py-4">Failed to load users. Make sure you have admin privileges.</div>';
         }
-        this.state.isLoading.notices = false;
+      },
+
+      renderUsersList(usersData, emailMap) {
+        const usersList = document.getElementById('usersList');
+        
+        if (!usersData || usersData.length === 0) {
+          usersList.innerHTML = '<div class="text-gray-400 text-center py-4">No users found</div>';
+          return;
+        }
+        
+        usersList.innerHTML = usersData.map(user => {
+          const isCurrentUser = user.id === this.state.currentUser?.id;
+          const email = user.email || emailMap[user.id] || 'Email not available';
+          const roleColor = {
+            admin: 'bg-red-100 text-red-700',
+            moderator: 'bg-purple-100 text-purple-700',
+            student: 'bg-blue-100 text-blue-700',
+            user: 'bg-gray-100 text-gray-700'
+          }[user.role] || 'bg-gray-100 text-gray-700';
+          
+          return `
+            <div class="bg-white border border-gray-200 rounded-lg p-3">
+              <div class="flex items-start justify-between mb-2">
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-800">${user.name}${isCurrentUser ? ' <span class="text-xs text-blue-600">(You)</span>' : ''}</div>
+                  <div class="text-xs text-gray-500">${email}</div>
+                  <div class="text-xs text-gray-400 mt-1">ID: ${user.id.substring(0, 12)}...</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded font-semibold ${roleColor}">${user.role.toUpperCase()}</span>
+              </div>
+              ${!isCurrentUser ? `
+                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200">
+                  <select class="user-role-select flex-1 border border-gray-300 rounded px-2 py-1 text-sm" data-user-id="${user.id}" data-user-name="${user.name}" data-current-role="${user.role}">
+                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                    <option value="student" ${user.role === 'student' ? 'selected' : ''}>Student</option>
+                    <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>Moderator</option>
+                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  </select>
+                  <button class="save-role-btn bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700 transition" data-user-id="${user.id}">
+                    Change
+                  </button>
+                </div>
+              ` : '<div class="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">You cannot change your own role</div>'}
+            </div>
+          `;
+        }).join('');
+        
+        // Bind save role buttons with confirmation modals
+        document.querySelectorAll('.save-role-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const userId = btn.dataset.userId;
+            const roleSelect = document.querySelector(`.user-role-select[data-user-id="${userId}"]`);
+            const newRole = roleSelect.value;
+            const currentRole = roleSelect.dataset.currentRole;
+            const userName = roleSelect.dataset.userName;
+            
+            // Check if role actually changed
+            if (newRole === currentRole) {
+              return this.showNotification('Role is already ' + newRole, true);
+            }
+            
+            // Store data for confirmation flow
+            this.pendingRoleChange = { userId, newRole, currentRole, userName };
+            
+            // Show first confirmation
+            this.showRoleConfirmation();
+          });
+        });
+      },
+
+      filterUsers(searchTerm) {
+        if (!this.allUsersData) return;
+        
+        if (!searchTerm) {
+          this.renderUsersList(this.allUsersData, this.allUsersEmailMap);
+          return;
+        }
+        
+        const filtered = this.allUsersData.filter(user => {
+          const name = (user.name || '').toLowerCase();
+          const email = (this.allUsersEmailMap[user.id] || '').toLowerCase();
+          const role = (user.role || '').toLowerCase();
+          const id = (user.id || '').toLowerCase();
+          
+          return name.includes(searchTerm) || 
+                 email.includes(searchTerm) || 
+                 role.includes(searchTerm) ||
+                 id.includes(searchTerm);
+        });
+        
+        this.renderUsersList(filtered, this.allUsersEmailMap);
+      },
+
+      showRoleConfirmation() {
+        this.showModal('roleConfirmModal');
+        
+        const yesBtn = document.getElementById('roleConfirmYes');
+        const noBtn = document.getElementById('roleConfirmNo');
+        
+        // Remove old listeners
+        const newYesBtn = yesBtn.cloneNode(true);
+        const newNoBtn = noBtn.cloneNode(true);
+        yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+        noBtn.parentNode.replaceChild(newNoBtn, noBtn);
+        
+        newYesBtn.addEventListener('click', () => {
+          this.hideAllModals();
+          this.showRoleConsequences();
+        });
+        
+        newNoBtn.addEventListener('click', () => {
+          this.hideAllModals();
+          this.pendingRoleChange = null;
+        });
+      },
+
+      showRoleConsequences() {
+        const { newRole, currentRole, userName } = this.pendingRoleChange;
+        const consequencesText = document.getElementById('roleConsequencesText');
+        
+        let consequences = '';
+        
+        if (newRole === 'admin') {
+          consequences = `
+            <p class="font-semibold text-red-600">If you set the role of ${userName} to Admin:</p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+              <li>They can add, delete, and edit collection and sadakah entries</li>
+              <li>They will have full control over all blood donor profiles</li>
+              <li>They can change the role of any individual, including removing you from admin</li>
+              <li>They will have access to the admin menu and all its features</li>
+            </ul>
+          `;
+        } else if (currentRole === 'admin') {
+          consequences = `
+            <p class="font-semibold text-orange-600">If you remove ${userName} from Admin role:</p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+              <li>They will no longer be able to add, delete, or edit fund entries</li>
+              <li>They will lose control over blood donor profiles</li>
+              <li>They cannot change user roles anymore</li>
+              <li>They will lose access to the admin menu</li>
+            </ul>
+          `;
+        } else if (newRole === 'moderator') {
+          consequences = `
+            <p class="font-semibold text-purple-600">If you set the role of ${userName} to Moderator:</p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+              <li>Moderator permissions will be defined later</li>
+              <li>They will have more privileges than regular users</li>
+            </ul>
+          `;
+        } else if (newRole === 'student') {
+          consequences = `
+            <p class="font-semibold text-blue-600">If you set the role of ${userName} to Student:</p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+              <li>Student permissions will be defined later</li>
+              <li>They may have limited access to certain features</li>
+            </ul>
+          `;
+        } else {
+          consequences = `
+            <p class="font-semibold text-gray-600">If you set the role of ${userName} to User:</p>
+            <ul class="list-disc ml-5 mt-2 space-y-1">
+              <li>They will have standard user permissions</li>
+              <li>They can manage their own donor profile</li>
+              <li>They can post activities</li>
+            </ul>
+          `;
+        }
+        
+        consequencesText.innerHTML = consequences;
+        this.showModal('roleConsequencesModal');
+        
+        const confirmBtn = document.getElementById('roleConsequencesConfirm');
+        const cancelBtn = document.getElementById('roleConsequencesCancel');
+        
+        // Remove old listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        
+        newConfirmBtn.addEventListener('click', async () => {
+          await this.executeRoleChange();
+        });
+        
+        newCancelBtn.addEventListener('click', () => {
+          this.hideAllModals();
+          this.pendingRoleChange = null;
+        });
+      },
+
+      async executeRoleChange() {
+        const { userId, newRole } = this.pendingRoleChange;
+        
+        const { error } = await db.from('users').update({ role: newRole }).eq('id', userId);
+        
+        if (error) {
+          this.showNotification('Failed to update role: ' + error.message, true);
+        } else {
+          this.showNotification('User role updated successfully!');
+          this.loadUsers(); // Reload the list
+        }
+        
+        this.hideAllModals();
+        this.pendingRoleChange = null;
       },
 
 
@@ -936,11 +1394,25 @@ async loadDonors() {
         // Auth controls are now inside Settings only
         document.getElementById('settingsBtn').classList.remove('hide');
         document.getElementById('loginTopBtn').classList.toggle('hide', this.state.currentUser);
+        this.elements.adminMenuBtn.classList.toggle('hide', !this.state.isAdmin);
+        
+        // Show Talib button for students
+        const isStudent = this.state.userProfile?.role === 'student';
+        document.getElementById('talibMenuBtn').classList.toggle('hide', !isStudent);
         document.getElementById('loginBtn').classList.toggle('hide', this.state.currentUser);
         document.getElementById('logoutBtn').classList.toggle('hide', !this.state.currentUser);
 
+        // Show/hide fund tabs based on admin status
+        this.elements.fundTabs.classList.toggle('hide', this.state.isAdmin);
+        
         // Admin controls
         this.elements.adminControls.classList.toggle('hide', !this.state.isAdmin);
+        
+        // Hide donation info for admins
+        const donationInfoText = document.getElementById('donationInfoText');
+        if (donationInfoText && donationInfoText.parentElement) {
+          donationInfoText.parentElement.classList.toggle('hide', this.state.isAdmin);
+        }
 
         // User-specific buttons
         if (this.state.isAdmin) {
@@ -995,7 +1467,6 @@ async loadDonors() {
                         <div class="flex-1">
                             <span class="font-semibold text-gray-600">${index + 1}.</span>
                             <span class="ml-2 ${textColor}">${item.name || item.description}</span>
-                            ${color === 'red' ? `<div class="text-xs text-gray-500 mt-1">${formattedTime}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="font-bold text-${color}-700">৳ ${item.amount}</div>
@@ -1005,7 +1476,7 @@ async loadDonors() {
                             ` : ''}
                         </div>
                     </div>
-                    ${color === 'green' ? `<div class="absolute left-0 top-full mt-1 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">${formattedTime}</div>` : ''}
+                    <div class="absolute left-0 top-full mt-1 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">${formattedTime}</div>
                 </div>
             `;
         }).join('');
@@ -1020,6 +1491,22 @@ async loadDonors() {
         this.elements.totalExpense.textContent = `৳ ${totalExpense}`;
         this.elements.monthlyBalance.textContent = `৳ ${balance}`;
         this.elements.monthlyBalance.style.color = balance >= 0 ? 'var(--brand-green-dark)' : '#dc2626';
+      },
+
+      async loadNotices() {
+        if (this.state.isLoading.notices) return;
+        this.state.isLoading.notices = true;
+        this.renderLoader('notices');
+        try {
+          const { data, error } = await db.from('notices').select('*').order('timestamp', { ascending: false }).limit(20);
+          if (error) throw error;
+          localStorage.setItem('noticesData', JSON.stringify(data));
+          this.renderNotices(data);
+        } catch {
+          const cached = JSON.parse(localStorage.getItem('noticesData') || '[]');
+          this.renderNotices(cached);
+        }
+        this.state.isLoading.notices = false;
       },
 
       async calculateNetWorth() {
@@ -1516,6 +2003,34 @@ async loadDonors() {
         document.querySelectorAll('.nav-btn').forEach(btn => {
           btn.addEventListener('click', () => this.showSection(btn.dataset.section));
         });
+        
+        // Fund tab switching (non-admin only)
+        document.getElementById('collectionTabBtn')?.addEventListener('click', () => {
+          this.state.activeFundTab = 'collection';
+          this.updateFundTabView();
+        });
+        
+        document.getElementById('sadakahTabBtn')?.addEventListener('click', () => {
+          this.state.activeFundTab = 'sadakah';
+          this.updateFundTabView();
+        });
+        
+        // Admin menu button
+        this.elements.adminMenuBtn?.addEventListener('click', () => {
+          this.showModal('adminMenuModal');
+        });
+        
+        // Talib menu button
+        document.getElementById('talibMenuBtn')?.addEventListener('click', () => {
+          this.showModal('talibMenuModal');
+        });
+        
+        // Admin users button
+        document.getElementById('adminUsersBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+          this.loadUsers();
+          this.showModal('adminUsersModal');
+        });
         // Set initial active tab
         this.updateActiveTab();
         document.getElementById('refreshBtn').addEventListener('click', () => this.refreshApp());
@@ -1675,20 +2190,21 @@ document.getElementById('loginForm').addEventListener('submit', e => {
           e.target.reset();
           document.getElementById('incomeId').value = '';
         });
-        document.getElementById('addExpenseForm').addEventListener('submit', async e => {
+document.getElementById('addExpenseForm').addEventListener('submit', async e => {
           e.preventDefault();
           const expenseId = document.getElementById('expenseId').value;
-          const description = e.target.elements.expenseDesc.value;
+          const description = e.target.elements.expenseDesc.value; // This is the sadakah name
           const amountInput = this.convertBengaliToEnglishNumber(e.target.elements.expenseAmount.value);
           const amount = parseFloat(amountInput);
+          const additional_info = e.target.elements.expenseAdditionalInfo.value.trim() || null;
           const highlighted = e.target.elements.expenseHighlighted.checked;
 
           if (expenseId) {
             // Update existing entry
-            await this.updateFundEntry(expenseId, { description, amount, highlighted });
+            await this.updateFundEntry(expenseId, { description, amount, additional_info, highlighted });
           } else {
             // Add new entry
-            await this.addFundEntry('expense', { description, amount, highlighted });
+            await this.addFundEntry('expense', { description, amount, additional_info, highlighted });
           }
           e.target.reset();
           document.getElementById('expenseId').value = '';
@@ -1832,6 +2348,17 @@ document.getElementById('loginForm').addEventListener('submit', e => {
         document.getElementById('totalFundBtn').addEventListener('click', () => this.showCompleteHistory());
         document.getElementById('copyIncomeBtn').addEventListener('click', () => this.copyIncomeList());
         document.getElementById('copyHistoryBtn').addEventListener('click', () => this.copyCompleteHistory());
+        
+        // Copy donation numbers on click
+        document.addEventListener('click', (e) => {
+          const copyBtn = e.target.closest('[data-copy-number]');
+          if (copyBtn) {
+            const number = copyBtn.dataset.copyNumber;
+            navigator.clipboard.writeText(number).then(() => {
+              this.showNotification('Number copied: ' + number);
+            });
+          }
+        });
       },
 
       async updateFundEntry(id, details) {
@@ -1872,6 +2399,7 @@ document.getElementById('loginForm').addEventListener('submit', e => {
           document.getElementById('expenseId').value = id;
           document.getElementById('expenseDesc').value = data.description || '';
           document.getElementById('expenseAmount').value = data.amount || '';
+          document.getElementById('expenseAdditionalInfo').value = data.additional_info || '';
           document.getElementById('expenseHighlighted').checked = data.highlighted || false;
           
           // Update modal title
@@ -1888,8 +2416,17 @@ document.getElementById('loginForm').addEventListener('submit', e => {
 
       async addFundEntry(type, details) {
         const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        
+        // Clean up the details object - remove null/undefined values
+        const cleanDetails = {};
+        for (const key in details) {
+          if (details[key] !== null && details[key] !== undefined && details[key] !== '') {
+            cleanDetails[key] = details[key];
+          }
+        }
+        
         const { error } = await db.from('fund').insert({
-          ...details,
+          ...cleanDetails,
           month: monthKey,
           type: type,
           updated_by: this.state.currentUser.id,
@@ -2019,6 +2556,29 @@ async populateDonorForm(donorId = null) {
         this.loadFundData();
       },
 
+      updateFundTabView() {
+        if (this.state.isAdmin) return; // Admin sees everything always
+        
+        const isCollection = this.state.activeFundTab === 'collection';
+        
+        this.elements.collectionView.classList.toggle('hide', !isCollection);
+        this.elements.sadakahListView.classList.toggle('hide', isCollection);
+        
+        // Update active tab styling
+        document.getElementById('collectionTabBtn').classList.toggle('bg-emerald-100', isCollection);
+        document.getElementById('collectionTabBtn').classList.toggle('border-2', isCollection);
+        document.getElementById('collectionTabBtn').classList.toggle('border-emerald-500', isCollection);
+        
+        document.getElementById('sadakahTabBtn').classList.toggle('bg-emerald-100', !isCollection);
+        document.getElementById('sadakahTabBtn').classList.toggle('border-2', !isCollection);
+        document.getElementById('sadakahTabBtn').classList.toggle('border-emerald-500', !isCollection);
+        
+        // Load sadakah list if switching to that tab
+        if (!isCollection) {
+          this.loadAllSadakah();
+        }
+      },
+
       // --- UTILITIES ---
       showSection(sectionId) {
         this.state.activeSection = sectionId;
@@ -2029,6 +2589,27 @@ async populateDonorForm(donorId = null) {
           section.classList.add('fade-in');
         }
         this.updateActiveTab();
+        
+        // Handle fund section display based on user role
+        if (sectionId === 'fund') {
+          if (this.state.isAdmin) {
+            // Admin: hide tabs, show collection view only
+            if (this.elements.fundTabs) {
+              this.elements.fundTabs.classList.add('hide');
+            }
+            if (this.elements.collectionView) {
+              this.elements.collectionView.classList.remove('hide');
+            }
+            if (this.elements.sadakahListView) {
+              this.elements.sadakahListView.classList.add('hide');
+            }
+          } else {
+            // Non-admin: show tabs, default to sadakah tab
+            this.state.activeFundTab = 'sadakah';
+            this.updateFundTabView();
+          }
+        }
+        
         this.loadDataForActiveSection();
       },
 
@@ -2225,30 +2806,30 @@ if (isYearlyBrief) {
               if (monthData.expenses.length > 0) {
                 monthData.expenses.forEach(expense => {
                   runningBalance -= expense.amount;
-                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}</div>`;
+                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
                 });
-                html += `<div class="text-blue-600 ml-2 font-semibold">অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
               }
 
               if (monthData.income > 0) {
                 runningBalance += monthData.income;
-                html += `<div class="text-green-700 ml-2">কালেকশন: ৳ ${monthData.income.toLocaleString()}</div>`;
-                html += `<div class="text-blue-600 ml-2 font-semibold">মোট হয়: ৳ ${runningBalance.toLocaleString()}</div>`;
+                html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">এখন ফান্ডে আছে: ${runningBalance.toLocaleString()} টাকা</div>`;
               }
             } else {
               // For other months, show income first, then expenses (normal order)
               if (monthData.income > 0) {
                 runningBalance += monthData.income;
-                html += `<div class="text-green-700 ml-2">কালেকশন: ৳ ${monthData.income.toLocaleString()}</div>`;
-                html += `<div class="text-blue-600 ml-2 font-semibold">মোট হয়: ৳ ${runningBalance.toLocaleString()}</div>`;
+                html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">ফান্ডে মোট হয়: ${runningBalance.toLocaleString()} টাকা</div>`;
               }
 
               if (monthData.expenses.length > 0) {
                 monthData.expenses.forEach(expense => {
                   runningBalance -= expense.amount;
-                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}</div>`;
+                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
                 });
-                html += `<div class="text-blue-600 ml-2 font-semibold">অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
               }
             }
           });
@@ -2265,16 +2846,16 @@ if (isYearlyBrief) {
 
               if (monthData.income > 0) {
                 runningBalance += monthData.income;
-                html += `<div class="text-green-700 ml-2">কালেকশন: ৳ ${monthData.income.toLocaleString()}</div>`;
-                html += `<div class="text-blue-600 ml-2 font-semibold">মোট হয়: ৳ ${runningBalance.toLocaleString()}</div>`;
+                html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">ফান্ডে মোট হয়: ${runningBalance.toLocaleString()} টাকা</div>`;
               }
 
               if (monthData.expenses.length > 0) {
                 monthData.expenses.forEach(expense => {
                   runningBalance -= expense.amount;
-                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}</div>`;
+                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
                 });
-                html += `<div class="text-blue-600 ml-2 font-semibold">অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}</div>`;
+                html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
               }
             });
           }
@@ -2372,30 +2953,30 @@ if (isYearlyBrief) {
               if (monthData.expenses.length > 0) {
                 monthData.expenses.forEach(expense => {
                   runningBalance -= expense.amount;
-                  text += `সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}\n`;
+                  text += `সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা\n`;
                 });
-                text += `অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}\n`;
+                text += `মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা\n`;
               }
 
               if (monthData.income > 0) {
                 runningBalance += monthData.income;
-                text += `কালেকশন: ৳ ${monthData.income.toLocaleString()}\n`;
-                text += `মোট হয়: ৳ ${runningBalance.toLocaleString()}\n`;
+                text += `মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা\n`;
+                text += `এখন ফান্ডে আছে: ${runningBalance.toLocaleString()} টাকা\n`;
               }
             } else {
               // For other months, show income first, then expenses (normal order)
               if (monthData.income > 0) {
                 runningBalance += monthData.income;
-                text += `কালেকশন: ৳ ${monthData.income.toLocaleString()}\n`;
-                text += `মোট হয়: ৳ ${runningBalance.toLocaleString()}\n`;
+                text += `মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা\n`;
+                text += `ফান্ডে মোট হয়: ${runningBalance.toLocaleString()} টাকা\n`;
               }
 
               if (monthData.expenses.length > 0) {
                 monthData.expenses.forEach(expense => {
                   runningBalance -= expense.amount;
-                  text += `সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}\n`;
+                  text += `সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা\n`;
                 });
-                text += `অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}\n`;
+                text += `মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা\n`;
               }
             }
             
@@ -2414,16 +2995,16 @@ if (isYearlyBrief) {
 
             if (monthData.income > 0) {
               runningBalance += monthData.income;
-              text += `কালেকশন: ৳ ${monthData.income.toLocaleString()}\n`;
-              text += `মোট হয়: ৳ ${runningBalance.toLocaleString()}\n`;
+              text += `মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা\n`;
+              text += `ফান্ডে মোট হয়: ${runningBalance.toLocaleString()} টাকা\n`;
             }
 
             if (monthData.expenses.length > 0) {
               monthData.expenses.forEach(expense => {
                 runningBalance -= expense.amount;
-                text += `সাদাকাহ (${expense.description}): ৳ ${expense.amount.toLocaleString()}\n`;
+                text += `সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা\n`;
               });
-              text += `অবশিষ্ট থাকে: ৳ ${runningBalance.toLocaleString()}\n`;
+              text += `মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা\n`;
             }
             
             text += `\n`;
@@ -2652,6 +3233,8 @@ setupScrollBehavior() {
           // --- Settings ---
           bengaliMode: { en: 'Bengali Mode', bn: 'বাংলা করুন' },
           enable: { en: 'Enable', bn: 'চালু করুন' },
+          talib: { en: 'Talib', bn: 'তালিব' },
+          talibMenu: { en: 'Talib Menu', bn: 'তালিব মেনু' },
         };
 
 
@@ -2729,8 +3312,34 @@ setupScrollBehavior() {
 
           document.querySelector('#addExpenseModal h2').textContent = isBn ? 'সাদাকাহ যুক্ত করুন' : 'Add Sadakah';
           document.getElementById('addExpenseBtn').textContent = isBn ? '+সাদাকাহ' : '+Sadakah';
-          document.getElementById('expenseDesc').placeholder = isBn ? 'বর্ণনা' : 'Description';
+          document.getElementById('expenseDesc').placeholder = isBn ? 'শিরোনাম' : 'Title';
           document.getElementById('expenseAmount').placeholder = isBn ? 'পরিমাণ (৳)' : 'Amount (৳)';
+          document.getElementById('expenseAdditionalInfo').placeholder = isBn ? 'অতিরিক্ত তথ্য (ঐচ্ছিক)' : 'Additional info (optional)';
+          
+          // Fund tabs
+          if (document.getElementById('collectionTabBtn')) {
+            document.querySelector('#collectionTabBtn .text-sm').textContent = isBn ? 'কালেকশন' : 'Collection';
+            const collectionMonth = document.getElementById('collectionTabMonth');
+            if (collectionMonth) {
+              const amount = collectionMonth.textContent.split(' ')[1];
+              collectionMonth.textContent = isBn ? `৳ ${amount} এই মাসে` : `৳ ${amount} this month`;
+            }
+          }
+          
+          if (document.getElementById('sadakahTabBtn')) {
+            document.querySelector('#sadakahTabBtn .text-sm').textContent = isBn ? 'সাদাকাহ' : 'Sadakah';
+            const sadakahCount = document.getElementById('sadakahTabCount');
+            if (sadakahCount) {
+              const count = sadakahCount.textContent.split(' ')[0];
+              sadakahCount.textContent = isBn ? `${count} টি এন্ট্রি` : `${count} entries`;
+            }
+          }
+          
+          // Sadakah list view
+          const sadakahListTitle = document.querySelector('#sadakahListView h3');
+          if (sadakahListTitle) {
+            sadakahListTitle.textContent = isBn ? 'সকল সাদাকাহ এর তথ্য' : 'All Sadakah History';
+          }
           document.querySelector('#addExpenseForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
           document.querySelector('#addExpenseModal [data-close-modal]').textContent = isBn ? elementsToTranslate.cancel.bn : elementsToTranslate.cancel.en;
 
@@ -2786,6 +3395,47 @@ setupScrollBehavior() {
 
           // Complete History Modal
           document.querySelector('#completeHistoryModal [data-close-modal]').textContent = isBn ? elementsToTranslate.close.bn : elementsToTranslate.close.en;
+          
+          // Talib button and modal
+          const talibBtn = document.getElementById('talibMenuBtn');
+          if (talibBtn) {
+            talibBtn.textContent = isBn ? elementsToTranslate.talib.bn : elementsToTranslate.talib.en;
+          }
+          const talibMenuTitle = document.querySelector('#talibMenuModal h2');
+          if (talibMenuTitle) {
+            talibMenuTitle.textContent = isBn ? elementsToTranslate.talibMenu.bn : elementsToTranslate.talibMenu.en;
+          }
+          
+          // Admin Menu Modal
+          const adminMenuTitle = document.querySelector('#adminMenuModal h2');
+          if (adminMenuTitle) {
+            adminMenuTitle.textContent = isBn ? 'অ্যাডমিন মেনু' : 'Admin Menu';
+          }
+          const adminUsersBtn = document.getElementById('adminUsersBtn');
+          if (adminUsersBtn) {
+            adminUsersBtn.innerHTML = isBn ? '👥 ইউজারস' : '👥 Users';
+          }
+          
+                    // Admin Users Modal
+          const adminUsersTitle = document.querySelector('#adminUsersModal h2');
+          if (adminUsersTitle) {
+            adminUsersTitle.textContent = isBn ? 'ইউজার ম্যানেজমেন্ট' : 'Manage Users';
+          }
+          
+          // Role Confirmation Modals
+          const roleConfirmTitle = document.querySelector('#roleConfirmModal h2');
+          if (roleConfirmTitle) {
+            roleConfirmTitle.textContent = isBn ? 'রোল পরিবর্তন নিশ্চিত করুন' : 'Confirm Role Change';
+          }
+          const roleConfirmText = document.querySelector('#roleConfirmModal p');
+          if (roleConfirmText) {
+            roleConfirmText.textContent = isBn ? 'আপনি কি নিশ্চিত যে আপনি এই ইউজারের রোল পরিবর্তন করতে চান?' : 'Are you sure you want to change this user\'s role?';
+          }
+          
+          const roleConsequencesTitle = document.querySelector('#roleConsequencesModal h2');
+          if (roleConsequencesTitle) {
+            roleConsequencesTitle.textContent = isBn ? '⚠️ গুরুত্বপূর্ণ: ফলাফল বুঝুন' : '⚠️ Important: Understand the Consequences';
+          }
         };
 
         const savedLang = localStorage.getItem('lang') || 'en';
@@ -2809,452 +3459,397 @@ setupScrollBehavior() {
 
 </html>
 
-<!-- Manifest.json:
-
-{
-  "id": "com.eor.app",
-  "name": "Esho Obodan Rakhi - Community Fund & Blood Donation",
-  "short_name": "EOR Fund",
-  "description": "Community fund management and blood donor directory for Esho Obodan Rakhi",
-  "start_url": "/index.html",
-  "scope": "/",
-  "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
-  "orientation": "portrait",
-  "background_color": "#10b981",
-  "theme_color": "#059669",
-  "categories": ["finance", "health", "lifestyle"],
-  "lang": "en",
-  "dir": "ltr",
-  "icons": [
-    {
-      "src": "/icon-app.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-app.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-app.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%23f0fdf4'/%3E%3Crect y='0' width='540' height='80' fill='%2310b981'/%3E%3Ctext x='20' y='45' font-size='24' fill='white' font-family='system-ui' font-weight='bold'%3EEsho Obodan Rakhi%3C/text%3E%3Ctext x='20' y='65' font-size='14' fill='white' opacity='0.9' font-family='system-ui'%3ECommunity Fund Management%3C/text%3E%3C/svg%3E",
-      "sizes": "540x720",
-      "type": "image/svg+xml",
-      "form_factor": "narrow",
-      "label": "Home screen showing fund overview"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Fund History",
-      "short_name": "Fund",
-      "description": "View fund collection and expenses",
-      "url": "/?section=fund",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%2310b981'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E৳%3C/text%3E%3C/svg%3E",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
-    },
-    {
-      "name": "Blood Donors",
-      "short_name": "Donors",
-      "description": "Find blood donors",
-      "url": "/?section=blood",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%23ef4444'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E🩸%3C/text%3E%3C/svg%3E",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
-    },
-    {
-      "name": "Activities",
-      "short_name": "Activities",
-      "description": "View community activities",
-      "url": "/?section=notices",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%233b82f6'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E📢%3C/text%3E%3C/svg%3E",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
-}
-
--->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--serviceWorker.js
-
-const CACHE_NAME = 'esho-obodan-rakhi-v1';
-const urlsToCache = [
-  '/',
-  '/bEOR.html',
-  '/svgs/icon-settings.svg',
-  '/svgs/icon-fund.svg',
-  '/svgs/announcement-icon.svg',
-  '/svgs/blood-donation-icon.svg',
-  '/svgs/icon-previous.svg',
-  '/svgs/icon-next.svg',
-  '/svgs/icon-copy.svg',
-  '/svgs/icon-location.svg',
-  '/svgs/icon-call.svg',
-  '/svgs/icon-edit.svg',
-  '/svgs/icon-delete.svg',
-  '/svgs/icon-bump.svg',
-  '/svgs/icon-eye.svg',
-  '/svgs/icon-eye-slash.svg',
-  '/svgs/overview-icon.svg',
-  'https://cdn.tailwindcss.com',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
-];
-
-// Install event - cache resources
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache.map(url => {
-          return new Request(url, { cache: 'reload' });
-        })).catch(err => {
-          console.log('Cache addAll error:', err);
-        });
-      })
-  );
-  self.skipWaiting();
-});
-
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', event => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin) && 
-      !event.request.url.includes('cdn.tailwindcss.com') &&
-      !event.request.url.includes('cdn.jsdelivr.net') &&
-      !event.request.url.includes('supabase.co')) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-
-        // Clone the request
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(response => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Don't cache Supabase API calls
-          if (!event.request.url.includes('supabase.co/rest') && 
-              !event.request.url.includes('supabase.co/auth')) {
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-          }
-
-          return response;
-        }).catch(() => {
-          // If both cache and network fail, show offline page
-          return caches.match('/bEOR.html');
-        });
-      })
-  );
-});
-
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// Background sync for offline data
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-data') {
-    event.waitUntil(syncData());
-  }
-});
-
-async function syncData() {
-  // This will be called when connection is restored
-  console.log('Background sync triggered');
-  // You can add logic here to sync offline data with Supabase
-}
-
-// Push notification support (for future use)
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data ? event.data.text() : 'New update available',
-    icon: '/icon-192.png',
-    badge: '/badge-72.png',
-    vibrate: [200, 100, 200]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification('Esho Obodan Rakhi', options)
-  );
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/')
-  );
-});
-
--->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!--
-================================================================================
-                        SUPABASE SETUP DOCUMENTATION
-================================================================================
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    SUPABASE CONFIGURATION DOCUMENTATION                    ║
+║                         Esho Obodan Rakhi Fund App                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
 
-PROJECT DETAILS:
-- Project Name: Community Fund & Blood Donation
-- Database: PostgreSQL (Supabase)
-- Storage: Supabase Storage (for image uploads)
-- Authentication: Supabase Auth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 PROJECT OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-================================================================================
-                            DATABASE TABLES
-================================================================================
+Project: Community Fund & Blood Donation Management System
+Database: PostgreSQL (Supabase)
+Authentication: Supabase Auth (Email/Password + Google OAuth)
+Storage: Supabase Storage (for images)
+Real-time: Supabase Realtime (for live updates)
 
-TABLE 1: users
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🗄️ DATABASE SCHEMA - PUBLIC TABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.users                                                     │
+│ Purpose: Store user profiles and roles                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
 Columns:
-  - id (UUID, PRIMARY KEY) - References auth.users(id) ON DELETE CASCADE
-  - name (TEXT, NOT NULL)
-  - role (TEXT, DEFAULT 'user') - Values: 'user' or 'admin'
-  - created_at (TIMESTAMP, DEFAULT now())
+  ✓ id (UUID, PRIMARY KEY) → References auth.users(id) ON DELETE CASCADE
+  ✓ name (TEXT, NOT NULL) → User's full name
+  ✓ email (TEXT) → User's email address
+  ✓ role (TEXT, DEFAULT 'user') → User role: 'user', 'student', 'moderator', 'admin'
+  ✓ created_at (TIMESTAMP, DEFAULT now())
 
-RLS Enabled: YES
-Policies:
-  1. SELECT - "Users can read own profile" - authenticated - auth.uid() = id
-  2. INSERT - "Users can create their own profile" - public - withcheck= true
----
+RLS Policies (Enabled: ✅):
+  1. SELECT: "User Can Read Their Own Data and admin can read all data"
+     → Target: authenticated
+     → Rule: (auth.uid() = id) OR is_admin()
+     
+  2. INSERT: "Users can create their own profile"
+     → Target: public
+     → Rule: true
+     
+  3. UPDATE: "Admin Can Update Any User's Role"
+     → Target: authenticated
+     → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
 
-TABLE 2: fund
+───────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.fund                                                      │
+│ Purpose: Track all income (collection) and expenses (sadakah)          │
+└─────────────────────────────────────────────────────────────────────────┘
+
 Columns:
-  - id (BIGSERIAL, PRIMARY KEY)
-  - month (TEXT, NOT NULL) - Format: "YYYY-MM" (e.g., "2017-06")
-  - type (TEXT, NOT NULL) - Values: 'income' or 'expense'
-  - name (TEXT) - Name of donor (for income entries)
-  - description (TEXT) - Description (for expense entries)
-  - amount (DECIMAL(10, 2), NOT NULL) - Amount in local currency
-  - highlighted (BOOLEAN, DEFAULT false) - If true, entry text displays in red
-  - timestamp (TIMESTAMP, DEFAULT now())
-  - updated_by (UUID) - References auth.users(id)
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ month (TEXT, NOT NULL) → Format: "YYYY-MM" (e.g., "2017-06")
+  ✓ type (TEXT, NOT NULL) → 'income' or 'expense'
+  ✓ name (TEXT) → Donor name (for income entries)
+  ✓ description (TEXT) → Sadakah title (for expense entries)
+  ✓ additional_info (TEXT) → Optional details for expenses
+  ✓ amount (NUMERIC, NOT NULL) → Amount in local currency
+  ✓ highlighted (BOOLEAN, DEFAULT false) → If true, shows in red
+  ✓ timestamp (TIMESTAMP, DEFAULT now())
+  ✓ updated_by (UUID) → References auth.users(id)
 
-RLS Enabled: YES
-Policies:
-  1. SELECT - "Everyone can see fund" - public - (leave empty or true)
-  2. INSERT - "Only admins can add fund" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
-  3. UPDATE - "Only admins can update fund" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
-  4. DELETE - "Only admins delete fund" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+RLS Policies (Enabled: ✅):
+  1. SELECT: "EveryoneCanSeeFund"
+     → Target: public
+     → Rule: true
+     
+  2. INSERT: "Only admins can add fund"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+     
+  3. UPDATE: "Only admin can update fund"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+     
+  4. DELETE: "Only admins delete fund"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
 
----
+───────────────────────────────────────────────────────────────────────────
 
-TABLE 3: donors
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.donors                                                    │
+│ Purpose: Blood donor directory with contact info and availability      │
+└─────────────────────────────────────────────────────────────────────────┘
+
 Columns:
-  - id (BIGSERIAL, PRIMARY KEY)
-  - user_id (UUID, UNIQUE) - References auth.users(id) ON DELETE CASCADE
-  - name (TEXT, NOT NULL)
-  - phone (TEXT, NOT NULL)
-  - blood_group (TEXT, NOT NULL) - Values: 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
-  - location (TEXT, NOT NULL)
-  - available (BOOLEAN, DEFAULT true)
-  - created_by_admin (BOOLEAN, DEFAULT false) - True if admin added this profile
-  - created_at (TIMESTAMP, DEFAULT now())
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ user_id (UUID, UNIQUE) → References auth.users(id) ON DELETE CASCADE
+  ✓ name (TEXT, NOT NULL)
+  ✓ phone (TEXT, NOT NULL)
+  ✓ blood_group (TEXT, NOT NULL) → 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
+  ✓ location (TEXT, NOT NULL)
+  ✓ available (BOOLEAN, DEFAULT true)
+  ✓ created_by_admin (BOOLEAN, DEFAULT false) → True if admin added profile
+  ✓ created_at (TIMESTAMP, DEFAULT now())
 
-RLS Enabled: YES
-Policies:
-  1. SELECT - "Everyone can see donors" - public - (leave empty or true)
-  2. INSERT - "Users can create own donor profile" - authenticated - auth.uid() = user_id (USING & WITH CHECK)
-  3. UPDATE - "Users can update own profile" - authenticated - auth.uid() = user_id (USING & WITH CHECK)
-  4. DELETE - "Users can delete own profile" - authenticated - auth.uid() = user_id
+RLS Policies (Enabled: ✅):
+  1. SELECT: "EveryoneCanSeeDonorData"
+     → Target: public
+     → Rule: true
+     
+  2. INSERT: "UserCanCreateOwnDonorProfile"
+     → Target: authenticated
+     → Rule: (auth.uid() = user_id) OR (is_admin() AND user_id IS NULL)
+     
+  3. INSERT: "Admins can create donor profile"
+     → Target: authenticated
+     → Rule: is_admin() OR (auth.uid() = user_id)
+     
+  4. UPDATE: "UserCanUpdateOwnProfile"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  5. UPDATE: "Admins can update any donor profile"
+     → Target: authenticated
+     → Rule: is_admin()
+     
+  6. DELETE: "Users can delete own profile"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  7. DELETE: "Admins can delete any donor profile"
+     → Target: authenticated
+     → Rule: is_admin()
 
----
+───────────────────────────────────────────────────────────────────────────
 
-TABLE 4: notices
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.notices                                                   │
+│ Purpose: Community activity feed / announcements                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
 Columns:
-  - id (BIGSERIAL, PRIMARY KEY)
-  - text (TEXT) - Activity description
-  - author_name (TEXT) - Name of the person who posted
-  - author_id (UUID) - References auth.users(id)
-  - timestamp (TIMESTAMP, DEFAULT now())
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ text (TEXT) → Activity description
+  ✓ author_name (TEXT) → Name of person who posted
+  ✓ author_id (UUID) → References auth.users(id)
+  ✓ image_url (TEXT) → Optional image attachment
+  ✓ timestamp (TIMESTAMP, DEFAULT now())
 
-RLS Enabled: YES
-Policies:
-  1. SELECT - "Everyone can see notices" - public - (leave empty or true)
-  2. INSERT - "Users can post notices" - authenticated - auth.uid() = author_id (USING & WITH CHECK)
-  3. UPDATE - "Only admins can update notices" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
-  4. DELETE - "Only admins can delete notices" - authenticated - auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+RLS Policies (Enabled: ✅):
+  1. SELECT: "Everyone can see notices"
+     → Target: public
+     → Rule: true
+     
+  2. INSERT: "Admin can post notices"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+     
+  3. UPDATE: "Admin can update notices"
+     → Target: authenticated
+     → Rule: is_admin()
+     
+  4. DELETE: "Admin can delete notices"
+     → Target: authenticated
+     → Rule: is_admin()
 
-================================================================================
-                          STORAGE BUCKETS
-================================================================================
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 AUTHENTICATION & SECURITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-BUCKET 1: notices
-Purpose: Store images uploaded with activity posts
-Settings:
-  - Public: YES (images must be accessible to all)
-  - Path: notices/{timestamp}_{filename}
-  - File types: image/* (PNG, JPG, GIF, etc.)
-
-================================================================================
-                        AUTHENTICATION SETTINGS
-================================================================================
-
-Email/Password Authentication: ENABLED
-- Users can sign up with email and password
-- Email verification: Not required (can be enabled)
-- Users are created in auth.users table automatically
+Authentication Methods:
+  ✅ Email/Password (Primary)
+  ✅ Google OAuth (Social login)
+  ✅ Phone/SMS (Optional - configured but not actively used)
 
 Session Management:
-- Client-side session handling via Supabase Auth
-- Session stored in browser memory (no localStorage/sessionStorage)
-- onAuthStateChange() listener tracks auth state
+  → Client-side: Supabase Auth handles sessions automatically
+  → Storage: In-memory only (NO localStorage/sessionStorage used in app)
+  → Listener: auth.onAuthStateChange() tracks auth state changes
+  → Session Duration: Follows Supabase default (1 hour access token, 7 day refresh)
 
-================================================================================
-                      IMPORTANT NOTES FOR AI MODELS
-================================================================================
+OAuth Configuration:
+  → Provider: Google
+  → Redirect URLs: 
+     - Web: window.location.origin
+     - Mobile (Capacitor): com.eor.app://oauth
+  → Deep Links: Handled via Capacitor App URL listener
 
-1. COLUMN NAMING CONVENTION:
-   - Database uses snake_case (e.g., blood_group, user_id, author_name)
-   - JavaScript code uses camelCase (e.g., bloodGroup, userId, authorName)
-   - ALWAYS convert when reading/writing to database
+Helper Functions (Database):
+  → is_admin(): Returns true if auth.uid() has role = 'admin'
+     Used in RLS policies for cleaner syntax
 
-2. USER AUTHENTICATION:
-   - currentUser is a Supabase auth.users object
-   - User ID: currentUser.id (NOT currentUser.uid)
-   - User email: currentUser.email
-   - Session managed by: auth.onAuthStateChange()
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 STORAGE BUCKETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-3. DATABASE QUERIES:
-   - Use: db.from('table_name').select(...).eq('column', value)
-   - NOT: db.collection('table_name').doc(...).get()
-   - Supabase returns {data, error} object, NOT a DocumentSnapshot
+BUCKET: notices
+  Purpose: Store images for activity posts
+  Settings:
+    → Public: YES (all users can view images)
+    → Path Pattern: notices/{timestamp}_{filename}
+    → Allowed MIME Types: image/* (PNG, JPG, JPEG, GIF, WebP)
+    → Max File Size: Default Supabase limit (50MB)
 
-4. TIMESTAMPS:
-   - Always use ISO 8601 format: new Date().toISOString()
-   - NOT firebase.firestore.FieldValue.serverTimestamp()
-   - When reading: new Date(timestamp_string).toLocaleString()
+Storage Policies:
+  → Upload: Authenticated users only (via app logic)
+  → View: Public (anyone with URL)
+  → Delete: Admin only
 
-5. STORAGE:
-   - Upload: db.storage.from('bucket_name').upload(path, file)
-   - Get URL: db.storage.from('bucket_name').getPublicUrl(path)
-   - Images must be in PUBLIC bucket to be accessible
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 IMPORTANT CODING CONVENTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-6. RLS POLICIES:
-   - If adding new features, MUST create corresponding RLS policies
-   - Test policies in Supabase dashboard BEFORE testing in app
-   - Common policy checks:
-     * auth.uid() = user_id (user owns the record)
-     * auth.uid() IN (SELECT id FROM users WHERE role = 'admin') (admin check)
-     * true or leave empty (public read access)
+1. NAMING CONVENTIONS
+   ⚠️ CRITICAL: Always convert between JavaScript and Database naming!
+   
+   Database (snake_case)     ←→     JavaScript (camelCase)
+   ────────────────────────────────────────────────────────
+   blood_group               ←→     bloodGroup
+   user_id                   ←→     userId
+   author_name              ←→     authorName
+   created_at               ←→     createdAt
+   additional_info          ←→     additionalInfo
 
-7. ERRORS TO WATCH FOR:
-   - "RLS policy violation" = Permission denied by RLS policy
-   - "Column not found" = Using camelCase in DB query
-   - "No session" = User not logged in
-   - "Cannot read property 'from'" = Supabase not initialized
+2. USER AUTHENTICATION REFERENCE
+   ✓ Current user object: db.auth.getUser() or session.user
+   ✓ User ID: currentUser.id (NOT currentUser.uid - that's Firebase!)
+   ✓ User email: currentUser.email
+   ✓ Session check: db.auth.getSession()
 
-================================================================================
-                      HOW TO UPDATE THIS DOCUMENT
-================================================================================
+3. DATABASE QUERIES (Supabase Syntax)
+   
+   ✅ CORRECT:
+   const { data, error } = await db.from('fund').select('*').eq('type', 'income')
+   
+   ❌ WRONG (Firebase syntax):
+   const doc = await db.collection('fund').doc(id).get()
 
-When making changes:
-- New table? Add it to DATABASE TABLES section with full column definitions
-- New policy? Add it to the table's RLS Policies section
-- New storage bucket? Add it to STORAGE BUCKETS section
-- New auth setting? Add it to AUTHENTICATION SETTINGS section
-- New rules? Add to IMPORTANT NOTES section
+4. TIMESTAMPS
+   ✅ CORRECT: new Date().toISOString()
+   ❌ WRONG: firebase.firestore.FieldValue.serverTimestamp()
+   
+   Reading timestamps:
+   → new Date(timestamp).toLocaleString()
+   → For Bangladesh time: new Date(timestamp + 6*60*60*1000)
 
-================================================================================
+5. STORAGE OPERATIONS
+   Upload:
+     const { data, error } = await db.storage
+       .from('notices')
+       .upload(path, file)
+   
+   Get Public URL:
+     const { data } = db.storage
+       .from('notices')
+       .getPublicUrl(path)
+
+6. COMMON ERRORS & SOLUTIONS
+
+   Error: "RLS policy violation"
+   → Fix: User doesn't have permission. Check RLS policies in table above.
+   
+   Error: "Column 'bloodGroup' does not exist"
+   → Fix: Use snake_case in queries: .select('blood_group')
+   
+   Error: "No session found"
+   → Fix: User not logged in. Check: await db.auth.getSession()
+   
+   Error: "Cannot read property 'from' of undefined"
+   → Fix: Supabase client not initialized. Check: const db = createClient(...)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 DEVELOPMENT WORKFLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Adding New Features Checklist:
+
+□ 1. Design database schema
+     → Decide on table structure and columns
+     → Choose appropriate data types
+     
+□ 2. Create table in Supabase Dashboard
+     → Use SQL editor or Table editor
+     
+□ 3. Enable RLS on new table
+     → Dashboard → Table → Settings → Enable RLS
+     
+□ 4. Create RLS policies
+     → SELECT: Who can read data?
+     → INSERT: Who can create records?
+     → UPDATE: Who can modify records?
+     → DELETE: Who can remove records?
+     
+□ 5. Test policies in Supabase SQL Editor
+     → Use auth.uid() = 'test-uuid' to simulate different users
+     
+□ 6. Update this documentation
+     → Add new table schema above
+     → Document all policies
+     
+□ 7. Implement in code
+     → Remember snake_case ←→ camelCase conversion!
+     → Handle {data, error} responses
+     
+□ 8. Test thoroughly
+     → Test as different user roles
+     → Test error cases (network failure, permission denied)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 DATABASE SYSTEM TABLES (Auto-generated by Supabase)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These tables are managed by Supabase. DO NOT modify directly!
+
+auth.* tables:
+  → auth.users - Core user authentication data
+  → auth.sessions - Active user sessions
+  → auth.identities - OAuth provider links
+  → auth.refresh_tokens - Token refresh data
+  → auth.mfa_factors - Multi-factor authentication
+  → auth.audit_log_entries - Authentication audit trail
+
+storage.* tables:
+  → storage.buckets - Storage bucket configuration
+  → storage.objects - Uploaded files metadata
+  → storage.migrations - Storage schema versions
+
+realtime.* tables:
+  → realtime.messages - Real-time pub/sub messages
+  → realtime.subscription - Active subscriptions
+
+extensions.* tables:
+  → pg_stat_statements - PostgreSQL query statistics
+
+vault.* tables:
+  → vault.secrets - Encrypted secrets storage
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 QUICK REFERENCE: Common Queries
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Get current user
+const { data: { user } } = await db.auth.getUser()
+
+// Check if user is admin
+const { data } = await db.from('users').select('role').eq('id', user.id).single()
+const isAdmin = data?.role === 'admin'
+
+// Fetch fund data for a month
+const { data, error } = await db
+  .from('fund')
+  .select('*')
+  .eq('month', '2025-10')
+  .order('timestamp', { ascending: true })
+
+// Add new fund entry (admin only)
+const { error } = await db.from('fund').insert({
+  month: '2025-10',
+  type: 'income',
+  name: 'John Doe',
+  amount: 1000,
+  updated_by: user.id
+})
+
+// Get all available blood donors
+const { data } = await db
+  .from('donors')
+  .select('*')
+  .eq('available', true)
+  .order('name')
+
+// Post new activity (admin only)
+const { error } = await db.from('notices').insert({
+  text: 'New announcement',
+  author_name: userName,
+  author_id: user.id
+})
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 MAINTENANCE NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When updating this documentation:
+  ✓ Add new tables to "DATABASE SCHEMA - PUBLIC TABLES" section
+  ✓ Document all RLS policies for new tables
+  ✓ Update "Common Queries" section with new use cases
+  ✓ Add new error patterns to "Common Errors & Solutions"
+  ✓ Keep naming conventions consistent
+  ✓ Test all code examples before documenting
+
+Last Updated: October 2025
+Supabase Project: kszhmrhlsoqfxkcopvoe
+App Version: 1.0
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║  Remember: This is a vibe coding project. Keep the energy flowing! 🎵✨   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
 -->
+

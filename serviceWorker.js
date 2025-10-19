@@ -1,7 +1,7 @@
-const CACHE_NAME = 'esho-obodan-rakhi-v1';
+const CACHE_NAME = 'esho-obodan-rakhi-v2';
 const urlsToCache = [
   '/',
-  '/bEOR.html',
+  '/index.html',
   '/svgs/icon-settings.svg',
   '/svgs/icon-fund.svg',
   '/svgs/announcement-icon.svg',

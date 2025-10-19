@@ -67,6 +67,16 @@ body {
   background-color: #dc2626;
 }
 
+.phone-number {
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.phone-number:hover {
+  color: var(--brand-green-dark);
+}
+
 .loader {
   border: 4px solid #f3f3f3;
   border-top: 4px solid var(--brand-green-dark);
@@ -139,25 +149,21 @@ body.modal-open {
   transform: rotate(180deg);
 }
 
-@media (max-aspect-ratio: 1/1) {
-    html {
-      font-size: calc(100vw / 48);
-    }
-    
-    .mobile-container {
-      font-size: 1rem;
-    }
-    
-    .desktop-padding .mobile-container {
-      max-width: 100vw;
-    }
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
   }
-  
-  @media (min-aspect-ratio: 1/1) {
-    html {
-      font-size: 16px;
-    }
+}
+
+@media (max-width: 360px) {
+  html {
+    font-size: 13px;
   }
+}
 
 /* Top bar transitions */
 .bg-gradient-to-r {
@@ -198,4 +204,12 @@ body.modal-open {
 #bloodFilterPlaceholder.active {
   display: block;
   height: 80px;
+}
+
+.fund-tab-btn {
+  transition: all 0.3s ease;
+}
+
+.fund-tab-btn:hover {
+  transform: translateY(-2px);
 }
