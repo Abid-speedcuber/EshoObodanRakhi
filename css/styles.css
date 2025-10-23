@@ -213,3 +213,59 @@ html {
 .fund-tab-btn:hover {
   transform: translateY(-2px);
 }
+
+    /* Formatting auras */
+    .format-bold {
+      font-weight: bold;
+      background-color: rgba(59, 130, 246, 0.08);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    
+    .format-highlight {
+      color: #dc2626;
+      background-color: rgba(220, 38, 38, 0.08);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    
+    .format-underline {
+      text-decoration: underline;
+      background-color: rgba(168, 85, 247, 0.08);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    
+    /* Stacked formatting */
+    .format-bold.format-highlight {
+      font-weight: bold;
+      color: #dc2626;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%);
+    }
+    
+    .format-bold.format-underline {
+      font-weight: bold;
+      text-decoration: underline;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+    }
+    
+    .format-highlight.format-underline {
+      color: #dc2626;
+      text-decoration: underline;
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+    }
+    
+    .format-bold.format-highlight.format-underline {
+      font-weight: bold;
+      color: #dc2626;
+      text-decoration: underline;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(220, 38, 38, 0.08) 50%, rgba(168, 85, 247, 0.08) 100%);
+    }
+    
+    #noteContentInput::placeholder {
+      color: #9ca3af;
+    }
+    
+    #noteContentDisplay {
+      color: #374151;
+    }

@@ -14,7 +14,7 @@
 
   <!-- Capacitor Core (loaded differently for production) -->
   <script src="capacitor.js"></script>
-  
+
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -27,6 +27,7 @@
 
   <!--<link rel="stylesheet" href="tailwind.css">-->
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/text-formatting.css">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -40,7 +41,8 @@
     <div class="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-4 sticky top-0 z-50 shadow-lg">
       <div class="flex justify-between items-center">
         <button id="totalFundBtn" class="text-left">
-          <div class="text-lg font-bold" id="appTitle">Esho Obodan Rakhi<br><span class="text-sm opacity-90">আসো অবদান রাখি</span></div>
+          <div class="text-lg font-bold" id="appTitle">Esho Obodan Rakhi<br><span class="text-sm opacity-90">আসো অবদান
+              রাখি</span></div>
           <div class="text-xs opacity-90 underline decoration-2 underline-offset-2" id="totalFundDisplay">৳ 0</div>
         </button>
         <div class="flex items-center gap-2">
@@ -89,93 +91,109 @@
       <div id="fundSection" class="section hide">
         <!-- Fund Tabs (Non-Admin Only) -->
         <div id="fundTabs" class="grid grid-cols-2 gap-2 p-4 bg-green-50 hide">
-          <button id="collectionTabBtn" class="fund-tab-btn bg-white p-3 rounded-xl shadow hover:shadow-lg transition text-center">
+          <button id="collectionTabBtn"
+            class="fund-tab-btn bg-white p-3 rounded-xl shadow hover:shadow-lg transition text-center">
             <div class="text-sm font-semibold text-gray-700">Collection</div>
             <div class="text-xs text-green-700 font-bold mt-1" id="collectionTabTotal">৳ 0</div>
             <div class="text-xs text-gray-500" id="collectionTabMonth">৳ 0 this month</div>
           </button>
-          <button id="sadakahTabBtn" class="fund-tab-btn bg-white p-3 rounded-xl shadow hover:shadow-lg transition text-center">
+          <button id="sadakahTabBtn"
+            class="fund-tab-btn bg-white p-3 rounded-xl shadow hover:shadow-lg transition text-center">
             <div class="text-sm font-semibold text-gray-700">Sadakah</div>
             <div class="text-xs text-red-700 font-bold mt-1" id="sadakahTabTotal">৳ 0</div>
             <div class="text-xs text-gray-500" id="sadakahTabCount">0 entries</div>
           </button>
         </div>
-        
+
         <!-- Collection View (default for non-admin) -->
         <div id="collectionView">
-        <div class="bg-white rounded-xl shadow-lg p-3 mb-3">
-          <div class="flex justify-between items-center mb-2">
-            <button id="prevMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
-                src="svgs/icon-previous.svg"></button>
-            <h2 id="currentMonthDisplay" class="text-base font-bold text-gray-800"></h2>
-            <button id="nextMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
-                src="svgs/icon-next.svg"></button>
+          <div class="bg-white rounded-xl shadow-lg p-3 mb-3">
+            <div class="flex justify-between items-center mb-2">
+              <button id="prevMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
+                  src="svgs/icon-previous.svg"></button>
+              <h2 id="currentMonthDisplay" class="text-base font-bold text-gray-800"></h2>
+              <button id="nextMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
+                  src="svgs/icon-next.svg"></button>
+            </div>
+            <div id="adminControls" class="hide mb-2 text-center">
+              <button data-modal="addIncomeModal" class="bg-green-600 text-white px-4 py-2 rounded-lg mr-2 text-sm"
+                id="addIncomeBtn">+Collection</button>
+              <button data-modal="addExpenseModal" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
+                id="addExpenseBtn">+Sadakah</button>
+            </div>
           </div>
-          <div id="adminControls" class="hide mb-2 text-center">
-            <button data-modal="addIncomeModal" class="bg-green-600 text-white px-4 py-2 rounded-lg mr-2 text-sm"
-              id="addIncomeBtn">+Collection</button>
-            <button data-modal="addExpenseModal" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
-              id="addExpenseBtn">+Sadakah</button>
-          </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="text-lg font-bold text-green-700">Collection</h3>
-            <button id="copyIncomeBtn"
-              class="bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-200 transition">
-              <img src="svgs/icon-copy.svg"> Copy List
-            </button>
-          </div>
-          <div class="mb-3 pb-3 border-b border-gray-200">
-            <div class="text-sm text-gray-700">
-              <div id="donationInfoText" class="font-semibold mb-2">You can also contribute by donating to:</div>
-              <div class="space-y-1">
-                <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1937-222273"><span class="underline">+880 1937-222273</span> - nogod</div>
-                <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1515-214867"><span class="underline">+880 1515-214867</span> - bkash</div>
+          <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-bold text-green-700">Collection</h3>
+              <button id="copyIncomeBtn"
+                class="bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-200 transition">
+                <img src="svgs/icon-copy.svg"> Copy List
+              </button>
+            </div>
+            <div class="mb-3 pb-3 border-b border-gray-200">
+              <div class="text-sm text-gray-700">
+                <div id="donationInfoText" class="font-semibold mb-2">You can also contribute by donating to:</div>
+                <div class="space-y-1">
+                  <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1937-222273"><span
+                      class="underline">+880 1937-222273</span> - nogod</div>
+                  <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1515-214867"><span
+                      class="underline">+880 1515-214867</span> - bkash</div>
+                </div>
+              </div>
+            </div>
+            <div id="incomeList" class="space-y-2"></div>
+            <div class="mt-3 pt-3 border-t border-gray-200">
+              <div class="flex justify-between font-bold text-green-700">
+                <span>Total Collection:</span>
+                <span id="totalIncome">৳ 0</span>
               </div>
             </div>
           </div>
-          <div id="incomeList" class="space-y-2"></div>
-          <div class="mt-3 pt-3 border-t border-gray-200">
-            <div class="flex justify-between font-bold text-green-700">
-              <span>Total Collection:</span>
-              <span id="totalIncome">৳ 0</span>
+          <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+            <h3 class="text-lg font-bold text-red-700 mb-3">Sadakah</h3>
+            <div id="expenseList" class="space-y-2"></div>
+            <div class="mt-3 pt-3 border-t border-gray-200">
+              <div class="flex justify-between font-bold text-red-700">
+                <span>Total Sadakah:</span>
+                <span id="totalExpense">৳ 0</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-          <h3 class="text-lg font-bold text-red-700 mb-3">Sadakah</h3>
-          <div id="expenseList" class="space-y-2"></div>
-          <div class="mt-3 pt-3 border-t border-gray-200">
-            <div class="flex justify-between font-bold text-red-700">
-              <span>Total Sadakah:</span>
-              <span id="totalExpense">৳ 0</span>
+          <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+            <div class="flex justify-between items-center mb-3">
+              <span class="font-bold text-gray-700">Monthly economy:</span>
+              <span id="monthlyBalance" class="text-xl font-bold">৳ 0</span>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+              <span class="font-bold text-blue-700">Net worth at month end:</span>
+              <span id="netWorth" class="text-xl font-bold text-blue-700">৳ 0</span>
             </div>
           </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-          <div class="flex justify-between items-center mb-3">
-            <span class="font-bold text-gray-700">Monthly economy:</span>
-            <span id="monthlyBalance" class="text-xl font-bold">৳ 0</span>
-          </div>
-          <div class="flex justify-between items-center pt-3 border-t border-gray-200">
-            <span class="font-bold text-blue-700">Net worth at month end:</span>
-            <span id="netWorth" class="text-xl font-bold text-blue-700">৳ 0</span>
+          <div class="bg-white rounded-xl shadow-lg p-4 text-center" style="justify-items:center;">
+            <button id="showYearlyChartBtn"
+              class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+              <img src="svgs/overview-icon.svg" style="width: 20px; height: 20px;"> View Yearly Overview
+            </button>
           </div>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-4 text-center" style="justify-items:center;">
-          <button id="showYearlyChartBtn"
-            class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
-            <img src="svgs/overview-icon.svg" style="width: 20px; height: 20px;"> View Yearly Overview
-          </button>
-        </div>
-        </div>
-        
+
         <!-- Sadakah List View (Non-Admin Only) -->
         <div id="sadakahListView" class="hide">
           <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
             <h3 class="text-lg font-bold text-red-700 mb-3">All Sadakah History</h3>
             <div id="allSadakahList" class="space-y-3"></div>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <div class="text-sm text-gray-700">
+                <div id="sadakahDonationInfoText" class="font-semibold mb-2">You can also contribute by donating to:
+                </div>
+                <div class="space-y-1">
+                  <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1937-222273"><span
+                      class="underline">+880 1937-222273</span> - nogod</div>
+                  <div class="cursor-pointer hover:text-green-600 transition" data-copy-number="+880 1515-214867"><span
+                      class="underline">+880 1515-214867</span> - bkash</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -206,11 +224,14 @@
               <option value="AB+">AB+</option>
               <option value="AB-">AB-</option>
             </select>
-            <input type="text" id="bloodSearch" placeholder="Search donors..." class="hide flex-1 p-3 border border-gray-300 rounded-lg">
-            <button id="bloodSearchBtn" class="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition flex-shrink-0">
+            <input type="text" id="bloodSearch" placeholder="Search donors..."
+              class="hide flex-1 p-3 border border-gray-300 rounded-lg">
+            <button id="bloodSearchBtn"
+              class="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition flex-shrink-0">
               <img src="svgs/icon-search.svg" alt="Search" style="width: 20px; height: 20px;">
             </button>
-            <button id="bloodClearBtn" class="hide bg-white text-white p-3 rounded-lg hover:bg-gray-100 transition flex-shrink-0">
+            <button id="bloodClearBtn"
+              class="hide bg-white text-white p-3 rounded-lg hover:bg-gray-100 transition flex-shrink-0">
               <img src="svgs/icon-close.svg" alt="Clear" style="width: 20px; height: 20px;">
             </button>
           </div>
@@ -227,6 +248,25 @@
         </div>
         <div id="noticesList" class="space-y-4"></div>
       </div>
+
+      <!-- Notes Section -->
+      <div id="notesSection" class="section hide">
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xl font-bold text-gray-800">Notes</h2>
+            <div class="flex gap-2">
+              <button id="createBackupBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition flex items-center gap-2">
+                <img src="svgs/icon-refresh.svg" style="width: 16px; height: 16px;"> Backup to Cloud
+              </button>
+              <button id="createNoteBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition">
+                + New Note
+              </button>
+            </div>
+          </div>
+          <div id="notesLastSync" class="text-xs text-gray-500 text-center"></div>
+        </div>
+        <div id="notesList" class="space-y-3"></div>
+      </div>
     </main>
 
     <!-- All Modals -->
@@ -242,7 +282,8 @@
               <img src="svgs/icon-eye.svg" id="loginEyeIcon" style="width: 20px; height: 20px;" alt="Show password">
             </button>
           </div>
-          <button id="forgotPasswordBtn" type="button" class="w-full text-right text-orange-600 font-semibold text-sm mb-3">Forgot Password?</button>
+          <button id="forgotPasswordBtn" type="button"
+            class="w-full text-right text-orange-600 font-semibold text-sm mb-3">Forgot Password?</button>
           <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold mb-4">Login</button>
         </form>
 
@@ -254,13 +295,15 @@
         </div>
 
         <!-- START: Continue with Google button -->
-        <button id="googleLoginBtn" type="button" class="w-full bg-white border border-gray-300 py-3 rounded-lg font-semibold mb-4 flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+        <button id="googleLoginBtn" type="button"
+          class="w-full bg-white border border-gray-300 py-3 rounded-lg font-semibold mb-4 flex items-center justify-center gap-3 hover:bg-gray-50 transition">
           <img src="svgs/icon-google.svg" alt="G" style="width:18px;height:18px;">
           <span>Continue with Google</span>
         </button>
         <!-- END: Continue with Google button -->
 
-        <button id="showSignupBtn" class="w-full text-blue-600 py-2 font-semibold">Don't have an account? Sign up</button>
+        <button id="showSignupBtn" class="w-full text-blue-600 py-2 font-semibold">Don't have an account? Sign
+          up</button>
         <button data-close-modal class="w-full mt-2 text-gray-600 py-2">Cancel</button>
       </div>
     </div>
@@ -330,14 +373,15 @@
       </div>
     </div>
 
-<div id="addExpenseModal" class="modal hide">
+    <div id="addExpenseModal" class="modal hide">
       <div class="modal-content">
         <h2 class="text-xl font-bold mb-4 text-gray-800">Add Sadakah</h2>
         <form id="addExpenseForm">
           <input type="hidden" id="expenseId">
           <input type="text" id="expenseDesc" placeholder="Title" class="modal-input" required>
           <input type="number" id="expenseAmount" placeholder="Amount (৳)" class="modal-input" required>
-          <textarea id="expenseAdditionalInfo" placeholder="Additional info (optional)" class="modal-input h-24"></textarea>
+          <textarea id="expenseAdditionalInfo" placeholder="Additional info (optional)"
+            class="modal-input h-24"></textarea>
           <label class="flex items-center mb-4 cursor-pointer">
             <input type="checkbox" id="expenseHighlighted" class="mr-2 w-5 h-5">
             <span class="text-gray-700">Highlight this entry</span>
@@ -455,8 +499,9 @@
     <div class="modal-content">
       <h2 class="text-xl font-bold mb-4 text-gray-800">Talib Menu</h2>
       <div class="space-y-2">
-        <button class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold cursor-not-allowed text-left px-4" disabled>
-          📝 Notes (Coming Soon)
+        <button id="talibNotesBtn"
+          class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-left px-4">
+          📝 Notes
         </button>
       </div>
       <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
@@ -468,11 +513,13 @@
     <div class="modal-content">
       <h2 class="text-xl font-bold mb-4 text-gray-800">Admin Menu</h2>
       <div class="space-y-2">
-        <button id="adminUsersBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-left px-4">
+        <button id="adminUsersBtn"
+          class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-left px-4">
           👥 Users
         </button>
-        <button class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold cursor-not-allowed text-left px-4" disabled>
-          📝 Notes (Coming Soon)
+        <button id="adminNotesBtn"
+          class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-left px-4">
+          📝 Notes
         </button>
       </div>
       <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
@@ -485,8 +532,10 @@
       <h2 class="text-xl font-bold mb-4 text-gray-800">Manage Users</h2>
       <div class="mb-4">
         <div class="flex items-center gap-2">
-          <input type="text" id="userSearch" placeholder="Search users..." class="flex-1 p-3 border border-gray-300 rounded-lg">
-          <button id="userClearBtn" class="hide bg-white text-white p-3 rounded-lg hover:bg-gray-100 transition flex-shrink-0">
+          <input type="text" id="userSearch" placeholder="Search users..."
+            class="flex-1 p-3 border border-gray-300 rounded-lg">
+          <button id="userClearBtn"
+            class="hide bg-white text-white p-3 rounded-lg hover:bg-gray-100 transition flex-shrink-0">
             <img src="svgs/icon-close.svg" alt="Clear" style="width: 20px; height: 20px;">
           </button>
         </div>
@@ -502,8 +551,11 @@
       <h2 class="text-xl font-bold mb-4 text-gray-800">Confirm Role Change</h2>
       <p class="text-gray-700 mb-4">Are you sure you want to change this user's role?</p>
       <div class="flex gap-2">
-        <button id="roleConfirmYes" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Yes, Continue</button>
-        <button id="roleConfirmNo" class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
+        <button id="roleConfirmYes"
+          class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Yes,
+          Continue</button>
+        <button id="roleConfirmNo"
+          class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
       </div>
     </div>
   </div>
@@ -514,8 +566,131 @@
       <h2 class="text-xl font-bold mb-4 text-red-600">⚠️ Important: Understand the Consequences</h2>
       <div id="roleConsequencesText" class="text-gray-700 mb-4 space-y-2"></div>
       <div class="flex gap-2">
-        <button id="roleConsequencesConfirm" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">I Understand, Proceed</button>
-        <button id="roleConsequencesCancel" class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
+        <button id="roleConsequencesConfirm"
+          class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">I Understand,
+          Proceed</button>
+        <button id="roleConsequencesCancel"
+          class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note View Modal (Read-only) -->
+  <div id="noteViewModal" class="modal hide">
+    <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
+        <div>
+          <h2 id="noteViewTitle" class="text-xl font-bold text-gray-800"></h2>
+          <div id="noteViewDate" class="text-sm text-gray-500 mt-1"></div>
+        </div>
+        <div class="flex gap-2">
+          <button id="editNoteBtn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition">
+            <img src="svgs/icon-edit.svg" style="width: 20px; height: 20px;">
+          </button>
+          <button id="deleteNoteViewBtn" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition">
+            <img src="svgs/icon-delete.svg" style="width: 20px; height: 20px;">
+          </button>
+        </div>
+      </div>
+      <div id="noteViewContent" class="text-gray-700 whitespace-pre-wrap"></div>
+      <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
+  <!-- Note Edit Modal -->
+  <div id="noteEditModal" class="modal hide">
+    <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <!-- Editable Title and Date Bar -->
+      <div class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div class="flex-1">
+          <input type="text" id="noteTitleInput" placeholder="Untitled" class="text-xl font-bold text-gray-800 bg-transparent border-none outline-none w-full focus:bg-white focus:px-2 focus:py-1 rounded" maxlength="100">
+          <input type="date" id="noteDateInput" class="text-sm text-gray-500 mt-1 bg-transparent border-none outline-none cursor-pointer hover:bg-white hover:px-2 hover:py-1 rounded" required>
+        </div>
+        <div class="flex gap-2">
+          <button id="saveNoteBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition">Save</button>
+          <button type="button" id="deleteNoteEditBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition hide">Delete</button>
+        </div>
+      </div>
+      
+      <!-- Sticky Formatting Toolbar -->
+      <div class="flex gap-2 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10 overflow-x-auto" style="scrollbar-width: thin;">
+        <div class="note-dropdown">
+          <button id="noteBoldBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition font-bold" title="Bold">B</button>
+          <button class="note-dropdown-arrow bg-gray-200 text-gray-700 px-2 py-2 rounded-lg hover:bg-gray-300 transition" title="Bold Options">▼</button>
+          <div class="note-dropdown-content note-dropdown-bold">
+            <button data-note-format="bold" data-value="light" style="font-weight: 500; font-size: 18px;">B</button>
+            <button data-note-format="bold" data-value="medium" style="font-weight: 700; font-size: 18px;">B</button>
+            <button data-note-format="bold" data-value="heavy" style="font-weight: 900; font-size: 18px;">B</button>
+          </div>
+        </div>
+        <button id="noteItalicBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition italic" title="Italic">I</button>
+        <div class="note-dropdown">
+          <button id="noteUnderlineBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition" title="Underline" style="text-decoration: underline;">U</button>
+          <button class="note-dropdown-arrow bg-gray-200 text-gray-700 px-2 py-2 rounded-lg hover:bg-gray-300 transition" title="Underline Options">▼</button>
+          <div class="note-dropdown-content note-dropdown-underline">
+            <div class="note-dropdown-row">
+              <button data-note-format="underline" data-value="single" style="text-decoration: underline; text-decoration-style: solid;">U</button>
+              <button data-note-format="underline" data-value="double" style="text-decoration: underline; text-decoration-style: double;">U</button>
+              <button data-note-format="underline" data-value="dotted" style="text-decoration: underline; text-decoration-style: dotted;">U</button>
+            </div>
+            <div class="note-dropdown-row">
+              <button data-note-format="underline" data-value="dashed" style="text-decoration: underline; text-decoration-style: dashed;">U</button>
+              <button data-note-format="underline" data-value="wavy" style="text-decoration: underline; text-decoration-style: wavy;">U</button>
+            </div>
+          </div>
+        </div>
+        <div class="note-dropdown">
+          <button id="noteHighlightBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition" title="Highlight" style="background-color: #fff59d;">H</button>
+          <button class="note-dropdown-arrow bg-gray-200 text-gray-700 px-2 py-2 rounded-lg hover:bg-gray-300 transition" title="Highlight Options">▼</button>
+          <div class="note-dropdown-content note-dropdown-colors">
+            <button data-note-format="highlight" data-value="yellow" style="background-color: #fff59d; width: 32px; height: 32px; padding: 0;"></button>
+            <button data-note-format="highlight" data-value="green" style="background-color: #a5d6a7; width: 32px; height: 32px; padding: 0;"></button>
+            <button data-note-format="highlight" data-value="blue" style="background-color: #90caf9; width: 32px; height: 32px; padding: 0;"></button>
+            <button data-note-format="highlight" data-value="pink" style="background-color: #f48fb1; width: 32px; height: 32px; padding: 0;"></button>
+            <button data-note-format="highlight" data-value="orange" style="background-color: #ffcc80; width: 32px; height: 32px; padding: 0;"></button>
+          </div>
+        </div>
+        <div class="note-dropdown">
+          <button id="noteColorBtn" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition" title="Text Color" style="color: #d32f2f;">A</button>
+          <button class="note-dropdown-arrow bg-gray-200 text-gray-700 px-2 py-2 rounded-lg hover:bg-gray-300 transition" title="Color Options">▼</button>
+          <div class="note-dropdown-content note-dropdown-colors">
+            <button data-note-format="color" data-value="red" style="color: #d32f2f; width: 32px; height: 32px; padding: 0; font-weight: 900; font-size: 18px;">A</button>
+            <button data-note-format="color" data-value="blue" style="color: #1976d2; width: 32px; height: 32px; padding: 0; font-weight: 900; font-size: 18px;">A</button>
+            <button data-note-format="color" data-value="green" style="color: #388e3c; width: 32px; height: 32px; padding: 0; font-weight: 900; font-size: 18px;">A</button>
+            <button data-note-format="color" data-value="purple" style="color: #7b1fa2; width: 32px; height: 32px; padding: 0; font-weight: 900; font-size: 18px;">A</button>
+            <button data-note-format="color" data-value="orange" style="color: #f57c00; width: 32px; height: 32px; padding: 0; font-weight: 900; font-size: 18px;">A</button>
+            <button data-note-format="color" data-value="gray" style="color: #616161; width: 32px; height: 32px; padding: 0; font-weight: 900; font-size: 18px;">A</button>
+          </div>
+        </div>
+      </div>
+      
+      <form id="noteEditForm">
+        <input type="hidden" id="noteEditId">
+        <div class="note-editor-wrapper px-4" style="position: relative;">
+          <div 
+            id="noteContentInput" 
+            class="modal-input border-none" 
+            contenteditable="true"
+            placeholder="Write your note here..." 
+            style="min-height: 300px; font-family: inherit; outline: none; cursor: text;" 
+            required
+          ></div>
+        </div>
+        <div class="flex gap-2 mt-4 px-4 pb-4">
+          <button type="button" data-close-modal class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Unsaved Changes Warning Modal -->
+  <div id="unsavedChangesModal" class="modal hide">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2 class="text-xl font-bold mb-4 text-orange-600">⚠️ Unsaved Changes</h2>
+      <p class="text-gray-700 mb-4">You have unsaved changes. Are you sure you want to close without saving?</p>
+      <div class="flex gap-2">
+        <button id="discardChangesBtn" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">Discard</button>
+        <button id="keepEditingBtn" class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Keep Editing</button>
       </div>
     </div>
   </div>
@@ -554,12 +729,12 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtzemhtcmhsc29xZnhrY29wdm9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjU5MTcsImV4cCI6MjA3NTU0MTkxN30.8TLXLfVbPiwtzpa_4wEYzC9Lfqm58Z7ICIaUQsa0izA";
 
     const { createClient } = supabase;
-    
+
     // Check if running in Capacitor (mobile app)
     if (typeof window.Capacitor === 'undefined') {
-      window.Capacitor = { 
+      window.Capacitor = {
         Plugins: {},
-        isNativePlatform: () => false 
+        isNativePlatform: () => false
       };
     }
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -581,11 +756,16 @@
           fund: false,
           donors: false,
           notices: false,
+          notes: false,
         },
         allFundData: [], // Store all fund data for offline access
         cachedMonthlyData: {}, // Store monthly aggregated data
+        notes: [], // All notes in memory
+        currentNote: null, // Currently viewing/editing note
+        notesNeedSync: false, // Track if local notes differ from server
+        notesRecycleBin: [], // Deleted notes that shouldn't come back from server
       },
-      
+
       pendingRoleChange: null, // Store pending role change data for confirmation flow
 
       // --- DOM ELEMENTS ---
@@ -607,6 +787,7 @@
         monthlyBalance: document.getElementById('monthlyBalance'),
         donorsList: document.getElementById('donorsList'),
         noticesList: document.getElementById('noticesList'),
+        notesList: document.getElementById('notesList'),
         adminControls: document.getElementById('adminControls'),
         myDonorBtn: document.getElementById('myDonorBtn'),
         postNoticeBtn: document.getElementById('postNoticeBtn'),
@@ -620,46 +801,63 @@
         this.registerServiceWorker();
         this.bindEvents();
         this.setupScrollBehavior();
-        
+
+        // Load cached auth state for offline support
+        const cachedAuthState = localStorage.getItem('authState');
+        if (cachedAuthState) {
+          const authState = JSON.parse(cachedAuthState);
+          this.state.userProfile = authState.userProfile;
+          this.state.isAdmin = authState.isAdmin;
+          this.state.currentUser = { id: authState.userProfile?.id }; // Temporary user object
+          // Update UI based on cached state
+          this.updateUI();
+        } else {
+          // No cached state - show login button by default
+          document.getElementById('loginTopBtn').classList.remove('hide');
+        }
+
         // Load cached total fund immediately for offline support
         const cachedTotal = localStorage.getItem('totalFund');
         if (cachedTotal) {
           this.state.totalFund = parseFloat(cachedTotal);
           this.elements.totalFundDisplay.textContent = `৳ ${parseFloat(cachedTotal).toLocaleString()}`;
         }
-        
+
         // Load cached fund data
         const cachedAllData = localStorage.getItem('allFundData');
         if (cachedAllData) {
           this.state.allFundData = JSON.parse(cachedAllData);
         }
-        
+
         const cachedMonthly = localStorage.getItem('cachedMonthlyData');
         if (cachedMonthly) {
           this.state.cachedMonthlyData = JSON.parse(cachedMonthly);
         }
 
+        // Load cached notes
+        this.loadNotesFromLocalStorage();
+
         // --- Setup Deep Link Listener for Mobile App ---
         if (typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform?.()) {
           const { App, Browser } = window.Capacitor.Plugins;
-          
+
           App.addListener('appUrlOpen', async (data) => {
             console.log('App opened with URL:', data.url);
-            
+
             // Close the browser if it's still open
             try {
               await Browser.close();
             } catch (e) {
               // Browser might already be closed
             }
-            
+
             // Extract hash from URL (format: com.eor.app://oauth#access_token=...)
             const url = data.url;
             const hashIndex = url.indexOf('#');
-            
+
             if (hashIndex !== -1) {
               const hash = url.substring(hashIndex);
-              
+
               // Handle OAuth callback
               if (hash.includes('access_token')) {
                 try {
@@ -667,16 +865,16 @@
                   const params = new URLSearchParams(hash.substring(1));
                   const accessToken = params.get('access_token');
                   const refreshToken = params.get('refresh_token');
-                  
+
                   if (accessToken) {
                     // Set the session manually
                     const { data: sessionData, error } = await db.auth.setSession({
                       access_token: accessToken,
                       refresh_token: refreshToken
                     });
-                    
+
                     if (error) throw error;
-                    
+
                     await this.handleAuthStateChange();
                     this.hideAllModals();
                     this.showNotification('Login successful!');
@@ -692,13 +890,13 @@
                   const params = new URLSearchParams(hash.substring(1));
                   const accessToken = params.get('access_token');
                   const refreshToken = params.get('refresh_token');
-                  
+
                   if (accessToken) {
                     await db.auth.setSession({
                       access_token: accessToken,
                       refresh_token: refreshToken
                     });
-                    
+
                     this.showNotification('Please set your new password');
                     this.showModal('settingsModal');
                   }
@@ -710,7 +908,7 @@
             }
           });
         }
-        
+
         // --- Finish OAuth redirect when user returns from Google (Web) ---
         // This will parse URL fragments returned by Supabase after OAuth and store the session.
         // We ignore errors because if there's no oauth data in URL, that's fine.
@@ -724,7 +922,7 @@
         })();
 
         this.setupLanguageToggle();
-        
+
         // Show blood section by default (will be overridden for admins in handleAuthStateChange)
         this.showSection('blood');
       },
@@ -740,21 +938,21 @@
           const { data, error } = await db.from('users').select('name, role').eq('id', this.state.currentUser.id).single();
 
           if (error && error.code === 'PGRST116') {
-            // single() returns error if no rows — we'll handle missing profile below
+            // single() returns error if no rows – we'll handle missing profile below
           }
 
           if (!data) {
             // No profile row found: try to create one (use user's metadata or email as name fallback)
             const profileName = (this.state.currentUser.user_metadata && (this.state.currentUser.user_metadata.full_name || this.state.currentUser.user_metadata.name)) || this.state.currentUser.email || 'User';
-            const { error: insertError } = await db.from('users').insert({ 
-              id: this.state.currentUser.id, 
-              name: profileName, 
+            const { error: insertError } = await db.from('users').insert({
+              id: this.state.currentUser.id,
+              name: profileName,
               email: this.state.currentUser.email,
-              role: 'user' 
+              role: 'user'
             });
             if (insertError) {
               console.error('Failed to create users profile:', insertError);
-              // not fatal — continue
+              // not fatal – continue
               this.state.userProfile = { id: this.state.currentUser.id, name: profileName, role: 'user' };
               this.state.isAdmin = false;
             } else {
@@ -765,13 +963,26 @@
             this.state.userProfile = { id: this.state.currentUser.id, ...data };
             this.state.isAdmin = data?.role === 'admin';
           }
+
+          // Cache auth state for offline access
+          localStorage.setItem('authState', JSON.stringify({
+            userProfile: this.state.userProfile,
+            isAdmin: this.state.isAdmin
+          }));
+
+          // Sync notes from server if user has access to notes
+          if (this.canAccessNotes()) {
+            await this.syncNotesFromServer();
+          }
         } else {
           this.state.userProfile = null;
           this.state.isAdmin = false;
+          // Clear cached auth state
+          localStorage.removeItem('authState');
         }
 
         this.updateUI();
-        
+
         // Set initial section based on admin status
         if (this.state.isAdmin) {
           this.showSection('fund');
@@ -788,77 +999,77 @@
         } else {
           this.showSection('blood');
         }
-        
+
         this.loadDataForActiveSection();
         this.calculateTotalFund();
       },
 
-async signup(name, emailOrPhone, password) {
-  // Detect if input is phone number
-  const isPhone = /^[\d+]/.test(emailOrPhone.trim());
-  
-  let signupResult;
-  if (isPhone) {
-    const phone = emailOrPhone.startsWith('+') ? emailOrPhone : `+88${emailOrPhone}`;
-    signupResult = await db.auth.signUp({ phone, password });
-  } else {
-    signupResult = await db.auth.signUp({ email: emailOrPhone, password });
-  }
-  
-  if (signupResult.error) {
-    this.hideAllModals();
-    return this.showNotification(signupResult.error.message, true);
-  }
+      async signup(name, emailOrPhone, password) {
+        // Detect if input is phone number
+        const isPhone = /^[\d+]/.test(emailOrPhone.trim());
 
-  const { error: profileError } = await db.from('users').insert({ 
-    id: signupResult.data.user.id, 
-    name,
-    email: isPhone ? null : emailOrPhone,
-    role: 'user' 
-  });
-  
-  if (profileError) {
-    this.hideAllModals();
-    return this.showNotification(profileError.message, true);
-  }
+        let signupResult;
+        if (isPhone) {
+          const phone = emailOrPhone.startsWith('+') ? emailOrPhone : `+88${emailOrPhone}`;
+          signupResult = await db.auth.signUp({ phone, password });
+        } else {
+          signupResult = await db.auth.signUp({ email: emailOrPhone, password });
+        }
 
-  this.hideAllModals();
-  if (isPhone) {
-    this.showNotification('Account created! Check your phone for OTP verification code.');
-  } else {
-    this.showNotification('Account created! Activate your account from the email we sent you through Supabase and then login with your credentials.');
-  }
-  setTimeout(() => this.showModal('loginModal'), 1000);
-},
+        if (signupResult.error) {
+          this.hideAllModals();
+          return this.showNotification(signupResult.error.message, true);
+        }
 
-async login(emailOrPhone, password) {
-  // Detect if input is phone number (starts with + or contains only digits)
-  const isPhone = /^[\d+]/.test(emailOrPhone.trim());
-  
-  let authResult;
-  if (isPhone) {
-    // For phone login, we need to use signInWithPassword with phone format
-    const phone = emailOrPhone.startsWith('+') ? emailOrPhone : `+88${emailOrPhone}`;
-    authResult = await db.auth.signInWithPassword({ phone, password });
-  } else {
-    authResult = await db.auth.signInWithPassword({ email: emailOrPhone, password });
-  }
-  
-  if (authResult.error) {
-    this.hideAllModals();
-    return this.showNotification(authResult.error.message, true);
-  }
-  this.hideAllModals();
-  this.showNotification('Login successful!');
-  this.handleAuthStateChange();
-},
+        const { error: profileError } = await db.from('users').insert({
+          id: signupResult.data.user.id,
+          name,
+          email: isPhone ? null : emailOrPhone,
+          role: 'user'
+        });
+
+        if (profileError) {
+          this.hideAllModals();
+          return this.showNotification(profileError.message, true);
+        }
+
+        this.hideAllModals();
+        if (isPhone) {
+          this.showNotification('Account created! Check your phone for OTP verification code.');
+        } else {
+          this.showNotification('Account created! Activate your account from the email we sent you through Supabase and then login with your credentials.');
+        }
+        setTimeout(() => this.showModal('loginModal'), 1000);
+      },
+
+      async login(emailOrPhone, password) {
+        // Detect if input is phone number (starts with + or contains only digits)
+        const isPhone = /^[\d+]/.test(emailOrPhone.trim());
+
+        let authResult;
+        if (isPhone) {
+          // For phone login, we need to use signInWithPassword with phone format
+          const phone = emailOrPhone.startsWith('+') ? emailOrPhone : `+88${emailOrPhone}`;
+          authResult = await db.auth.signInWithPassword({ phone, password });
+        } else {
+          authResult = await db.auth.signInWithPassword({ email: emailOrPhone, password });
+        }
+
+        if (authResult.error) {
+          this.hideAllModals();
+          return this.showNotification(authResult.error.message, true);
+        }
+        this.hideAllModals();
+        this.showNotification('Login successful!');
+        this.handleAuthStateChange();
+      },
 
       // Start OAuth sign-in flow with Google
       async signInWithGoogle() {
         try {
           // Detect if running in native app or web
           const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform?.();
-          
+
           if (isNative) {
             // For mobile app: use skipBrowserRedirect to get the OAuth URL
             const { data, error } = await db.auth.signInWithOAuth({
@@ -868,16 +1079,16 @@ async login(emailOrPhone, password) {
                 skipBrowserRedirect: true
               }
             });
-            
+
             if (error) {
               this.showNotification(error.message, true);
               return;
             }
-            
+
             // Open the OAuth URL in system browser
             const { Browser } = window.Capacitor.Plugins;
             await Browser.open({ url: data.url, presentationStyle: 'popover' });
-            
+
             this.showNotification('Redirecting to Google...');
           } else {
             // For web: normal OAuth flow
@@ -885,7 +1096,7 @@ async login(emailOrPhone, password) {
               provider: 'google',
               options: { redirectTo: window.location.origin }
             });
-            
+
             if (error) {
               this.showNotification(error.message, true);
             } else {
@@ -916,6 +1127,7 @@ async login(emailOrPhone, password) {
             break;
           case 'blood': this.loadDonors(); break;
           case 'notices': this.loadNotices(); break;
+          case 'notes': this.loadNotes(); break;
         }
       },
 
@@ -923,25 +1135,47 @@ async login(emailOrPhone, password) {
         try {
           const { data, error } = await db.from('fund').select('amount, month, type');
           if (error) throw error;
-          
+
           const allIncome = (data || []).filter(d => d.type === 'income');
           const totalIncome = allIncome.reduce((sum, item) => sum + item.amount, 0);
-          
+
           // Current month income
           const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
           const monthIncome = allIncome.filter(d => d.month === monthKey).reduce((sum, item) => sum + item.amount, 0);
-          
+
           document.getElementById('collectionTabTotal').textContent = `৳ ${totalIncome.toLocaleString()}`;
           document.getElementById('collectionTabMonth').textContent = `৳ ${monthIncome.toLocaleString()} this month`;
         } catch (err) {
           console.error('Error updating collection tab:', err);
+          // Fall back to offline method
+          this.updateCollectionTabTotalOffline();
+        }
+      },
+
+      updateCollectionTabTotalOffline() {
+        try {
+          const allCached = this.state.allFundData.length > 0 
+            ? this.state.allFundData 
+            : JSON.parse(localStorage.getItem('allFundData') || '[]');
+          
+          const allIncome = allCached.filter(d => d.type === 'income');
+          const totalIncome = allIncome.reduce((sum, item) => sum + item.amount, 0);
+
+          // Current month income
+          const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+          const monthIncome = allIncome.filter(d => d.month === monthKey).reduce((sum, item) => sum + item.amount, 0);
+
+          document.getElementById('collectionTabTotal').textContent = `৳ ${totalIncome.toLocaleString()}`;
+          document.getElementById('collectionTabMonth').textContent = `৳ ${monthIncome.toLocaleString()} this month`;
+        } catch (err) {
+          console.error('Error updating collection tab offline:', err);
         }
       },
 
       async calculateTotalFund() {
         let data = [];
         const { data: freshData, error } = await db.from('fund').select('type, amount');
-        
+
         if (error || !freshData) {
           // Use cached data if network fails
           const cached = localStorage.getItem('allFundData');
@@ -960,26 +1194,45 @@ async login(emailOrPhone, password) {
         }, 0);
         this.state.totalFund = total;
         this.elements.totalFundDisplay.textContent = `৳ ${total.toLocaleString()}`;
-        
+
         // Save total to cache
         localStorage.setItem('totalFund', total.toString());
       },
 
       async loadAllSadakah() {
         try {
-          const { data, error } = await db.from('fund').select('*').eq('type', 'expense').order('timestamp', { ascending: false });
-          if (error) throw error;
+          // Try to load from cache first
+          const allCached = this.state.allFundData.length > 0 
+            ? this.state.allFundData 
+            : JSON.parse(localStorage.getItem('allFundData') || '[]');
           
-          this.renderAllSadakahList(data || []);
-          
-          // Update tab totals
-          const totalAmount = (data || []).reduce((sum, item) => sum + item.amount, 0);
-          const totalCount = (data || []).length;
-          
-          document.getElementById('sadakahTabTotal').textContent = `৳ ${totalAmount.toLocaleString()}`;
-          document.getElementById('sadakahTabCount').textContent = `${totalCount} entries`;
+          const cachedExpenses = allCached.filter(d => d.type === 'expense')
+            .sort((a, b) => {
+              if (b.month !== a.month) return b.month.localeCompare(a.month);
+              return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+
+          // Render cached data immediately
+          if (cachedExpenses.length > 0) {
+            this.renderAllSadakahList(cachedExpenses);
+            const totalAmount = cachedExpenses.reduce((sum, item) => sum + item.amount, 0);
+            const totalCount = cachedExpenses.length;
+            document.getElementById('sadakahTabTotal').textContent = `৳ ${totalAmount.toLocaleString()}`;
+            document.getElementById('sadakahTabCount').textContent = `${totalCount} entries`;
+          }
+
+          // Then try to fetch fresh data
+          const { data, error } = await db.from('fund').select('*').eq('type', 'expense').order('month', { ascending: false }).order('timestamp', { ascending: false });
+          if (!error && data) {
+            this.renderAllSadakahList(data);
+            const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
+            const totalCount = data.length;
+            document.getElementById('sadakahTabTotal').textContent = `৳ ${totalAmount.toLocaleString()}`;
+            document.getElementById('sadakahTabCount').textContent = `${totalCount} entries`;
+          }
         } catch (err) {
-          console.error('Error loading sadakah:', err);
+          console.error('Error loading sadakah (using cached data):', err);
+          // Already rendered cached data above
         }
       },
 
@@ -996,7 +1249,7 @@ async login(emailOrPhone, password) {
           const date = new Date(year, parseInt(month) - 1, 1);
           const monthName = date.toLocaleString('default', { month: 'long' });
           const additionalInfo = item.additional_info ? `<div class="text-sm text-gray-600 mt-1">${item.additional_info}</div>` : '';
-          
+
           return `
             <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-300">
               <div class="flex justify-between items-start mb-1">
@@ -1014,21 +1267,35 @@ async login(emailOrPhone, password) {
         this.state.isLoading.fund = true;
         this.renderLoader('fund');
         this.updateMonthDisplay();
-        
-        // Update collection tab total for non-admin
-        if (!this.state.isAdmin) {
-          this.updateCollectionTabTotal();
-        }
 
         const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
+        // Load from cache first (for immediate display)
+        const allCached = JSON.parse(localStorage.getItem('allFundData') || '[]');
+        const monthlyCache = JSON.parse(localStorage.getItem('cachedMonthlyData') || '{}');
+        
+        this.state.allFundData = allCached;
+        this.state.cachedMonthlyData = monthlyCache;
+        
+        // Render cached data immediately
+        const cachedMonthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
+        if (cachedMonthData.length > 0) {
+          this.renderFundData(cachedMonthData);
+          await this.calculateNetWorth();
+        }
+
+        // Update collection tab total for non-admin (works offline with cache)
+        if (!this.state.isAdmin) {
+          this.updateCollectionTabTotalOffline();
+        }
+
+        // Then try to fetch fresh data in background
         try {
-          // Try to fetch all fund data to update cache
           const { data: allData, error: allError } = await db.from('fund').select('*').order('month', { ascending: true }).order('timestamp', { ascending: true });
           if (!allError && allData) {
             localStorage.setItem('allFundData', JSON.stringify(allData));
             this.state.allFundData = allData;
-            
+
             // Cache monthly aggregated data
             const monthlyCache = {};
             allData.forEach(entry => {
@@ -1039,27 +1306,22 @@ async login(emailOrPhone, password) {
             });
             localStorage.setItem('cachedMonthlyData', JSON.stringify(monthlyCache));
             this.state.cachedMonthlyData = monthlyCache;
-            
-            // Get current month data
+
+            // Get current month data and re-render with fresh data
             const monthData = allData.filter(d => d.month === monthKey);
             this.renderFundData(monthData);
-          } else {
-            throw new Error('Failed to fetch data');
+            await this.calculateNetWorth();
+            
+            // Update collection tab with fresh data
+            if (!this.state.isAdmin) {
+              this.updateCollectionTabTotal();
+            }
           }
-          await this.calculateNetWorth();
         } catch (err) {
-          console.log('Loading from cache due to:', err);
-          // Load from cache
-          const allCached = JSON.parse(localStorage.getItem('allFundData') || '[]');
-          const monthlyCache = JSON.parse(localStorage.getItem('cachedMonthlyData') || '{}');
-          
-          this.state.allFundData = allCached;
-          this.state.cachedMonthlyData = monthlyCache;
-          
-          const monthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
-          this.renderFundData(monthData);
-          await this.calculateNetWorth();
+          console.log('Using cached data (offline mode):', err);
+          // Already rendered cached data above, so just continue
         }
+        
         this.state.isLoading.fund = false;
       },
 
@@ -1072,77 +1334,77 @@ async login(emailOrPhone, password) {
       },
 
 
-async loadDonors() {
-  if (this.state.isLoading.donors) return;
-  this.state.isLoading.donors = true;
-  this.renderLoader('blood');
-  try {
-    const { data, error } = await db.from('donors').select('*').order('name');
-    if (error) throw error;
-    localStorage.setItem('donorsData', JSON.stringify(data));
-    this.state.allDonors = data || [];
-  } catch {
-    this.state.allDonors = JSON.parse(localStorage.getItem('donorsData') || '[]');
-  }
-  // Randomize donors before rendering
-  this.state.allDonors = this.shuffleDonors(this.state.allDonors);
-  this.filterAndRenderDonors();
-  
-  // Check if non-admin user has donor profile and show/hide prompt
-  const promptMsg = document.getElementById('donorPromptMessage');
-  if (promptMsg) {
-    const isBn = localStorage.getItem('lang') === 'bn';
-    // Hide prompt for admins
-    if (this.state.isAdmin) {
-      promptMsg.classList.add('hide');
-    } else if (!this.state.currentUser) {
-      // Show for non-logged-in users
-      promptMsg.classList.remove('hide');
-      promptMsg.textContent = isBn ? 'ব্লাড ডোনার তালিকায় যুক্ত হতে লগইন করে আপনার ব্লাড ডোনার প্রোফাইল কমপ্লিট করুন' : 'To be a blood donor, login and complete your donor profile';
-    } else {
-      // For logged-in non-admin users, check if they have a profile
-      try {
-        const { data } = await db.from('donors').select('*').eq('user_id', this.state.currentUser.id).single();
-        if (!data) {
-          promptMsg.classList.remove('hide');
-          promptMsg.textContent = isBn ? 'ব্লাড ডোনার হতে "আমার প্রোফাইল" ক্লিক করে আপনার ফোন নম্বর এবং লোকেশন যুক্ত করুন' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
-        } else {
-          promptMsg.classList.add('hide');
+      async loadDonors() {
+        if (this.state.isLoading.donors) return;
+        this.state.isLoading.donors = true;
+        this.renderLoader('blood');
+        try {
+          const { data, error } = await db.from('donors').select('*').order('name');
+          if (error) throw error;
+          localStorage.setItem('donorsData', JSON.stringify(data));
+          this.state.allDonors = data || [];
+        } catch {
+          this.state.allDonors = JSON.parse(localStorage.getItem('donorsData') || '[]');
         }
-      } catch {
-        // If error checking profile, show prompt
-        promptMsg.classList.remove('hide');
-        promptMsg.textContent = isBn ? 'ব্লাড ডোনার হতে "আমার প্রোফাইল" ক্লিক করে আপনার ফোন নম্বর এবং লোকেশন যুক্ত করুন' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
-      }
-    }
-  }
-  
-  this.state.isLoading.donors = false;
-},
+        // Randomize donors before rendering
+        this.state.allDonors = this.shuffleDonors(this.state.allDonors);
+        this.filterAndRenderDonors();
+
+        // Check if non-admin user has donor profile and show/hide prompt
+        const promptMsg = document.getElementById('donorPromptMessage');
+        if (promptMsg) {
+          const isBn = localStorage.getItem('lang') === 'bn';
+          // Hide prompt for admins
+          if (this.state.isAdmin) {
+            promptMsg.classList.add('hide');
+          } else if (!this.state.currentUser) {
+            // Show for non-logged-in users
+            promptMsg.classList.remove('hide');
+            promptMsg.textContent = isBn ? 'ব্লাড ডোনার তালিকায় যুক্ত হতে লগইন করে আপনার ব্লাড ডোনার প্রোফাইল কমপ্লিট করুন' : 'To be a blood donor, login and complete your donor profile';
+          } else {
+            // For logged-in non-admin users, check if they have a profile
+            try {
+              const { data } = await db.from('donors').select('*').eq('user_id', this.state.currentUser.id).single();
+              if (!data) {
+                promptMsg.classList.remove('hide');
+                promptMsg.textContent = isBn ? 'ব্লাড ডোনার হতে "আমার প্রোফাইল" ক্লিক করে আপনার ফোন নম্বর এবং লোকেশন যুক্ত করুন' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
+              } else {
+                promptMsg.classList.add('hide');
+              }
+            } catch {
+              // If error checking profile, show prompt
+              promptMsg.classList.remove('hide');
+              promptMsg.textContent = isBn ? 'ব্লাড ডোনার হতে "আমার প্রোফাইল" ক্লিক করে আপনার ফোন নম্বর এবং লোকেশন যুক্ত করুন' : 'To be a blood donor, click on "My Profile" and add your phone number and location.';
+            }
+          }
+        }
+
+        this.state.isLoading.donors = false;
+      },
 
       async loadUsers() {
         const usersList = document.getElementById('usersList');
         usersList.innerHTML = '<div class="loader"></div>';
-        
+
         // Setup search functionality
         const userSearch = document.getElementById('userSearch');
         const userClearBtn = document.getElementById('userClearBtn');
-        
+
         userSearch.value = '';
         userClearBtn.classList.add('hide');
-        
+
         userSearch.addEventListener('input', () => {
           const searchTerm = userSearch.value.trim().toLowerCase();
           userClearBtn.classList.toggle('hide', !searchTerm);
           this.filterUsers(searchTerm);
         });
-        
+
         userClearBtn.addEventListener('click', () => {
           userSearch.value = '';
           userClearBtn.classList.add('hide');
           this.filterUsers('');
         });
-        
+
         try {
           // Fetch users from users table
           const { data: usersData, error: usersError } = await db.from('users').select('*').order('name');
@@ -1150,7 +1412,7 @@ async loadDonors() {
             console.error('Error fetching users:', usersError);
             throw usersError;
           }
-          
+
           // Try to fetch auth users for emails (this requires service role key, might fail)
           let emailMap = {};
           try {
@@ -1164,19 +1426,19 @@ async loadDonors() {
             console.warn('Could not fetch auth users (requires service role):', authError);
             // If we can't get emails, that's okay - we'll show "N/A"
           }
-          
+
           if (!usersData || usersData.length === 0) {
             usersList.innerHTML = '<div class="text-gray-400 text-center py-4">No users found</div>';
             return;
           }
-          
+
           // Store users data for filtering
           this.allUsersData = usersData;
           this.allUsersEmailMap = emailMap;
-          
+
           // Render the users list
           this.renderUsersList(usersData, emailMap);
-          
+
         } catch (err) {
           console.error('Error loading users:', err);
           usersList.innerHTML = '<div class="text-red-500 text-center py-4">Failed to load users. Make sure you have admin privileges.</div>';
@@ -1185,12 +1447,12 @@ async loadDonors() {
 
       renderUsersList(usersData, emailMap) {
         const usersList = document.getElementById('usersList');
-        
+
         if (!usersData || usersData.length === 0) {
           usersList.innerHTML = '<div class="text-gray-400 text-center py-4">No users found</div>';
           return;
         }
-        
+
         usersList.innerHTML = usersData.map(user => {
           const isCurrentUser = user.id === this.state.currentUser?.id;
           const email = user.email || emailMap[user.id] || 'Email not available';
@@ -1200,7 +1462,7 @@ async loadDonors() {
             student: 'bg-blue-100 text-blue-700',
             user: 'bg-gray-100 text-gray-700'
           }[user.role] || 'bg-gray-100 text-gray-700';
-          
+
           return `
             <div class="bg-white border border-gray-200 rounded-lg p-3">
               <div class="flex items-start justify-between mb-2">
@@ -1227,7 +1489,7 @@ async loadDonors() {
             </div>
           `;
         }).join('');
-        
+
         // Bind save role buttons with confirmation modals
         document.querySelectorAll('.save-role-btn').forEach(btn => {
           btn.addEventListener('click', () => {
@@ -1236,15 +1498,15 @@ async loadDonors() {
             const newRole = roleSelect.value;
             const currentRole = roleSelect.dataset.currentRole;
             const userName = roleSelect.dataset.userName;
-            
+
             // Check if role actually changed
             if (newRole === currentRole) {
               return this.showNotification('Role is already ' + newRole, true);
             }
-            
+
             // Store data for confirmation flow
             this.pendingRoleChange = { userId, newRole, currentRole, userName };
-            
+
             // Show first confirmation
             this.showRoleConfirmation();
           });
@@ -1253,44 +1515,44 @@ async loadDonors() {
 
       filterUsers(searchTerm) {
         if (!this.allUsersData) return;
-        
+
         if (!searchTerm) {
           this.renderUsersList(this.allUsersData, this.allUsersEmailMap);
           return;
         }
-        
+
         const filtered = this.allUsersData.filter(user => {
           const name = (user.name || '').toLowerCase();
           const email = (this.allUsersEmailMap[user.id] || '').toLowerCase();
           const role = (user.role || '').toLowerCase();
           const id = (user.id || '').toLowerCase();
-          
-          return name.includes(searchTerm) || 
-                 email.includes(searchTerm) || 
-                 role.includes(searchTerm) ||
-                 id.includes(searchTerm);
+
+          return name.includes(searchTerm) ||
+            email.includes(searchTerm) ||
+            role.includes(searchTerm) ||
+            id.includes(searchTerm);
         });
-        
+
         this.renderUsersList(filtered, this.allUsersEmailMap);
       },
 
       showRoleConfirmation() {
         this.showModal('roleConfirmModal');
-        
+
         const yesBtn = document.getElementById('roleConfirmYes');
         const noBtn = document.getElementById('roleConfirmNo');
-        
+
         // Remove old listeners
         const newYesBtn = yesBtn.cloneNode(true);
         const newNoBtn = noBtn.cloneNode(true);
         yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
         noBtn.parentNode.replaceChild(newNoBtn, noBtn);
-        
+
         newYesBtn.addEventListener('click', () => {
           this.hideAllModals();
           this.showRoleConsequences();
         });
-        
+
         newNoBtn.addEventListener('click', () => {
           this.hideAllModals();
           this.pendingRoleChange = null;
@@ -1300,9 +1562,9 @@ async loadDonors() {
       showRoleConsequences() {
         const { newRole, currentRole, userName } = this.pendingRoleChange;
         const consequencesText = document.getElementById('roleConsequencesText');
-        
+
         let consequences = '';
-        
+
         if (newRole === 'admin') {
           consequences = `
             <p class="font-semibold text-red-600">If you set the role of ${userName} to Admin:</p>
@@ -1349,23 +1611,23 @@ async loadDonors() {
             </ul>
           `;
         }
-        
+
         consequencesText.innerHTML = consequences;
         this.showModal('roleConsequencesModal');
-        
+
         const confirmBtn = document.getElementById('roleConsequencesConfirm');
         const cancelBtn = document.getElementById('roleConsequencesCancel');
-        
+
         // Remove old listeners
         const newConfirmBtn = confirmBtn.cloneNode(true);
         const newCancelBtn = cancelBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
         cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-        
+
         newConfirmBtn.addEventListener('click', async () => {
           await this.executeRoleChange();
         });
-        
+
         newCancelBtn.addEventListener('click', () => {
           this.hideAllModals();
           this.pendingRoleChange = null;
@@ -1374,16 +1636,16 @@ async loadDonors() {
 
       async executeRoleChange() {
         const { userId, newRole } = this.pendingRoleChange;
-        
+
         const { error } = await db.from('users').update({ role: newRole }).eq('id', userId);
-        
+
         if (error) {
           this.showNotification('Failed to update role: ' + error.message, true);
         } else {
           this.showNotification('User role updated successfully!');
           this.loadUsers(); // Reload the list
         }
-        
+
         this.hideAllModals();
         this.pendingRoleChange = null;
       },
@@ -1395,7 +1657,7 @@ async loadDonors() {
         document.getElementById('settingsBtn').classList.remove('hide');
         document.getElementById('loginTopBtn').classList.toggle('hide', this.state.currentUser);
         this.elements.adminMenuBtn.classList.toggle('hide', !this.state.isAdmin);
-        
+
         // Show Talib button for students
         const isStudent = this.state.userProfile?.role === 'student';
         document.getElementById('talibMenuBtn').classList.toggle('hide', !isStudent);
@@ -1404,10 +1666,10 @@ async loadDonors() {
 
         // Show/hide fund tabs based on admin status
         this.elements.fundTabs.classList.toggle('hide', this.state.isAdmin);
-        
+
         // Admin controls
         this.elements.adminControls.classList.toggle('hide', !this.state.isAdmin);
-        
+
         // Hide donation info for admins
         const donationInfoText = document.getElementById('donationInfoText');
         if (donationInfoText && donationInfoText.parentElement) {
@@ -1453,13 +1715,13 @@ async loadDonors() {
           const textColor = item.highlighted ? 'text-red-600' : 'text-gray-800';
           // Convert to Bangladesh time (UTC+6)
           const bdTime = new Date(new Date(item.timestamp).getTime() + (6 * 60 * 60 * 1000));
-          const formattedTime = bdTime.toLocaleString('en-GB', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric', 
-            hour: '2-digit', 
+          const formattedTime = bdTime.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
             minute: '2-digit',
-            hour12: true 
+            hour12: true
           });
           return `
                 <div class="bg-${color}-50 p-1.5 rounded-lg text-sm relative group" title="${formattedTime}">
@@ -1511,13 +1773,13 @@ async loadDonors() {
 
       async calculateNetWorth() {
         const currentMonthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
-        
+
         let data = [];
-        
+
         try {
           // Try to get fresh data
           const { data: freshData, error } = await db.from('fund').select('type, amount, month').lte('month', currentMonthKey);
-          
+
           if (!error && freshData) {
             data = freshData;
           } else {
@@ -1525,10 +1787,10 @@ async loadDonors() {
           }
         } catch (err) {
           // Use cached data
-          const allCached = this.state.allFundData.length > 0 
-            ? this.state.allFundData 
+          const allCached = this.state.allFundData.length > 0
+            ? this.state.allFundData
             : JSON.parse(localStorage.getItem('allFundData') || '[]');
-          
+
           data = allCached.filter(entry => entry.month <= currentMonthKey);
         }
 
@@ -1547,7 +1809,7 @@ async loadDonors() {
 
       highlightMatch(text, searchTerm) {
         if (!searchTerm || !text) return text;
-        
+
         const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return text.replace(regex, '<mark style="background-color: #fef08a; padding: 2px 0;">$1</mark>');
       },
@@ -1555,14 +1817,14 @@ async loadDonors() {
       filterAndRenderDonors() {
         const filterValue = document.getElementById('bloodFilter').value;
         const searchValue = document.getElementById('bloodSearch').value.trim().toLowerCase();
-        
+
         let filteredDonors = this.state.allDonors;
-        
+
         // Apply blood group filter if not in search mode
         if (!searchValue && filterValue !== 'all') {
           filteredDonors = filteredDonors.filter(d => d.blood_group === filterValue);
         }
-        
+
         // Apply search filter
         if (searchValue) {
           filteredDonors = filteredDonors.filter(d => {
@@ -1570,19 +1832,19 @@ async loadDonors() {
             const phone = (d.phone || '').toLowerCase();
             const location = (d.location || '').toLowerCase();
             const bloodGroup = (d.blood_group || '').toLowerCase();
-            
-            return name.includes(searchValue) || 
-                   phone.includes(searchValue) || 
-                   location.includes(searchValue) ||
-                   bloodGroup.includes(searchValue);
+
+            return name.includes(searchValue) ||
+              phone.includes(searchValue) ||
+              location.includes(searchValue) ||
+              bloodGroup.includes(searchValue);
           });
         }
-        
+
         // Randomize the donor list only if not searching
         if (!searchValue) {
           filteredDonors = this.shuffleDonors(filteredDonors);
         }
-        
+
         if (filteredDonors.length === 0) {
           this.elements.donorsList.innerHTML = `<div class="text-gray-400 text-center py-8">No donors found</div>`;
           return;
@@ -1602,7 +1864,7 @@ async loadDonors() {
           const highlightedLocation = searchValue ? this.highlightMatch(donor.location || 'N/A', searchValue) : (donor.location || 'N/A');
           const highlightedPhone = searchValue ? this.highlightMatch(donor.phone || 'N/A', searchValue) : (donor.phone || 'N/A');
           const highlightedBloodGroup = searchValue ? this.highlightMatch(donor.blood_group, searchValue) : donor.blood_group;
-          
+
           return `
 <div class="bg-white rounded-xl shadow-lg p-3 border-l-4 ${availableClass}">
                         <div class="flex justify-between items-start mb-2">
@@ -1653,13 +1915,13 @@ async loadDonors() {
         this.elements.noticesList.innerHTML = notices.map(notice => {
           // Convert to Bangladesh time (UTC+6)
           const bdTime = new Date(new Date(notice.timestamp).getTime() + (6 * 60 * 60 * 1000));
-          const formattedTime = bdTime.toLocaleString('en-GB', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric', 
-            hour: '2-digit', 
+          const formattedTime = bdTime.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
             minute: '2-digit',
-            hour12: true 
+            hour12: true
           });
           return `
                 <div class="bg-white rounded-xl shadow-lg p-4">
@@ -1707,7 +1969,7 @@ async loadDonors() {
       async loadYearlyChartData() {
         const year = this.state.currentYear;
         let data = [];
-        
+
         try {
           const { data: freshData, error } = await db.from('fund').select('*').gte('month', `${year}-01`).lte('month', `${year}-12`);
 
@@ -1716,10 +1978,10 @@ async loadDonors() {
         } catch (err) {
           console.log('Loading chart from cache:', err);
           // Use cached data
-          const allCached = this.state.allFundData.length > 0 
-            ? this.state.allFundData 
+          const allCached = this.state.allFundData.length > 0
+            ? this.state.allFundData
             : JSON.parse(localStorage.getItem('allFundData') || '[]');
-          
+
           data = allCached.filter(entry => {
             const entryYear = parseInt(entry.month.split('-')[0]);
             return entryYear === year;
@@ -1779,7 +2041,7 @@ async loadDonors() {
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
-        
+
         // Store data for hover detection
         this.chartData = { income, expense, balance };
         const width = canvas.width;
@@ -1882,23 +2144,23 @@ async loadDonors() {
           const rect = canvas.getBoundingClientRect();
           const mouseX = e.clientX - rect.left;
           const mouseY = e.clientY - rect.top;
-          
+
           // Scale coordinates
           const scaleX = canvas.width / rect.width;
           const scaleY = canvas.height / rect.height;
           const scaledX = mouseX * scaleX;
           const scaledY = mouseY * scaleY;
-          
+
           let clickedPoint = null;
           let minDistance = 40; // pixels - larger hitbox for clicks
-          
+
           // Check all points
           [income, expense, balance].forEach((data, dataIndex) => {
             data.forEach((value, i) => {
               const x = getX(i);
               const y = getY(value);
               const distance = Math.sqrt(Math.pow(scaledX - x, 2) + Math.pow(scaledY - y, 2));
-              
+
               if (distance < minDistance) {
                 minDistance = distance;
                 const labels = ['Collection', 'Sadakah', 'Total Fund'];
@@ -1913,55 +2175,55 @@ async loadDonors() {
               }
             });
           });
-          
+
           // Store clicked point
           canvas.clickedPoint = clickedPoint;
-          
+
           // Redraw chart with clicked point highlighted
           this.renderYearlyChart(income, expense, balance);
-          
+
           if (clickedPoint) {
             // Draw highlight circle at clicked point
             ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
             ctx.beginPath();
             ctx.arc(clickedPoint.x, clickedPoint.y, 8, 0, Math.PI * 2);
             ctx.fill();
-            
+
             ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
             ctx.beginPath();
             ctx.arc(clickedPoint.x, clickedPoint.y, 5, 0, Math.PI * 2);
             ctx.fill();
-            
+
             // Draw tooltip
             const tooltipText = `${clickedPoint.month}: ৳ ${Math.round(clickedPoint.value).toLocaleString()}`;
             const tooltipWidth = ctx.measureText(tooltipText).width + 20;
             const tooltipHeight = 30;
             let tooltipX = clickedPoint.x - tooltipWidth / 2;
             let tooltipY = clickedPoint.y - 40;
-            
+
             // Keep tooltip inside canvas
             if (tooltipX < 10) tooltipX = 10;
             if (tooltipX + tooltipWidth > width - 10) tooltipX = width - tooltipWidth - 10;
             if (tooltipY < 10) tooltipY = clickedPoint.y + 20;
-            
+
             ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
             ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight);
-            
+
             ctx.fillStyle = 'white';
             ctx.font = 'bold 16px system-ui';
             ctx.textAlign = 'center';
             ctx.fillText(tooltipText, tooltipX + tooltipWidth / 2, tooltipY + 20);
-            
+
             ctx.fillStyle = '#10b981';
             ctx.font = '12px system-ui';
             ctx.fillText(clickedPoint.label, tooltipX + tooltipWidth / 2, tooltipY + tooltipHeight + 15);
           }
         };
-        
+
         // Remove old listeners if exist
         const oldClick = canvas.clickHandler;
         if (oldClick) canvas.removeEventListener('click', oldClick);
-        
+
         // Add new listener
         canvas.clickHandler = handleClick;
         canvas.addEventListener('click', handleClick);
@@ -2003,34 +2265,96 @@ async loadDonors() {
         document.querySelectorAll('.nav-btn').forEach(btn => {
           btn.addEventListener('click', () => this.showSection(btn.dataset.section));
         });
-        
+
         // Fund tab switching (non-admin only)
         document.getElementById('collectionTabBtn')?.addEventListener('click', () => {
           this.state.activeFundTab = 'collection';
           this.updateFundTabView();
         });
-        
+
         document.getElementById('sadakahTabBtn')?.addEventListener('click', () => {
           this.state.activeFundTab = 'sadakah';
           this.updateFundTabView();
         });
-        
+
         // Admin menu button
         this.elements.adminMenuBtn?.addEventListener('click', () => {
           this.showModal('adminMenuModal');
         });
-        
+
         // Talib menu button
         document.getElementById('talibMenuBtn')?.addEventListener('click', () => {
           this.showModal('talibMenuModal');
         });
-        
+
         // Admin users button
         document.getElementById('adminUsersBtn')?.addEventListener('click', () => {
           this.hideAllModals();
           this.loadUsers();
           this.showModal('adminUsersModal');
         });
+
+        // Admin notes button
+        document.getElementById('adminNotesBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+          this.showSection('notes');
+        });
+
+        // Talib notes button
+        document.getElementById('talibNotesBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+          this.showSection('notes');
+        });
+
+        // Notes buttons
+        document.getElementById('createNoteBtn')?.addEventListener('click', () => {
+          this.editNote(null);
+        });
+
+        document.getElementById('createBackupBtn')?.addEventListener('click', () => {
+          this.backupNotesToServer();
+        });
+
+        document.getElementById('editNoteBtn')?.addEventListener('click', () => {
+          if (this.state.currentNote) {
+            this.editNote(this.state.currentNote.id);
+          }
+        });
+
+        document.getElementById('deleteNoteViewBtn')?.addEventListener('click', () => {
+          if (this.state.currentNote) {
+            this.deleteNote(this.state.currentNote.id);
+          }
+        });
+
+        document.getElementById('deleteNoteEditBtn')?.addEventListener('click', () => {
+          const noteId = document.getElementById('noteEditId').value;
+          if (noteId) {
+            this.deleteNote(noteId);
+          }
+        });
+
+        document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
+          this.saveNote();
+        });
+
+        // Unsaved changes warning
+        document.querySelector('#noteEditModal [data-close-modal]')?.addEventListener('click', (e) => {
+          if (this.checkUnsavedChanges()) {
+            e.stopPropagation();
+            this.showModal('unsavedChangesModal');
+          }
+        });
+
+        document.getElementById('discardChangesBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+        });
+
+        document.getElementById('keepEditingBtn')?.addEventListener('click', () => {
+          document.getElementById('unsavedChangesModal').classList.add('hide');
+          this.showModal('noteEditModal');
+        });
+
         // Set initial active tab
         this.updateActiveTab();
         document.getElementById('refreshBtn').addEventListener('click', () => this.refreshApp());
@@ -2092,7 +2416,7 @@ async loadDonors() {
         document.querySelectorAll('[data-modal]').forEach(btn => {
           btn.addEventListener('click', async () => {
             if (btn.dataset.modal === 'donorProfileModal' && btn.id !== 'myDonorBtn') await this.populateDonorForm();
-            
+
             // Reset income modal when opening for new entry
             if (btn.dataset.modal === 'addIncomeModal') {
               const isBn = localStorage.getItem('lang') === 'bn';
@@ -2101,7 +2425,7 @@ async loadDonors() {
               document.querySelector('#addIncomeForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
               document.getElementById('addIncomeForm').reset();
             }
-            
+
             // Reset expense modal when opening for new entry
             if (btn.dataset.modal === 'addExpenseModal') {
               const isBn = localStorage.getItem('lang') === 'bn';
@@ -2110,7 +2434,7 @@ async loadDonors() {
               document.querySelector('#addExpenseForm button[type="submit"]').textContent = isBn ? 'যুক্ত করুন' : 'Add';
               document.getElementById('addExpenseForm').reset();
             }
-            
+
             this.showModal(btn.dataset.modal);
           });
         });
@@ -2119,37 +2443,37 @@ async loadDonors() {
         });
 
         // Forms
-document.getElementById('signupForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const name = e.target.elements.signupName.value.trim();
-  const emailOrPhone = e.target.elements.signupEmail.value.trim();
-  const pass = e.target.elements.signupPassword.value;
-  const confirmPass = e.target.elements.signupConfirmPassword.value;
+        document.getElementById('signupForm').addEventListener('submit', e => {
+          e.preventDefault();
+          const name = e.target.elements.signupName.value.trim();
+          const emailOrPhone = e.target.elements.signupEmail.value.trim();
+          const pass = e.target.elements.signupPassword.value;
+          const confirmPass = e.target.elements.signupConfirmPassword.value;
 
-  if (!name) {
-    this.hideAllModals();
-    return this.showNotification('Please enter your full name', true);
-  }
-  if (pass.length < 6) {
-    this.hideAllModals();
-    return this.showNotification('Password must be at least 6 characters long', true);
-  }
-  if (pass !== confirmPass) {
-    this.hideAllModals();
-    return this.showNotification('Passwords do not match', true);
-  }
-  this.signup(name, emailOrPhone, pass);
-});
-document.getElementById('loginForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const emailOrPhone = e.target.elements.loginEmail.value.trim();
-  const password = e.target.elements.loginPassword.value;
-  if (!emailOrPhone || !password) {
-    this.hideAllModals();
-    return this.showNotification('Please enter both email/phone and password', true);
-  }
-  this.login(emailOrPhone, password);
-});
+          if (!name) {
+            this.hideAllModals();
+            return this.showNotification('Please enter your full name', true);
+          }
+          if (pass.length < 6) {
+            this.hideAllModals();
+            return this.showNotification('Password must be at least 6 characters long', true);
+          }
+          if (pass !== confirmPass) {
+            this.hideAllModals();
+            return this.showNotification('Passwords do not match', true);
+          }
+          this.signup(name, emailOrPhone, pass);
+        });
+        document.getElementById('loginForm').addEventListener('submit', e => {
+          e.preventDefault();
+          const emailOrPhone = e.target.elements.loginEmail.value.trim();
+          const password = e.target.elements.loginPassword.value;
+          if (!emailOrPhone || !password) {
+            this.hideAllModals();
+            return this.showNotification('Please enter both email/phone and password', true);
+          }
+          this.login(emailOrPhone, password);
+        });
         document.getElementById('forgotPasswordForm').addEventListener('submit', async e => {
           e.preventDefault();
           const email = e.target.elements.forgotEmail.value.trim();
@@ -2160,7 +2484,7 @@ document.getElementById('loginForm').addEventListener('submit', e => {
           // Detect if running in native app or web
           const isNative = typeof window.Capacitor !== 'undefined';
           const redirectTo = isNative ? 'com.eor.app://reset-password' : window.location.origin;
-          
+
           const { error } = await db.auth.resetPasswordForEmail(email, {
             redirectTo
           });
@@ -2190,7 +2514,7 @@ document.getElementById('loginForm').addEventListener('submit', e => {
           e.target.reset();
           document.getElementById('incomeId').value = '';
         });
-document.getElementById('addExpenseForm').addEventListener('submit', async e => {
+        document.getElementById('addExpenseForm').addEventListener('submit', async e => {
           e.preventDefault();
           const expenseId = document.getElementById('expenseId').value;
           const description = e.target.elements.expenseDesc.value; // This is the sadakah name
@@ -2297,26 +2621,26 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
           this.state.allDonors = this.shuffleDonors(this.state.allDonors);
           this.filterAndRenderDonors();
         });
-        
+
         // Blood search toggle
         document.getElementById('bloodSearchBtn').addEventListener('click', () => {
           const searchInput = document.getElementById('bloodSearch');
           const filterSelect = document.getElementById('bloodFilter');
           const searchBtn = document.getElementById('bloodSearchBtn');
           const clearBtn = document.getElementById('bloodClearBtn');
-          
+
           searchInput.classList.remove('hide');
           filterSelect.classList.add('hide');
           searchBtn.classList.add('hide');
           clearBtn.classList.remove('hide');
           searchInput.focus();
         });
-        
+
         // Blood search input
         document.getElementById('bloodSearch').addEventListener('input', () => {
           this.filterAndRenderDonors();
         });
-        
+
         // Blood search blur
         document.getElementById('bloodSearch').addEventListener('blur', () => {
           const searchInput = document.getElementById('bloodSearch');
@@ -2325,7 +2649,7 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
               const filterSelect = document.getElementById('bloodFilter');
               const searchBtn = document.getElementById('bloodSearchBtn');
               const clearBtn = document.getElementById('bloodClearBtn');
-              
+
               searchInput.classList.add('hide');
               filterSelect.classList.remove('hide');
               searchBtn.classList.remove('hide');
@@ -2334,21 +2658,21 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
             }, 200);
           }
         });
-        
+
         // Blood search clear
         document.getElementById('bloodClearBtn').addEventListener('click', () => {
           const searchInput = document.getElementById('bloodSearch');
           searchInput.value = '';
           searchInput.focus();
           this.filterAndRenderDonors();
-        });        document.getElementById('showYearlyChartBtn').addEventListener('click', () => {
+        }); document.getElementById('showYearlyChartBtn').addEventListener('click', () => {
           this.showModal('yearlyChartModal');
           this.loadYearlyChartData();
         });
         document.getElementById('totalFundBtn').addEventListener('click', () => this.showCompleteHistory());
         document.getElementById('copyIncomeBtn').addEventListener('click', () => this.copyIncomeList());
         document.getElementById('copyHistoryBtn').addEventListener('click', () => this.copyCompleteHistory());
-        
+
         // Copy donation numbers on click
         document.addEventListener('click', (e) => {
           const copyBtn = e.target.closest('[data-copy-number]');
@@ -2379,21 +2703,21 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
         if (error) return this.showNotification(error.message, true);
 
         const isBn = localStorage.getItem('lang') === 'bn';
-        
+
         if (type === 'income') {
           document.getElementById('incomeId').value = id;
           document.getElementById('incomeName').value = data.name || '';
           document.getElementById('incomeAmount').value = data.amount || '';
           document.getElementById('incomeHighlighted').checked = data.highlighted || false;
-          
+
           // Update modal title
           const modalTitle = document.querySelector('#addIncomeModal h2');
           modalTitle.textContent = isBn ? 'কালেকশন এডিট করুন' : 'Edit Collection';
-          
+
           // Update submit button
           const submitBtn = document.querySelector('#addIncomeForm button[type="submit"]');
           submitBtn.textContent = isBn ? 'আপডেট করুন' : 'Update';
-          
+
           this.showModal('addIncomeModal');
         } else if (type === 'expense') {
           document.getElementById('expenseId').value = id;
@@ -2401,22 +2725,22 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
           document.getElementById('expenseAmount').value = data.amount || '';
           document.getElementById('expenseAdditionalInfo').value = data.additional_info || '';
           document.getElementById('expenseHighlighted').checked = data.highlighted || false;
-          
+
           // Update modal title
           const modalTitle = document.querySelector('#addExpenseModal h2');
           modalTitle.textContent = isBn ? 'সাদাকাহ এডিট করুন' : 'Edit Sadakah';
-          
+
           // Update submit button
           const submitBtn = document.querySelector('#addExpenseForm button[type="submit"]');
           submitBtn.textContent = isBn ? 'আপডেট করুন' : 'Update';
-          
+
           this.showModal('addExpenseModal');
         }
       },
 
       async addFundEntry(type, details) {
         const monthKey = `${this.state.currentMonth.getFullYear()}-${String(this.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
-        
+
         // Clean up the details object - remove null/undefined values
         const cleanDetails = {};
         for (const key in details) {
@@ -2424,7 +2748,7 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
             cleanDetails[key] = details[key];
           }
         }
-        
+
         const { error } = await db.from('fund').insert({
           ...cleanDetails,
           month: monthKey,
@@ -2506,11 +2830,11 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
         this.loadNotices();
       },
 
-async populateDonorForm(donorId = null) {
-  const form = document.getElementById('donorProfileForm');
-  form.reset();
-  this.elements.deleteDonorBtn.classList.add('hide');
-  document.getElementById('donorId').value = '';
+      async populateDonorForm(donorId = null) {
+        const form = document.getElementById('donorProfileForm');
+        form.reset();
+        this.elements.deleteDonorBtn.classList.add('hide');
+        document.getElementById('donorId').value = '';
 
         if (donorId) {
           // Admin editing someone else's profile
@@ -2558,25 +2882,1677 @@ async populateDonorForm(donorId = null) {
 
       updateFundTabView() {
         if (this.state.isAdmin) return; // Admin sees everything always
-        
+
         const isCollection = this.state.activeFundTab === 'collection';
-        
+
         this.elements.collectionView.classList.toggle('hide', !isCollection);
         this.elements.sadakahListView.classList.toggle('hide', isCollection);
-        
+
         // Update active tab styling
         document.getElementById('collectionTabBtn').classList.toggle('bg-emerald-100', isCollection);
         document.getElementById('collectionTabBtn').classList.toggle('border-2', isCollection);
         document.getElementById('collectionTabBtn').classList.toggle('border-emerald-500', isCollection);
-        
+
         document.getElementById('sadakahTabBtn').classList.toggle('bg-emerald-100', !isCollection);
         document.getElementById('sadakahTabBtn').classList.toggle('border-2', !isCollection);
         document.getElementById('sadakahTabBtn').classList.toggle('border-emerald-500', !isCollection);
-        
+
         // Load sadakah list if switching to that tab
         if (!isCollection) {
           this.loadAllSadakah();
         }
+      },
+
+      // --- NOTES MANAGEMENT ---
+      canAccessNotes() {
+        // Notes are private - admins only see their own notes, just like students
+        const role = this.state.userProfile?.role;
+        return role === 'admin' || role === 'student' || role === 'moderator';
+      },
+
+      loadNotesFromLocalStorage() {
+        try {
+          const userId = this.state.userProfile?.id || 'guest';
+          const notesKey = `notes_${userId}`;
+          const cachedNotes = localStorage.getItem(notesKey);
+          if (cachedNotes) {
+            this.state.notes = JSON.parse(cachedNotes);
+          }
+          
+          // Load recycle bin (deleted notes that shouldn't come back from server)
+          const recycleBinKey = `notes_recycleBin_${userId}`;
+          const recycleBin = localStorage.getItem(recycleBinKey);
+          this.state.notesRecycleBin = recycleBin ? JSON.parse(recycleBin) : [];
+        } catch (err) {
+          console.error('Error loading notes from localStorage:', err);
+          this.state.notes = [];
+          this.state.notesRecycleBin = [];
+        }
+      },
+
+      saveNotesToLocalStorage() {
+        try {
+          const userId = this.state.userProfile?.id || 'guest';
+          const notesKey = `notes_${userId}`;
+          localStorage.setItem(notesKey, JSON.stringify(this.state.notes));
+          
+          // Also save recycle bin
+          const recycleBinKey = `notes_recycleBin_${userId}`;
+          localStorage.setItem(recycleBinKey, JSON.stringify(this.state.notesRecycleBin || []));
+        } catch (err) {
+          console.error('Error saving notes to localStorage:', err);
+        }
+      },
+
+      // Compression utilities for cloud storage
+compressNoteContent(rows) {
+  // Convert rows to compressed format
+  const compressed = {
+    v: 1, // version
+    r: [] // rows
+  };
+  
+  rows.forEach((row, rowIndex) => {
+    if (row.length === 0) {
+      compressed.r.push({ c: [] });
+      return;
+    }
+    
+    // Group cells by formatting
+    const formatGroups = {};
+    
+    row.forEach((cell, colIndex) => {
+      const fKey = JSON.stringify(cell.formatting);
+      if (!formatGroups[fKey]) {
+        formatGroups[fKey] = {
+          f: cell.formatting,
+          cells: []
+        };
+      }
+      formatGroups[fKey].cells.push({ i: colIndex, c: cell.char });
+    });
+    
+    compressed.r.push({
+      c: Object.values(formatGroups).map(g => ({
+        f: g.f,
+        d: g.cells
+      }))
+    });
+  });
+  
+  return JSON.stringify(compressed);
+},
+
+decompressNoteContent(compressedStr) {
+  if (!compressedStr) return [];
+  
+  try {
+    const compressed = JSON.parse(compressedStr);
+    
+    // Handle old uncompressed format
+    if (!compressed.v) {
+      // This is old format, return as-is
+      return this.parseOldFormatContent(compressedStr);
+    }
+    
+    const rows = [];
+    
+    compressed.r.forEach(rowData => {
+      const row = [];
+      
+      rowData.c.forEach(group => {
+        group.d.forEach(cellData => {
+          row[cellData.i] = {
+            char: cellData.c,
+            formatting: group.f
+          };
+        });
+      });
+      
+      rows.push(row);
+    });
+    
+    return rows;
+  } catch (err) {
+    console.error('Decompression error:', err);
+    // Fallback to old format parser
+    return this.parseOldFormatContent(compressedStr);
+  }
+},
+
+parseOldFormatContent(content) {
+  // Parse old marker-based format
+  const lines = content.split('\n');
+  return lines.map(line => {
+    const row = [];
+    let i = 0;
+    while (i < line.length) {
+      let char = line[i];
+      let formatting = {
+        bold: null,
+        italic: false,
+        underline: null,
+        highlight: null,
+        color: null
+      };
+
+      let tagsParsed = true;
+      while (tagsParsed && i < line.length) {
+        tagsParsed = false;
+        
+        if (line.substring(i).startsWith('<b:')) {
+          const match = line.substring(i).match(/^<b:(light|medium|heavy)>/);
+          if (match) {
+            formatting.bold = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+        
+        if (line.substring(i).startsWith('<i>')) {
+          formatting.italic = true;
+          i += 3;
+          tagsParsed = true;
+        }
+        
+        if (line.substring(i).startsWith('<u:')) {
+          const match = line.substring(i).match(/^<u:(single|double|dotted|dashed|wavy)>/);
+          if (match) {
+            formatting.underline = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+        
+        if (line.substring(i).startsWith('<h:')) {
+          const match = line.substring(i).match(/^<h:(yellow|green|blue|pink|orange)>/);
+          if (match) {
+            formatting.highlight = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+        
+        if (line.substring(i).startsWith('<c:')) {
+          const match = line.substring(i).match(/^<c:(red|blue|green|purple|orange|gray)>/);
+          if (match) {
+            formatting.color = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+      }
+
+      if (i < line.length) {
+        char = line[i];
+        i++;
+        
+        while (i < line.length) {
+          const remaining = line.substring(i);
+          let closingTagFound = false;
+          
+          if (remaining.startsWith('</b>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</i>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</u>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</h>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</c>')) {
+            i += 4;
+            closingTagFound = true;
+          }
+          
+          if (!closingTagFound) break;
+        }
+
+        row.push({ char, formatting });
+      }
+    }
+    return row;
+  });
+},
+            async syncNotesFromServer() {
+        if (!this.state.currentUser) return;
+
+        try {
+          // Privacy: Even admins only fetch their OWN notes (not all notes)
+          // This respects user privacy - notes are personal
+          const { data, error } = await db.from('notes').select('*').eq('user_id', this.state.currentUser.id);
+          
+          if (error) throw error;
+
+          // Merge server notes with local notes
+          const serverNotes = data || [];
+          const localNotes = this.state.notes;
+          const recycleBin = this.state.notesRecycleBin || [];
+
+          // Create a set of deleted note IDs (in recycle bin)
+          const deletedIds = new Set(recycleBin.map(note => note.id));
+
+          // Create a map of server notes by ID
+          const serverNotesMap = new Map();
+          serverNotes.forEach(note => {
+            // Skip notes that are in recycle bin (were deleted locally)
+            if (!deletedIds.has(note.id)) {
+              serverNotesMap.set(note.id, {
+                ...note,
+                datestamp: note.datestamp,
+                isBold: note.is_bold,
+                isHighlighted: note.is_highlighted
+              });
+            }
+          });
+
+          // Create a map of local notes by ID
+          const localNotesMap = new Map();
+          localNotes.forEach(note => {
+            localNotesMap.set(note.id, note);
+          });
+
+          // Merge: prefer local version if exists, otherwise use server version
+          const mergedNotes = [];
+          
+          // Add all local notes (they might be newer)
+          localNotes.forEach(note => {
+            mergedNotes.push(note);
+          });
+
+          // Add server notes that don't exist locally and aren't deleted
+serverNotes.forEach(serverNote => {
+  if (!localNotesMap.has(serverNote.id) && !deletedIds.has(serverNote.id)) {
+    // Decompress content from server
+    const decompressedRows = this.decompressNoteContent(serverNote.content);
+    const content = decompressedRows.map(row => 
+      row.map(cell => {
+        let text = cell.char;
+        if (cell.formatting.bold) text = `<b:${cell.formatting.bold}>${text}</b>`;
+        if (cell.formatting.italic) text = `<i>${text}</i>`;
+        if (cell.formatting.underline) text = `<u:${cell.formatting.underline}>${text}</u>`;
+        if (cell.formatting.highlight) text = `<h:${cell.formatting.highlight}>${text}</h>`;
+        if (cell.formatting.color) text = `<c:${cell.formatting.color}>${text}</c>`;
+        return text;
+      }).join('')
+    ).join('\n');
+    
+    mergedNotes.push({
+      id: serverNote.id,
+      title: serverNote.title,
+      content: content,
+      datestamp: serverNote.datestamp,
+      createdAt: serverNote.created_at,
+      updatedAt: serverNote.updated_at
+    });
+  }
+});
+
+          this.state.notes = mergedNotes;
+          this.saveNotesToLocalStorage();
+
+          // Update last sync time
+          const lastSyncKey = `notes_lastSync_${this.state.currentUser.id}`;
+          localStorage.setItem(lastSyncKey, new Date().toISOString());
+          this.updateLastSyncDisplay();
+
+        } catch (err) {
+          console.error('Error syncing notes from server:', err);
+          // Continue with local notes
+        }
+      },
+
+      async backupNotesToServer() {
+        if (!this.state.currentUser || !this.canAccessNotes()) {
+          return this.showNotification('You must be logged in to backup notes', true);
+        }
+
+        this.showNotification('Backing up notes to cloud...');
+
+        try {
+          // Delete all existing notes for this user first
+          const { error: deleteError } = await db.from('notes').delete().eq('user_id', this.state.currentUser.id);
+          
+          if (deleteError) throw deleteError;
+
+          // Insert all local notes
+if (this.state.notes.length > 0) {
+  const notesToInsert = this.state.notes.map(note => {
+    // Parse content and compress for cloud storage
+    const rows = this.parseOldFormatContent(note.content);
+    const compressed = this.compressNoteContent(rows);
+    
+    return {
+      user_id: this.state.currentUser.id,
+      title: note.title || null,
+      content: compressed,
+      datestamp: note.datestamp,
+      created_at: note.createdAt || new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  });
+
+            const { error: insertError } = await db.from('notes').insert(notesToInsert);
+            
+            if (insertError) throw insertError;
+          }
+
+          // Clear recycle bin after successful backup
+          this.state.notesRecycleBin = [];
+          const userId = this.state.currentUser.id;
+          const recycleBinKey = `notes_recycleBin_${userId}`;
+          localStorage.removeItem(recycleBinKey);
+
+          // Update last sync time
+          const lastSyncKey = `notes_lastSync_${this.state.currentUser.id}`;
+          localStorage.setItem(lastSyncKey, new Date().toISOString());
+          this.updateLastSyncDisplay();
+
+          this.showNotification(`Successfully backed up ${this.state.notes.length} note(s) to cloud!`);
+        } catch (err) {
+          console.error('Error backing up notes:', err);
+          this.showNotification('Failed to backup notes: ' + err.message, true);
+        }
+      },
+
+      updateLastSyncDisplay() {
+        const lastSyncElement = document.getElementById('notesLastSync');
+        if (!lastSyncElement) return;
+
+        if (!this.state.currentUser) {
+          lastSyncElement.textContent = '';
+          return;
+        }
+
+        const lastSyncKey = `notes_lastSync_${this.state.currentUser.id}`;
+        const lastSync = localStorage.getItem(lastSyncKey);
+
+        if (lastSync) {
+          const syncDate = new Date(lastSync);
+          const now = new Date();
+          const diffMs = now - syncDate;
+          const diffMins = Math.floor(diffMs / 60000);
+
+          let timeAgo;
+          if (diffMins < 1) {
+            timeAgo = 'just now';
+          } else if (diffMins < 60) {
+            timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+          } else if (diffMins < 1440) {
+            const hours = Math.floor(diffMins / 60);
+            timeAgo = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+          } else {
+            const days = Math.floor(diffMins / 1440);
+            timeAgo = `${days} day${days > 1 ? 's' : ''} ago`;
+          }
+
+          lastSyncElement.textContent = `Last synced: ${timeAgo}`;
+        } else {
+          lastSyncElement.textContent = 'Never synced';
+        }
+      },
+
+      loadNotes() {
+        if (this.state.isLoading.notes) return;
+        this.state.isLoading.notes = true;
+
+        this.loadNotesFromLocalStorage();
+        this.renderNotes();
+        this.updateLastSyncDisplay();
+
+        this.state.isLoading.notes = false;
+      },
+
+      renderNotes() {
+        const notesList = this.elements.notesList;
+        
+        if (!this.canAccessNotes()) {
+          notesList.innerHTML = '<div class="text-gray-400 text-center py-8">You need to be a student, moderator, or admin to access notes.</div>';
+          return;
+        }
+
+        if (this.state.notes.length === 0) {
+          const isBn = localStorage.getItem('lang') === 'bn';
+          notesList.innerHTML = `<div class="text-gray-400 text-center py-8">${isBn ? 'কোনো নোট নেই' : 'No notes yet. Click "New Note" to create one!'}</div>`;
+          return;
+        }
+
+        // Group notes by datestamp
+        const groupedNotes = {};
+        this.state.notes.forEach(note => {
+          const datestamp = note.datestamp;
+          if (!groupedNotes[datestamp]) {
+            groupedNotes[datestamp] = [];
+          }
+          groupedNotes[datestamp].push(note);
+        });
+
+        // Sort datestamps in descending order
+        const sortedDatestamps = Object.keys(groupedNotes).sort((a, b) => new Date(b) - new Date(a));
+
+        let html = '';
+
+        sortedDatestamps.forEach(datestamp => {
+          const notes = groupedNotes[datestamp];
+          const date = new Date(datestamp);
+          const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+          if (notes.length === 1) {
+            // Single note - no folder
+            const note = notes[0];
+            const title = this.stripFormatting(note.title || note.content.split('\n')[0].split(' ').slice(0, 3).join(' ') || 'Untitled');
+            const preview = this.stripFormatting(note.content.substring(0, 100)) + (note.content.length > 100 ? '...' : '');
+            
+            html += `
+              <div class="bg-white rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition" data-note-id="${note.id}">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="font-bold text-gray-800">${title}</h3>
+                  <span class="text-xs text-gray-500">${formattedDate}</span>
+                </div>
+                <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
+              </div>
+            `;
+          } else {
+            // Multiple notes - create folder
+            html += `
+              <div class="bg-blue-50 rounded-xl shadow-lg p-4 border-l-4 border-blue-400">
+                <div class="flex justify-between items-center mb-3">
+                  <h3 class="font-bold text-gray-800">📁 ${formattedDate}</h3>
+                  <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">${notes.length} notes</span>
+                </div>
+                <div class="space-y-2">
+                  ${notes.map(note => {
+                    const title = this.stripFormatting(note.title || note.content.split('\n')[0].split(' ').slice(0, 3).join(' ') || 'Untitled');
+                    return `
+                      <div class="bg-white rounded-lg p-3 cursor-pointer hover:shadow-md transition" data-note-id="${note.id}">
+                        <p class="text-sm font-semibold text-gray-700">${title}</p>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        notesList.innerHTML = html;
+
+        // Bind click events
+        notesList.querySelectorAll('[data-note-id]').forEach(el => {
+          el.addEventListener('click', () => {
+            const noteId = el.dataset.noteId;
+            this.viewNote(noteId);
+          });
+        });
+      },
+
+      stripFormatting(text) {
+        // Remove all formatting markers (angled brackets)
+        return text
+          .replace(/<\*(.+?)\*>/g, '$1') // bold
+          .replace(/<#(.+?)#>/g, '$1') // highlight
+          .replace(/<_(.+?)_>/g, '$1') // underline
+          .replace(/^• /gm, '') // bullets
+          .replace(/^\d+\. /gm, ''); // numbering
+      },
+
+      parseFormatting(text) {
+        // Convert new angled bracket markers to HTML
+        // Process nested combinations in order (most specific first)
+        let html = text
+          // Bold + Highlight + Underline (all 6 combinations)
+          .replace(/<\*<_<#(.+?)#>_>\*>/g, '<span style="font-weight: bold; text-decoration: underline; color: #dc2626;">$1</span>')
+          .replace(/<\*<#<_(.+?)_>#>\*>/g, '<span style="font-weight: bold; text-decoration: underline; color: #dc2626;">$1</span>')
+          .replace(/<_<\*<#(.+?)#>\*>_>/g, '<span style="font-weight: bold; text-decoration: underline; color: #dc2626;">$1</span>')
+          .replace(/<_<#<\*(.+?)\*>#>_>/g, '<span style="font-weight: bold; text-decoration: underline; color: #dc2626;">$1</span>')
+          .replace(/<#<\*<_(.+?)_>\*>#>/g, '<span style="font-weight: bold; text-decoration: underline; color: #dc2626;">$1</span>')
+          .replace(/<#<_<\*(.+?)\*>_>#>/g, '<span style="font-weight: bold; text-decoration: underline; color: #dc2626;">$1</span>')
+          // Bold + Highlight
+          .replace(/<\*<#(.+?)#>\*>/g, '<span style="font-weight: bold; color: #dc2626;">$1</span>')
+          .replace(/<#<\*(.+?)\*>#>/g, '<span style="font-weight: bold; color: #dc2626;">$1</span>')
+          // Bold + Underline
+          .replace(/<\*<_(.+?)_>\*>/g, '<span style="font-weight: bold; text-decoration: underline;">$1</span>')
+          .replace(/<_<\*(.+?)\*>_>/g, '<span style="font-weight: bold; text-decoration: underline;">$1</span>')
+          // Highlight + Underline
+          .replace(/<#<_(.+?)_>#>/g, '<span style="text-decoration: underline; color: #dc2626;">$1</span>')
+          .replace(/<_<#(.+?)#>_>/g, '<span style="text-decoration: underline; color: #dc2626;">$1</span>')
+          // Single styles
+          .replace(/<\*(.+?)\*>/g, '<strong>$1</strong>') // Bold
+          .replace(/<#(.+?)#>/g, '<span style="color: #dc2626;">$1</span>') // Highlight
+          .replace(/<_(.+?)_>/g, '<span style="text-decoration: underline;">$1</span>') // Underline
+          // Bullets and numbering with indentation
+          .replace(/^• (.+)$/gm, '<div style="margin-left: 20px; padding-left: 10px;">• $1</div>')
+          .replace(/^(\d+)\. (.+)$/gm, '<div style="margin-left: 20px; padding-left: 10px;">$1. $2</div>');
+        
+        return html;
+      },
+
+      viewNote(noteId) {
+        const note = this.state.notes.find(n => n.id === noteId);
+        if (!note) return;
+
+        this.state.currentNote = note;
+
+        // Populate view modal
+        document.getElementById('noteViewTitle').textContent = this.stripFormatting(note.title || 'Untitled');
+        const date = new Date(note.datestamp);
+        document.getElementById('noteViewDate').textContent = date.toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+
+        const contentEl = document.getElementById('noteViewContent');
+        // Parse and render formatted content
+        let html = this.renderFormattedContent(note.content);
+        contentEl.innerHTML = html;
+
+        this.showModal('noteViewModal');
+      },
+
+renderFormattedContent(content) {
+  // Convert formatting markers to HTML
+  const lines = content.split('\n');
+  return lines.map(line => {
+    let html = '';
+    let i = 0;
+    while (i < line.length) {
+      let char = line[i];
+      let styles = [];
+
+      // Check for nested formatting markers (process all at current position)
+      let processed = false;
+      let currentPos = i;
+      
+      // Try to match all possible formatting at current position
+      while (true) {
+        const remainingText = line.substring(currentPos);
+        let matched = false;
+        
+        const boldMatch = remainingText.match(/^<b:(light|medium|heavy)>/);
+        if (boldMatch) {
+          const weight = boldMatch[1] === 'light' ? '500' : boldMatch[1] === 'medium' ? '700' : '900';
+          styles.push(`font-weight: ${weight}`);
+          currentPos += boldMatch[0].length;
+          matched = true;
+          continue;
+        }
+        
+        const italicMatch = remainingText.match(/^<i>/);
+        if (italicMatch) {
+          styles.push('font-style: italic');
+          currentPos += italicMatch[0].length;
+          matched = true;
+          continue;
+        }
+        
+        const underlineMatch = remainingText.match(/^<u:(single|double|dotted|dashed|wavy)>/);
+        if (underlineMatch) {
+          const style = underlineMatch[1] === 'single' ? 'solid' : underlineMatch[1];
+          styles.push(`text-decoration: underline; text-decoration-style: ${style}`);
+          currentPos += underlineMatch[0].length;
+          matched = true;
+          continue;
+        }
+        
+        const highlightMatch = remainingText.match(/^<h:(yellow|green|blue|pink|orange)>/);
+        if (highlightMatch) {
+          const colors = { yellow: '#fff59d', green: '#a5d6a7', blue: '#90caf9', pink: '#f48fb1', orange: '#ffcc80' };
+          styles.push(`background-color: ${colors[highlightMatch[1]]}`);
+          currentPos += highlightMatch[0].length;
+          matched = true;
+          continue;
+        }
+        
+        const colorMatch = remainingText.match(/^<c:(red|blue|green|purple|orange|gray)>/);
+        if (colorMatch) {
+          const colors = { red: '#d32f2f', blue: '#1976d2', green: '#388e3c', purple: '#7b1fa2', orange: '#f57c00', gray: '#616161' };
+          styles.push(`color: ${colors[colorMatch[1]]}`);
+          currentPos += colorMatch[0].length;
+          matched = true;
+          continue;
+        }
+        
+        if (!matched) break;
+      }
+      
+      // Now get the character
+      if (currentPos > i) {
+        // We found formatting, now get the actual character
+        char = line[currentPos];
+        currentPos++;
+        
+        // Skip closing tags
+        while (currentPos < line.length) {
+          const remaining = line.substring(currentPos);
+          if (remaining.startsWith('</b>') || remaining.startsWith('</i>') || 
+              remaining.startsWith('</u>') || remaining.startsWith('</h>') || 
+              remaining.startsWith('</c>')) {
+            const closeMatch = remaining.match(/^<\/(b|i|u|h|c)>/);
+            if (closeMatch) {
+              currentPos += closeMatch[0].length;
+              continue;
+            }
+          }
+          break;
+        }
+        
+        i = currentPos;
+        processed = true;
+      } else {
+        i++;
+      }
+
+      if (styles.length > 0) {
+        html += `<span style="${styles.join('; ')}">${char === ' ' ? '&nbsp;' : char}</span>`;
+      } else {
+        html += char === ' ' ? '&nbsp;' : char;
+      }
+    }
+    return html;
+  }).join('<br>');
+},
+
+      // Row Universe Editor for Notes
+      RowUniverseEditor: class {
+        constructor(editor) {
+          this.rows = [[]];
+          this.currentRow = 0;
+          this.currentCol = 0;
+          this.activeFormatting = {
+            bold: null,
+            italic: false,
+            underline: null,
+            highlight: null,
+            color: null
+          };
+          this.formattingOverridden = false;
+          this.lastBoldValue = 'medium';
+          this.lastUnderlineValue = 'single';
+          this.lastHighlightValue = 'yellow';
+          this.lastColorValue = 'red';
+          this.editor = editor;
+          this.init();
+        }
+
+        init() {
+          this.editor.addEventListener('keydown', (e) => this.handleKeyDown(e));
+          this.editor.addEventListener('mouseup', () => this.updateToolbarFromCursor());
+          this.editor.addEventListener('keyup', (e) => {
+            if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') {
+              this.updateCursorPosition();
+              this.updateToolbarFromCursor();
+            }
+          });
+
+          this.render();
+          this.updateToolbar();
+        }
+
+        loadContent(content) {
+  // Parse existing content and populate rows with formatting
+  if (!content || content.trim() === '') {
+    this.rows = [[]];
+    this.currentRow = 0;
+    this.currentCol = 0;
+    this.render();
+    return;
+  }
+
+  const lines = content.split('\n');
+  this.rows = lines.map(line => {
+    const row = [];
+    let i = 0;
+    while (i < line.length) {
+      let char = line[i];
+      let formatting = {
+        bold: null,
+        italic: false,
+        underline: null,
+        highlight: null,
+        color: null
+      };
+
+      // Parse all formatting markers at current position
+      let tagsParsed = true;
+      while (tagsParsed && i < line.length) {
+        tagsParsed = false;
+        
+        if (line.substring(i).startsWith('<b:')) {
+          const match = line.substring(i).match(/^<b:(light|medium|heavy)>/);
+          if (match) {
+            formatting.bold = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+        
+        if (line.substring(i).startsWith('<i>')) {
+          formatting.italic = true;
+          i += 3;
+          tagsParsed = true;
+        }
+        
+        if (line.substring(i).startsWith('<u:')) {
+          const match = line.substring(i).match(/^<u:(single|double|dotted|dashed|wavy)>/);
+          if (match) {
+            formatting.underline = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+        
+        if (line.substring(i).startsWith('<h:')) {
+          const match = line.substring(i).match(/^<h:(yellow|green|blue|pink|orange)>/);
+          if (match) {
+            formatting.highlight = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+        
+        if (line.substring(i).startsWith('<c:')) {
+          const match = line.substring(i).match(/^<c:(red|blue|green|purple|orange|gray)>/);
+          if (match) {
+            formatting.color = match[1];
+            i += match[0].length;
+            tagsParsed = true;
+          }
+        }
+      }
+
+      // Now get the actual character
+      if (i < line.length) {
+        char = line[i];
+        i++;
+        
+        // Skip all closing tags
+        while (i < line.length) {
+          const remaining = line.substring(i);
+          let closingTagFound = false;
+          
+          if (remaining.startsWith('</b>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</i>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</u>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</h>')) {
+            i += 4;
+            closingTagFound = true;
+          } else if (remaining.startsWith('</c>')) {
+            i += 4;
+            closingTagFound = true;
+          }
+          
+          if (!closingTagFound) break;
+        }
+
+        row.push({ char, formatting });
+      }
+    }
+    return row;
+  });
+
+  if (this.rows.length === 0) {
+    this.rows = [[]];
+  }
+
+  this.currentRow = 0;
+  this.currentCol = 0;
+  this.render();
+}
+
+        getPlainText() {
+          return this.rows.map(row => 
+            row.map(cell => cell.char).join('')
+          ).join('\n');
+        }
+
+        handleKeyDown(e) {
+          if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'i') { e.preventDefault(); this.toggleFormat('italic'); return; }
+            if (e.key === 'b') { e.preventDefault(); this.toggleFormat('bold'); return; }
+            if (e.key === 'u') { e.preventDefault(); this.toggleFormat('underline'); return; }
+          }
+
+          const sel = window.getSelection();
+          const hasSelection = sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+
+          if (hasSelection) {
+            const range = this.getSelectionRange();
+            if (range) {
+              if (e.key === 'Backspace' || e.key === 'Delete') {
+                e.preventDefault();
+                this.deleteRange(range);
+                this.render();
+                this.updateToolbar();
+                return;
+              }
+              if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                this.deleteRange(range);
+                this.insertCharacter(e.key);
+                return;
+              }
+            }
+          }
+
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            this.insertCharacter(e.key);
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            this.handleBackspace();
+          } else if (e.key === 'Delete') {
+            e.preventDefault();
+            this.handleDelete();
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            this.handleEnter();
+          }
+        }
+
+        insertCharacter(char) {
+          this.updateCursorPosition();
+          const row = this.rows[this.currentRow];
+          const newCell = {
+            char: char,
+            formatting: { ...this.activeFormatting }
+          };
+          row.splice(this.currentCol, 0, newCell);
+          this.currentCol++;
+          this.formattingOverridden = false;
+          this.render();
+          this.updateToolbar();
+        }
+
+        handleBackspace() {
+          this.updateCursorPosition();
+          const row = this.rows[this.currentRow];
+
+          if (this.currentCol > 0) {
+            row.splice(this.currentCol - 1, 1);
+            this.currentCol--;
+            this.render();
+            this.updateToolbarFromCursor();
+          } else if (this.currentRow > 0) {
+            const prevRow = this.rows[this.currentRow - 1];
+            const mergePos = prevRow.length;
+            prevRow.push(...row);
+            this.rows.splice(this.currentRow, 1);
+            this.currentRow--;
+            this.currentCol = mergePos;
+            this.render();
+            this.updateToolbarFromCursor();
+          }
+        }
+
+        handleDelete() {
+          this.updateCursorPosition();
+          const row = this.rows[this.currentRow];
+
+          if (this.currentCol < row.length) {
+            row.splice(this.currentCol, 1);
+            this.render();
+            this.updateToolbarFromCursor();
+          } else if (this.currentRow < this.rows.length - 1) {
+            const nextRow = this.rows[this.currentRow + 1];
+            row.push(...nextRow);
+            this.rows.splice(this.currentRow + 1, 1);
+            this.render();
+            this.updateToolbarFromCursor();
+          }
+        }
+
+        handleEnter() {
+          const row = this.rows[this.currentRow];
+          const rightPart = row.splice(this.currentCol);
+          this.rows.splice(this.currentRow + 1, 0, rightPart);
+          this.currentRow++;
+          this.currentCol = 0;
+          this.render();
+        }
+
+        toggleFormat(format) {
+          const range = this.getSelectionRange();
+
+          if (range && !range.collapsed) {
+            const allHaveFormat = this.checkRangeFormatting(range, format);
+
+            for (let r = range.startRow; r <= range.endRow; r++) {
+              const row = this.rows[r];
+              const startCol = (r === range.startRow) ? range.startCol : 0;
+              const endCol = (r === range.endRow) ? range.endCol : row.length;
+
+              for (let c = startCol; c < endCol; c++) {
+                if (row[c]) {
+                  if (format === 'bold') {
+                    row[c].formatting[format] = !allHaveFormat ? this.lastBoldValue : null;
+                  } else if (format === 'underline') {
+                    row[c].formatting[format] = !allHaveFormat ? this.lastUnderlineValue : null;
+                  } else {
+                    row[c].formatting[format] = !allHaveFormat;
+                  }
+                }
+              }
+            }
+
+            this.render();
+            this.restoreSelection(range);
+          } else {
+            if (format === 'bold') {
+              this.activeFormatting[format] = this.activeFormatting[format] ? null : this.lastBoldValue;
+            } else if (format === 'underline') {
+              this.activeFormatting[format] = this.activeFormatting[format] ? null : this.lastUnderlineValue;
+            } else {
+              this.activeFormatting[format] = !this.activeFormatting[format];
+            }
+            this.formattingOverridden = true;
+            this.updateToolbar();
+          }
+        }
+
+        applyFormatWithValue(format, value) {
+          if (format === 'bold') this.lastBoldValue = value;
+          if (format === 'underline') this.lastUnderlineValue = value;
+          if (format === 'highlight') this.lastHighlightValue = value;
+          if (format === 'color') this.lastColorValue = value;
+
+          const range = this.getSelectionRange();
+
+          if (range && !range.collapsed) {
+            const allHaveFormat = this.checkRangeFormattingValue(range, format, value);
+
+            for (let r = range.startRow; r <= range.endRow; r++) {
+              const row = this.rows[r];
+              const startCol = (r === range.startRow) ? range.startCol : 0;
+              const endCol = (r === range.endRow) ? range.endCol : row.length;
+
+              for (let c = startCol; c < endCol; c++) {
+                if (row[c]) {
+                  row[c].formatting[format] = allHaveFormat ? null : value;
+                }
+              }
+            }
+
+            this.render();
+            this.restoreSelection(range);
+          } else {
+            this.activeFormatting[format] = (this.activeFormatting[format] === value) ? null : value;
+            this.formattingOverridden = true;
+            this.updateToolbar();
+          }
+        }
+
+        checkRangeFormatting(range, format) {
+          for (let r = range.startRow; r <= range.endRow; r++) {
+            const row = this.rows[r];
+            const startCol = (r === range.startRow) ? range.startCol : 0;
+            const endCol = (r === range.endRow) ? range.endCol : row.length;
+
+            for (let c = startCol; c < endCol; c++) {
+              if (row[c]) {
+                if (format === 'bold' || format === 'underline') {
+                  if (!row[c].formatting[format]) return false;
+                } else {
+                  if (!row[c].formatting[format]) return false;
+                }
+              }
+            }
+          }
+          return true;
+        }
+
+        checkRangeFormattingValue(range, format, value) {
+          for (let r = range.startRow; r <= range.endRow; r++) {
+            const row = this.rows[r];
+            const startCol = (r === range.startRow) ? range.startCol : 0;
+            const endCol = (r === range.endRow) ? range.endCol : row.length;
+
+            for (let c = startCol; c < endCol; c++) {
+              if (row[c] && row[c].formatting[format] !== value) {
+                return false;
+              }
+            }
+          }
+          return true;
+        }
+
+        deleteRange(range) {
+          if (range.startRow === range.endRow) {
+            const row = this.rows[range.startRow];
+            row.splice(range.startCol, range.endCol - range.startCol);
+          } else {
+            const firstRow = this.rows[range.startRow];
+            const lastRow = this.rows[range.endRow];
+            const keepFromFirst = firstRow.slice(0, range.startCol);
+            const keepFromLast = lastRow.slice(range.endCol);
+            const mergedRow = [...keepFromFirst, ...keepFromLast];
+            this.rows[range.startRow] = mergedRow;
+            const rowsToDelete = range.endRow - range.startRow;
+            this.rows.splice(range.startRow + 1, rowsToDelete);
+          }
+
+          this.currentRow = range.startRow;
+          this.currentCol = range.startCol;
+        }
+
+        getSelectionRange() {
+          const sel = window.getSelection();
+          if (sel.rangeCount === 0 || sel.getRangeAt(0).collapsed) return null;
+
+          const range = sel.getRangeAt(0);
+          const rows = this.editor.querySelectorAll('.note-row');
+          
+          let startRow = -1, startCol = -1;
+          let endRow = -1, endCol = -1;
+
+          for (let r = 0; r < rows.length; r++) {
+            const rowElement = rows[r];
+            const cells = rowElement.querySelectorAll('.note-cell');
+
+            for (let c = 0; c < cells.length; c++) {
+              const cell = cells[c];
+              
+              if (cell.contains(range.startContainer) || cell === range.startContainer) {
+                if (startRow === -1) {
+                  startRow = r;
+                  startCol = c;
+                }
+              }
+              
+              if (cell.contains(range.endContainer) || cell === range.endContainer) {
+                endRow = r;
+                endCol = c + 1;
+              }
+            }
+          }
+
+          if (startRow === -1 || endRow === -1) return null;
+
+          if (startRow > endRow || (startRow === endRow && startCol > endCol)) {
+            return {
+              startRow: endRow,
+              startCol: endCol - 1,
+              endRow: startRow,
+              endCol: startCol + 1,
+              collapsed: false
+            };
+          }
+
+          return { startRow, startCol, endRow, endCol, collapsed: false };
+        }
+
+        restoreSelection(range) {
+          setTimeout(() => {
+            const sel = window.getSelection();
+            const newRange = document.createRange();
+            const rows = this.editor.querySelectorAll('.note-row');
+
+            if (rows[range.startRow] && rows[range.endRow]) {
+              const startCells = rows[range.startRow].querySelectorAll('.note-cell');
+              const endCells = rows[range.endRow].querySelectorAll('.note-cell');
+
+              if (startCells[range.startCol] && endCells[range.endCol - 1]) {
+                const startNode = startCells[range.startCol].firstChild || startCells[range.startCol];
+                const endNode = endCells[range.endCol - 1].firstChild || endCells[range.endCol - 1];
+
+                newRange.setStart(startNode, 0);
+                newRange.setEnd(endNode, endNode.textContent ? endNode.textContent.length : 1);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+              }
+            }
+          }, 0);
+        }
+
+        updateCursorPosition() {
+          const sel = window.getSelection();
+          if (sel.rangeCount === 0) return;
+
+          const range = sel.getRangeAt(0);
+          const rows = this.editor.querySelectorAll('.note-row');
+
+          for (let r = 0; r < rows.length; r++) {
+            const rowElement = rows[r];
+            if (rowElement.contains(range.startContainer)) {
+              this.currentRow = r;
+              const cells = rowElement.querySelectorAll('.note-cell');
+              let foundCol = false;
+
+              for (let c = 0; c < cells.length; c++) {
+                if (cells[c].contains(range.startContainer) || cells[c] === range.startContainer) {
+                  if (range.startContainer.nodeType === Node.TEXT_NODE &&
+                      range.startOffset === range.startContainer.length) {
+                    this.currentCol = c + 1;
+                  } else {
+                    this.currentCol = c;
+                  }
+                  foundCol = true;
+                  break;
+                }
+              }
+
+              if (!foundCol) {
+                this.currentCol = cells.length;
+              }
+              break;
+            }
+          }
+        }
+
+        updateToolbarFromCursor() {
+          this.updateCursorPosition();
+
+          if (!this.formattingOverridden) {
+            const row = this.rows[this.currentRow];
+            if (this.currentCol > 0 && row[this.currentCol - 1]) {
+              this.activeFormatting = { ...row[this.currentCol - 1].formatting };
+            } else if (this.currentCol === 0 && row[0]) {
+              this.activeFormatting = { ...row[0].formatting };
+            }
+          }
+
+          this.updateToolbar();
+        }
+
+        updateToolbar() {
+          const italicBtn = document.getElementById('noteItalicBtn');
+          const boldBtn = document.getElementById('noteBoldBtn');
+          const underlineBtn = document.getElementById('noteUnderlineBtn');
+          const highlightBtn = document.getElementById('noteHighlightBtn');
+          const colorBtn = document.getElementById('noteColorBtn');
+
+          if (italicBtn) {
+            if (this.activeFormatting.italic) {
+              italicBtn.style.backgroundColor = '#93c5fd';
+              italicBtn.style.borderColor = '#3b82f6';
+            } else {
+              italicBtn.style.backgroundColor = '#e5e7eb';
+              italicBtn.style.borderColor = 'transparent';
+            }
+          }
+          
+          if (boldBtn) {
+            if (this.activeFormatting.bold !== null) {
+              boldBtn.style.backgroundColor = '#93c5fd';
+              boldBtn.style.borderColor = '#3b82f6';
+            } else {
+              boldBtn.style.backgroundColor = '#e5e7eb';
+              boldBtn.style.borderColor = 'transparent';
+            }
+            boldBtn.style.fontWeight = this.lastBoldValue ? 
+              (this.lastBoldValue === 'light' ? '500' : this.lastBoldValue === 'medium' ? '700' : '900') : '700';
+          }
+
+          if (underlineBtn) {
+            if (this.activeFormatting.underline !== null) {
+              underlineBtn.style.backgroundColor = '#93c5fd';
+              underlineBtn.style.borderColor = '#3b82f6';
+            } else {
+              underlineBtn.style.backgroundColor = '#e5e7eb';
+              underlineBtn.style.borderColor = 'transparent';
+            }
+            underlineBtn.style.textDecoration = 'underline';
+            underlineBtn.style.textDecorationStyle = this.lastUnderlineValue === 'single' ? 'solid' : this.lastUnderlineValue;
+          }
+
+          if (highlightBtn) {
+            const highlightColors = { 
+              yellow: '#fff59d', green: '#a5d6a7', blue: '#90caf9', 
+              pink: '#f48fb1', orange: '#ffcc80' 
+            };
+            if (this.activeFormatting.highlight !== null) {
+              highlightBtn.style.borderColor = '#3b82f6';
+              highlightBtn.style.borderWidth = '2px';
+            } else {
+              highlightBtn.style.borderColor = 'transparent';
+              highlightBtn.style.borderWidth = '1px';
+            }
+            highlightBtn.style.backgroundColor = this.lastHighlightValue ? 
+              highlightColors[this.lastHighlightValue] : '#e5e7eb';
+          }
+
+          if (colorBtn) {
+            const textColors = { 
+              red: '#d32f2f', blue: '#1976d2', green: '#388e3c', 
+              purple: '#7b1fa2', orange: '#f57c00', gray: '#616161' 
+            };
+            if (this.activeFormatting.color !== null) {
+              colorBtn.style.borderColor = '#3b82f6';
+              colorBtn.style.borderWidth = '2px';
+            } else {
+              colorBtn.style.borderColor = 'transparent';
+              colorBtn.style.borderWidth = '1px';
+            }
+            colorBtn.style.color = this.lastColorValue ? textColors[this.lastColorValue] : '#374151';
+            colorBtn.style.fontWeight = '900';
+          }
+        }
+
+        render() {
+          let html = '';
+
+          for (let r = 0; r < this.rows.length; r++) {
+            const row = this.rows[r];
+            html += '<div class="note-row">';
+
+            for (let c = 0; c < row.length; c++) {
+              const cell = row[c];
+              const classes = ['note-cell'];
+
+              if (cell.formatting.bold) classes.push(`note-bold-${cell.formatting.bold}`);
+              if (cell.formatting.italic) classes.push('note-italic');
+              if (cell.formatting.underline) classes.push(`note-underline-${cell.formatting.underline}`);
+              if (cell.formatting.highlight) classes.push(`note-highlight-${cell.formatting.highlight}`);
+              if (cell.formatting.color) classes.push(`note-color-${cell.formatting.color}`);
+
+              const char = cell.char === ' ' ? '&nbsp;' :
+                cell.char.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+              html += `<span class="${classes.join(' ')}">${char}</span>`;
+            }
+
+            if (row.length === 0) {
+              html += '<br>';
+            }
+
+            html += '</div>';
+          }
+
+          this.editor.innerHTML = html;
+          this.setCursorImmediate();
+        }
+
+        setCursorImmediate() {
+          const sel = window.getSelection();
+          const range = document.createRange();
+
+          const rows = this.editor.querySelectorAll('.note-row');
+          if (rows[this.currentRow]) {
+            const cells = rows[this.currentRow].querySelectorAll('.note-cell');
+
+            if (cells[this.currentCol]) {
+              const textNode = cells[this.currentCol].firstChild;
+              if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+                range.setStart(textNode, 0);
+              } else {
+                range.setStart(cells[this.currentCol], 0);
+              }
+            } else if (cells.length > 0) {
+              const lastCell = cells[cells.length - 1];
+              const textNode = lastCell.firstChild;
+              if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+                range.setStart(textNode, textNode.length);
+              } else {
+                range.setStart(lastCell, 1);
+              }
+            } else {
+              range.selectNodeContents(rows[this.currentRow]);
+              range.collapse(true);
+            }
+
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+      },
+
+  editNote(noteId = null) {
+        let note = null;
+        
+        if (noteId) {
+          note = this.state.notes.find(n => n.id === noteId);
+          if (!note) return;
+        }
+
+        this.state.currentNote = note;
+
+        // Force close all dropdowns before opening modal
+        document.querySelectorAll('.note-dropdown').forEach(d => {
+          d.classList.remove('active');
+        });
+
+        // Populate edit modal
+        if (note) {
+          document.getElementById('noteEditId').value = note.id;
+          document.getElementById('noteTitleInput').value = note.title || '';
+          document.getElementById('noteDateInput').value = note.datestamp;
+          document.getElementById('deleteNoteEditBtn').classList.remove('hide');
+
+          // Initialize editor and load content
+          setTimeout(() => {
+            const editor = document.getElementById('noteContentInput');
+            // Always create fresh editor instance
+            this.noteEditor = new this.RowUniverseEditor(editor);
+            this.noteEditor.loadContent(note.content);
+            this.setupNoteEditorEventListeners();
+            
+            // Force close dropdowns again after setup
+            document.querySelectorAll('.note-dropdown').forEach(d => {
+              d.classList.remove('active');
+            });
+          }, 100);
+
+        } else {
+          // New note
+          document.getElementById('noteEditId').value = '';
+          document.getElementById('noteTitleInput').value = '';
+          const today = new Date().toISOString().split('T')[0];
+          document.getElementById('noteDateInput').value = today;
+          document.getElementById('deleteNoteEditBtn').classList.add('hide');
+
+          // Initialize editor with empty content
+          setTimeout(() => {
+            const editor = document.getElementById('noteContentInput');
+            // Always create fresh editor instance
+            this.noteEditor = new this.RowUniverseEditor(editor);
+            this.noteEditor.loadContent('');
+            this.setupNoteEditorEventListeners();
+            
+            // Force close dropdowns again after setup
+            document.querySelectorAll('.note-dropdown').forEach(d => {
+              d.classList.remove('active');
+            });
+          }, 100);
+        }
+
+        this.hideAllModals();
+        this.showModal('noteEditModal');
+      },
+
+setupNoteEditorEventListeners() {
+        // Remove old click-outside handler if exists
+        if (this.closeDropdownsHandler) {
+          document.removeEventListener('click', this.closeDropdownsHandler);
+          this.closeDropdownsHandler = null;
+        }
+
+        // Close all dropdowns first
+        document.querySelectorAll('.note-dropdown').forEach(d => {
+          d.classList.remove('active');
+        });
+
+        // Simple button handlers - no cloning needed
+        const italicBtn = document.getElementById('noteItalicBtn');
+        const boldBtn = document.getElementById('noteBoldBtn');
+        const underlineBtn = document.getElementById('noteUnderlineBtn');
+        const highlightBtn = document.getElementById('noteHighlightBtn');
+        const colorBtn = document.getElementById('noteColorBtn');
+
+        // Remove all old event listeners by replacing with clones
+        if (italicBtn) {
+          const newItalic = italicBtn.cloneNode(true);
+          italicBtn.parentNode.replaceChild(newItalic, italicBtn);
+          newItalic.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (this.noteEditor) this.noteEditor.toggleFormat('italic');
+          });
+        }
+
+if (boldBtn) {
+  const newBold = boldBtn.cloneNode(true);
+  boldBtn.parentNode.replaceChild(newBold, boldBtn);
+  newBold.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (this.noteEditor) this.noteEditor.toggleFormat('bold');
+  });
+}
+
+        if (underlineBtn) {
+          const newUnderline = underlineBtn.cloneNode(true);
+          underlineBtn.parentNode.replaceChild(newUnderline, underlineBtn);
+          newUnderline.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (this.noteEditor) this.noteEditor.toggleFormat('underline');
+          });
+        }
+
+        if (highlightBtn) {
+          const newHighlight = highlightBtn.cloneNode(true);
+          highlightBtn.parentNode.replaceChild(newHighlight, highlightBtn);
+          newHighlight.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (this.noteEditor) {
+              const value = this.noteEditor.lastHighlightValue;
+              this.noteEditor.applyFormatWithValue('highlight', value);
+            }
+          });
+        }
+
+        if (colorBtn) {
+          const newColor = colorBtn.cloneNode(true);
+          colorBtn.parentNode.replaceChild(newColor, colorBtn);
+          newColor.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (this.noteEditor) {
+              const value = this.noteEditor.lastColorValue;
+              this.noteEditor.applyFormatWithValue('color', value);
+            }
+          });
+        }
+
+        // Setup dropdown handlers - get fresh references after cloning
+        setTimeout(() => {
+          document.querySelectorAll('.note-dropdown').forEach(dropdown => {
+            // Remove any existing 'active' class
+            dropdown.classList.remove('active');
+            
+            const arrowBtn = dropdown.querySelector('button.note-dropdown-arrow');
+            if (!arrowBtn) return;
+
+            // Remove old listeners by cloning
+            const newArrowBtn = arrowBtn.cloneNode(true);
+            arrowBtn.parentNode.replaceChild(newArrowBtn, arrowBtn);
+
+            newArrowBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              const isCurrentlyActive = dropdown.classList.contains('active');
+              
+              // Close all dropdowns first
+              document.querySelectorAll('.note-dropdown').forEach(d => {
+                d.classList.remove('active');
+              });
+              
+              // Toggle current dropdown (open if was closed, close if was open)
+              if (!isCurrentlyActive) {
+                dropdown.classList.add('active');
+                
+                // Position dropdown within viewport bounds
+                const dropdownContent = dropdown.querySelector('.note-dropdown-content');
+                const rect = newArrowBtn.getBoundingClientRect();
+                
+                // Temporarily show to get dimensions
+                dropdownContent.style.display = 'block';
+                const dropdownRect = dropdownContent.getBoundingClientRect();
+                
+                // Calculate position
+                let top = rect.bottom + 4;
+                let left = rect.left;
+                
+                // Check if dropdown goes beyond right edge
+                if (left + dropdownRect.width > window.innerWidth) {
+                  left = window.innerWidth - dropdownRect.width - 8;
+                }
+                
+                // Check if dropdown goes beyond left edge
+                if (left < 8) {
+                  left = 8;
+                }
+                
+                // Check if dropdown goes beyond bottom edge
+                if (top + dropdownRect.height > window.innerHeight) {
+                  // Position above button instead
+                  top = rect.top - dropdownRect.height - 4;
+                }
+                
+                // Check if still goes beyond top edge (shouldn't happen but just in case)
+                if (top < 8) {
+                  top = 8;
+                }
+                
+                dropdownContent.style.top = `${top}px`;
+                dropdownContent.style.left = `${left}px`;
+              }
+            });
+
+            // Setup option buttons
+            dropdown.querySelectorAll('[data-note-format]').forEach(optionBtn => {
+              const newOptionBtn = optionBtn.cloneNode(true);
+              optionBtn.parentNode.replaceChild(newOptionBtn, optionBtn);
+              
+              newOptionBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const format = newOptionBtn.dataset.noteFormat;
+                const value = newOptionBtn.dataset.value;
+                if (this.noteEditor) {
+                  this.noteEditor.applyFormatWithValue(format, value);
+                }
+                // Close dropdown after selection
+                dropdown.classList.remove('active');
+              });
+            });
+          });
+
+          // Close dropdowns when clicking outside
+          this.closeDropdownsHandler = (e) => {
+            if (!e.target.closest('.note-dropdown')) {
+              document.querySelectorAll('.note-dropdown').forEach(d => {
+                d.classList.remove('active');
+              });
+            }
+          };
+          
+          document.addEventListener('click', this.closeDropdownsHandler);
+        }, 10);
+      },
+
+  async saveNote() {
+        const noteId = document.getElementById('noteEditId').value;
+        const title = document.getElementById('noteTitleInput').value.trim();
+        const datestamp = document.getElementById('noteDateInput').value;
+        
+        // Save with formatting data instead of plain text
+        let content = '';
+        if (this.noteEditor) {
+          const rows = this.noteEditor.rows;
+          content = rows.map(row => 
+            row.map(cell => {
+              let text = cell.char;
+              // Wrap with formatting markers
+              if (cell.formatting.bold) text = `<b:${cell.formatting.bold}>${text}</b>`;
+              if (cell.formatting.italic) text = `<i>${text}</i>`;
+              if (cell.formatting.underline) text = `<u:${cell.formatting.underline}>${text}</u>`;
+              if (cell.formatting.highlight) text = `<h:${cell.formatting.highlight}>${text}</h>`;
+              if (cell.formatting.color) text = `<c:${cell.formatting.color}>${text}</c>`;
+              return text;
+            }).join('')
+          ).join('\n').trim();
+        }
+
+        if (!content) {
+          return this.showNotification('Note content cannot be empty', true);
+        }
+
+        if (!datestamp) {
+          return this.showNotification('Please select a date', true);
+        }
+
+        // Check if date is in future
+        const selectedDate = new Date(datestamp);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate > today) {
+          return this.showNotification('Cannot select a future date', true);
+        }
+
+        const noteData = {
+          id: noteId || this.generateNoteId(),
+          title: title || null,
+          content,
+          datestamp,
+          createdAt: noteId ? (this.state.currentNote?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        if (noteId) {
+          const index = this.state.notes.findIndex(n => n.id === noteId);
+          if (index !== -1) {
+            this.state.notes[index] = noteData;
+          }
+        } else {
+          this.state.notes.push(noteData);
+        }
+
+        this.saveNotesToLocalStorage();
+        this.hideAllModals();
+        this.renderNotes();
+        this.showNotification(noteId ? 'Note updated!' : 'Note created!');
+        
+        // Reset editor flag
+        this.noteEditorListenersSetup = false;
+      },
+
+      generateNoteId() {
+        return 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      },
+
+      async deleteNote(noteId) {
+        if (!confirm('Are you sure you want to delete this note?')) return;
+
+        const index = this.state.notes.findIndex(n => n.id === noteId);
+        if (index !== -1) {
+          // Move note to recycle bin instead of completely removing it
+          const deletedNote = this.state.notes[index];
+          if (!this.state.notesRecycleBin) {
+            this.state.notesRecycleBin = [];
+          }
+          this.state.notesRecycleBin.push(deletedNote);
+          
+          this.state.notes.splice(index, 1);
+          this.saveNotesToLocalStorage();
+          this.hideAllModals();
+          this.renderNotes();
+          this.showNotification('Note deleted.');
+        }
+      },
+
+checkUnsavedChanges() {
+        const noteId = document.getElementById('noteEditId').value;
+        const title = document.getElementById('noteTitleInput').value.trim();
+        const datestamp = document.getElementById('noteDateInput').value;
+        const content = this.noteEditor ? this.noteEditor.getPlainText().trim() : '';
+
+        if (noteId) {
+          const originalNote = this.state.notes.find(n => n.id === noteId);
+          if (originalNote) {
+            const hasChanges = 
+              (title || '') !== (originalNote.title || '') ||
+              datestamp !== originalNote.datestamp ||
+              content !== originalNote.content;
+            return hasChanges;
+          }
+        } else {
+          return content.length > 0 || title.length > 0;
+        }
+        
+        return false;
       },
 
       // --- UTILITIES ---
@@ -2589,7 +4565,7 @@ async populateDonorForm(donorId = null) {
           section.classList.add('fade-in');
         }
         this.updateActiveTab();
-        
+
         // Handle fund section display based on user role
         if (sectionId === 'fund') {
           if (this.state.isAdmin) {
@@ -2609,7 +4585,7 @@ async populateDonorForm(donorId = null) {
             this.updateFundTabView();
           }
         }
-        
+
         this.loadDataForActiveSection();
       },
 
@@ -2632,25 +4608,46 @@ async populateDonorForm(donorId = null) {
           // Calculate scrollbar width
           const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
           document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
-          
+
           modal.classList.remove('hide');
           document.body.classList.add('modal-open');
-          
-          // Close on outside click
-          setTimeout(() => {
-            modal.addEventListener('click', (e) => {
-              if (e.target === modal) {
-                this.hideAllModals();
-              }
-            });
-          }, 0);
+
+          // Define modals that should NOT close on outside click (text/data input modals)
+          const noOutsideCloseModals = [
+            'signupModal', 'loginModal', 'forgotPasswordModal',
+            'addIncomeModal', 'addExpenseModal', 'postNoticeModal',
+            'donorProfileModal', 'noteEditModal', 'noteViewModal'
+          ];
+
+          // Close on outside click only for non-text modals
+          if (!noOutsideCloseModals.includes(modalId)) {
+            setTimeout(() => {
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                  this.hideAllModals();
+                }
+              });
+            }, 0);
+          }
         }
       },
 
-      hideAllModals() {
+hideAllModals() {
         document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hide'));
         document.body.classList.remove('modal-open');
         document.documentElement.style.setProperty('--scrollbar-width', '0px');
+        
+        // Close any open dropdowns
+        document.querySelectorAll('.note-dropdown').forEach(d => d.classList.remove('active'));
+        
+        // Clean up click-outside listener
+        if (this.closeDropdownsHandler) {
+          document.removeEventListener('click', this.closeDropdownsHandler);
+          this.closeDropdownsHandler = null;
+        }
+        
+        // Reset note editor when closing modals
+        this.noteEditor = null;
       },
 
       showNotification(message, isError = false) {
@@ -2674,12 +4671,12 @@ async populateDonorForm(donorId = null) {
         const bdTime = new Date(now.getTime() + (6 * 60 * 60 * 1000));
         const monthName = bdTime.toLocaleString('en-US', { month: 'long' });
         const date = bdTime.getDate();
-        
+
         const dateHeader = `আজ ${monthName} এর ${date} তারিখ:\n\n`;
         const collectionList = data.map((item, index) => `${index + 1}. ${item.name}- ${item.amount} tk`).join('\n');
-        
+
         let text = dateHeader + collectionList;
-        
+
         // Only add admin suffix if user is admin
         if (this.state.isAdmin) {
           text += '\n\nঅনেক ভাইরা বাকি, আমরা আল্লাহর জন্য নিয়াত করি দেওয়ার ভাইরা। এই কাজ গুলোতো আপনাদের সদাকার মাধ্যমে হচ্ছে আল্লাহর তৌফিকে। \n+880 1937-222273 - nogod \n+880 1515-214867 - bkash\n\nআমাদের ফান্ডের ওয়েবসাইট লিংকঃ eshoobodanrakhi.web.app';
@@ -2705,21 +4702,21 @@ async populateDonorForm(donorId = null) {
         content.innerHTML = '<div class="loader"></div>';
 
         let data = [];
-        
+
         try {
           const { data: freshData, error } = await db.from('fund').select('*').order('month', { ascending: true }).order('timestamp', { ascending: true });
-          
+
           if (error) throw error;
           data = freshData;
-          
+
           // Update cache
           localStorage.setItem('allFundData', JSON.stringify(freshData));
           this.state.allFundData = freshData;
         } catch (err) {
           console.log('Loading history from cache:', err);
           // Use cached data
-          data = this.state.allFundData.length > 0 
-            ? this.state.allFundData 
+          data = this.state.allFundData.length > 0
+            ? this.state.allFundData
             : JSON.parse(localStorage.getItem('allFundData') || '[]');
         }
 
@@ -2763,76 +4760,76 @@ async populateDonorForm(donorId = null) {
           const months = Object.keys(monthlyData).sort();
           const currentYear = new Date().getFullYear();
 
-if (isYearlyBrief) {
-          // Calculate previous year's balance
-          const previousYearMonths = months.filter(m => parseInt(m.split('-')[0]) < currentYear);
-          previousYearMonths.forEach(month => {
-            const monthData = monthlyData[month];
-            runningBalance += monthData.income;
-            monthData.expenses.forEach(expense => {
-              runningBalance -= expense.amount;
+          if (isYearlyBrief) {
+            // Calculate previous year's balance
+            const previousYearMonths = months.filter(m => parseInt(m.split('-')[0]) < currentYear);
+            previousYearMonths.forEach(month => {
+              const monthData = monthlyData[month];
+              runningBalance += monthData.income;
+              monthData.expenses.forEach(expense => {
+                runningBalance -= expense.amount;
+              });
             });
-          });
 
-          if (previousYearMonths.length > 0) {
-            const lastYear = currentYear - 1;
-            html += `<div class="font-bold text-purple-700 mb-4">${lastYear} সালের শেষে অবশিষ্ট টাকা: ৳ ${runningBalance.toLocaleString()}</div>`;
-          }
-
-          html += `<div class="font-bold text-gray-800 mb-3">${currentYear} সাল:</div>`;
-
-          // Show only current year
-          const currentYearMonths = months.filter(m => parseInt(m.split('-')[0]) === currentYear);
-          const now = new Date();
-          const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-          
-          currentYearMonths.forEach(month => {
-            const monthData = monthlyData[month];
-            const date = new Date(month + '-01');
-            const monthName = date.toLocaleString('default', { month: 'long' });
-            const isCurrentMonth = month === currentMonthKey;
-
-            // For current month, show day + month
-            if (isCurrentMonth) {
-              const today = now.getDate();
-              const monthNameBn = date.toLocaleString('default', { month: 'long' });
-              html += `<div class="font-bold text-gray-700 mt-3 mb-1">${today} ${monthNameBn} পর্যন্ত:</div>`;
-            } else {
-              html += `<div class="font-bold text-gray-700 mt-3 mb-1">${monthName}:</div>`;
+            if (previousYearMonths.length > 0) {
+              const lastYear = currentYear - 1;
+              html += `<div class="font-bold text-purple-700 mb-4">${lastYear} সালের শেষে অবশিষ্ট টাকা: ৳ ${runningBalance.toLocaleString()}</div>`;
             }
 
-            // For current month, show expenses first, then income
-            if (isCurrentMonth) {
-              if (monthData.expenses.length > 0) {
-                monthData.expenses.forEach(expense => {
-                  runningBalance -= expense.amount;
-                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
-                });
-                html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
+            html += `<div class="font-bold text-gray-800 mb-3">${currentYear} সাল:</div>`;
+
+            // Show only current year
+            const currentYearMonths = months.filter(m => parseInt(m.split('-')[0]) === currentYear);
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+            currentYearMonths.forEach(month => {
+              const monthData = monthlyData[month];
+              const date = new Date(month + '-01');
+              const monthName = date.toLocaleString('default', { month: 'long' });
+              const isCurrentMonth = month === currentMonthKey;
+
+              // For current month, show day + month
+              if (isCurrentMonth) {
+                const today = now.getDate();
+                const monthNameBn = date.toLocaleString('default', { month: 'long' });
+                html += `<div class="font-bold text-gray-700 mt-3 mb-1">${today} ${monthNameBn} পর্যন্ত:</div>`;
+              } else {
+                html += `<div class="font-bold text-gray-700 mt-3 mb-1">${monthName}:</div>`;
               }
 
-              if (monthData.income > 0) {
-                runningBalance += monthData.income;
-                html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
-                html += `<div class="text-blue-600 ml-2 font-semibold">এখন ফান্ডে আছে: ${runningBalance.toLocaleString()} টাকা</div>`;
-              }
-            } else {
-              // For other months, show income first, then expenses (normal order)
-              if (monthData.income > 0) {
-                runningBalance += monthData.income;
-                html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
-                html += `<div class="text-blue-600 ml-2 font-semibold">ফান্ডে মোট হয়: ${runningBalance.toLocaleString()} টাকা</div>`;
-              }
+              // For current month, show expenses first, then income
+              if (isCurrentMonth) {
+                if (monthData.expenses.length > 0) {
+                  monthData.expenses.forEach(expense => {
+                    runningBalance -= expense.amount;
+                    html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
+                  });
+                  html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
+                }
 
-              if (monthData.expenses.length > 0) {
-                monthData.expenses.forEach(expense => {
-                  runningBalance -= expense.amount;
-                  html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
-                });
-                html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
+                if (monthData.income > 0) {
+                  runningBalance += monthData.income;
+                  html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
+                  html += `<div class="text-blue-600 ml-2 font-semibold">এখন ফান্ডে আছে: ${runningBalance.toLocaleString()} টাকা</div>`;
+                }
+              } else {
+                // For other months, show income first, then expenses (normal order)
+                if (monthData.income > 0) {
+                  runningBalance += monthData.income;
+                  html += `<div class="text-green-700 ml-2">মোট কালেকশন: ${monthData.income.toLocaleString()} টাকা</div>`;
+                  html += `<div class="text-blue-600 ml-2 font-semibold">ফান্ডে মোট হয়: ${runningBalance.toLocaleString()} টাকা</div>`;
+                }
+
+                if (monthData.expenses.length > 0) {
+                  monthData.expenses.forEach(expense => {
+                    runningBalance -= expense.amount;
+                    html += `<div class="text-red-600 ml-2">সাদাকাহ (${expense.description}): ${expense.amount.toLocaleString()} টাকা</div>`;
+                  });
+                  html += `<div class="text-blue-600 ml-2 font-semibold">মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা</div>`;
+                }
               }
-            }
-          });
+            });
           } else {
             // Elaborated mode - show all history
             html += `<div class="font-bold text-gray-800 mb-3">সম্পূর্ণ তথ্য:</div>`;
@@ -2873,17 +4870,17 @@ if (isYearlyBrief) {
         const isYearlyBrief = modeToggle.textContent === (isBn ? 'সংক্ষিপ্ত' : 'Yearly Brief');
 
         let data = [];
-        
+
         try {
           const { data: freshData, error } = await db.from('fund').select('*').order('month', { ascending: true }).order('timestamp', { ascending: true });
-          
+
           if (error) throw error;
           data = freshData;
         } catch (err) {
           console.log('Copying from cache:', err);
           // Use cached data
-          data = this.state.allFundData.length > 0 
-            ? this.state.allFundData 
+          data = this.state.allFundData.length > 0
+            ? this.state.allFundData
             : JSON.parse(localStorage.getItem('allFundData') || '[]');
         }
 
@@ -2910,7 +4907,7 @@ if (isYearlyBrief) {
         const months = Object.keys(monthlyData).sort();
         const currentYear = new Date().getFullYear();
 
-if (isYearlyBrief) {
+        if (isYearlyBrief) {
           // Calculate previous year's balance
           const previousYearMonths = months.filter(m => parseInt(m.split('-')[0]) < currentYear);
           previousYearMonths.forEach(month => {
@@ -2932,7 +4929,7 @@ if (isYearlyBrief) {
           const currentYearMonths = months.filter(m => parseInt(m.split('-')[0]) === currentYear);
           const now = new Date();
           const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-          
+
           currentYearMonths.forEach(month => {
             const monthData = monthlyData[month];
             const date = new Date(month + '-01');
@@ -2979,7 +4976,7 @@ if (isYearlyBrief) {
                 text += `মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা\n`;
               }
             }
-            
+
             text += `\n`;
           });
         } else {
@@ -3006,7 +5003,7 @@ if (isYearlyBrief) {
               });
               text += `মোট অবশিষ্ট থাকে: ${runningBalance.toLocaleString()} টাকা\n`;
             }
-            
+
             text += `\n`;
           });
         }
@@ -3021,13 +5018,13 @@ if (isYearlyBrief) {
 
       async refreshApp() {
         this.showNotification('Refreshing app...');
-        
+
         // Clear service worker cache
         if ('serviceWorker' in navigator && 'caches' in window) {
           const cacheNames = await caches.keys();
           await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
-        
+
         // Reload the page
         window.location.reload(true);
       },
@@ -3050,7 +5047,7 @@ if (isYearlyBrief) {
         }
       },
 
-            shuffleDonors(array) {
+      shuffleDonors(array) {
         // Fisher-Yates shuffle algorithm
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -3060,12 +5057,12 @@ if (isYearlyBrief) {
         return shuffled;
       },
 
-setupScrollBehavior() {
+      setupScrollBehavior() {
         const topBar = document.querySelector('.bg-gradient-to-r');
         let lastScrollTop = 0;
         const topBarHeight = topBar.offsetHeight;
         let currentTranslate = 0;
-        
+
         // Create placeholder for blood filter
         const bloodFilterContainer = document.getElementById('bloodFilterContainer');
         const placeholder = document.createElement('div');
@@ -3073,10 +5070,10 @@ setupScrollBehavior() {
         if (bloodFilterContainer) {
           bloodFilterContainer.parentNode.insertBefore(placeholder, bloodFilterContainer.nextSibling);
         }
-        
+
         // Store original position of blood filter
         let bloodFilterOriginalTop = 0;
-        
+
         // Calculate original position on load and section change
         const calculateFilterPosition = () => {
           if (bloodFilterContainer && this.state.activeSection === 'blood') {
@@ -3087,30 +5084,30 @@ setupScrollBehavior() {
             }, 100);
           }
         };
-        
+
         // Calculate initial position
         setTimeout(calculateFilterPosition, 500);
-        
+
         // Recalculate when switching to blood section
         const originalShowSection = this.showSection.bind(this);
-        this.showSection = function(sectionId) {
+        this.showSection = function (sectionId) {
           originalShowSection(sectionId);
           if (sectionId === 'blood') {
             setTimeout(calculateFilterPosition, 300);
           }
         };
-        
+
         window.addEventListener('scroll', () => {
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
           const scrollDelta = scrollTop - lastScrollTop;
-          
+
           // Check if we're in blood section
           const isBloodSection = this.state.activeSection === 'blood';
-          
+
           if (isBloodSection) {
             // Calculate if filter should be sticky
             const shouldBeSticky = scrollTop >= bloodFilterOriginalTop;
-            
+
             if (shouldBeSticky) {
               // Filter is sticky
               if (bloodFilterContainer) {
@@ -3126,7 +5123,7 @@ setupScrollBehavior() {
                 placeholder.classList.remove('active');
               }
             }
-            
+
             // Topbar scrolls naturally - remove any transform
             topBar.style.transform = '';
             topBar.style.position = 'relative';
@@ -3136,14 +5133,14 @@ setupScrollBehavior() {
             currentTranslate -= scrollDelta;
             currentTranslate = Math.max(-topBarHeight, Math.min(0, currentTranslate));
             topBar.style.transform = `translateY(${currentTranslate}px)`;
-            
+
             // Remove sticky from filter if present
             if (bloodFilterContainer) {
               bloodFilterContainer.classList.remove('sticky');
               placeholder.classList.remove('active');
             }
           }
-          
+
           lastScrollTop = scrollTop;
         }, { passive: true });
       },
@@ -3250,16 +5247,27 @@ setupScrollBehavior() {
 
           // Fund History Section Headers
           document.querySelector('#fundSection h3.text-green-700').textContent = isBn ? elementsToTranslate.income.bn : elementsToTranslate.income.en;
-          
-          // Donation info text
+
+          // Donation info text (collection view)
           const donationInfoText = document.getElementById('donationInfoText');
           if (donationInfoText) {
             donationInfoText.textContent = isBn ? 'এখানে সাদাকাহ করে আপনিও অবদান রাখতে পারেনঃ' : 'You can also contribute by donating to:';
           }
           const donationNumbers = donationInfoText?.nextElementSibling?.querySelectorAll('div');
           if (donationNumbers && donationNumbers.length >= 2) {
-            donationNumbers[0].textContent = isBn ? '+880 1937-222273 - নগদ' : '+880 1937-222273 - nogod';
-            donationNumbers[1].textContent = isBn ? '+880 1515-214867 - বিকাশ' : '+880 1515-214867 - bkash';
+            donationNumbers[0].innerHTML = isBn ? '<span class="underline">+880 1937-222273</span> - নগদ' : '<span class="underline">+880 1937-222273</span> - nogod';
+            donationNumbers[1].innerHTML = isBn ? '<span class="underline">+880 1515-214867</span> - বিকাশ' : '<span class="underline">+880 1515-214867</span> - bkash';
+          }
+
+          // Donation info text (sadakah list view)
+          const sadakahDonationInfoText = document.getElementById('sadakahDonationInfoText');
+          if (sadakahDonationInfoText) {
+            sadakahDonationInfoText.textContent = isBn ? 'এখানে সাদাকাহ করে আপনিও অবদান রাখতে পারেনঃ' : 'You can also contribute by donating to:';
+          }
+          const sadakahDonationNumbers = sadakahDonationInfoText?.nextElementSibling?.querySelectorAll('div');
+          if (sadakahDonationNumbers && sadakahDonationNumbers.length >= 2) {
+            sadakahDonationNumbers[0].innerHTML = isBn ? '<span class="underline">+880 1937-222273</span> - নগদ' : '<span class="underline">+880 1937-222273</span> - nogod';
+            sadakahDonationNumbers[1].innerHTML = isBn ? '<span class="underline">+880 1515-214867</span> - বিকাশ' : '<span class="underline">+880 1515-214867</span> - bkash';
           }
           document.querySelector('#fundSection h3.text-red-700').textContent = isBn ? elementsToTranslate.expense.bn : elementsToTranslate.expense.en;
           document.querySelector('#totalIncome').previousElementSibling.textContent = isBn ? elementsToTranslate.totalIncome.bn : elementsToTranslate.totalIncome.en;
@@ -3287,7 +5295,7 @@ setupScrollBehavior() {
           document.querySelector('#donorBloodGroup option[value=""]').textContent = isBn ? elementsToTranslate.bloodGroup.bn : elementsToTranslate.bloodGroup.en;
           document.getElementById('donorLocation').placeholder = isBn ? elementsToTranslate.location.bn : elementsToTranslate.location.en;
           document.querySelector('#donorProfileForm label span').textContent = isBn ? elementsToTranslate.available.bn : elementsToTranslate.available.en;
-          
+
           // Update highlight checkbox labels
           document.querySelector('#addIncomeForm label span').textContent = isBn ? 'এই এন্ট্রি হাইলাইট করুন' : 'Highlight this entry';
           document.querySelector('#addExpenseForm label span').textContent = isBn ? 'এই এন্ট্রি হাইলাইট করুন' : 'Highlight this entry';
@@ -3315,7 +5323,7 @@ setupScrollBehavior() {
           document.getElementById('expenseDesc').placeholder = isBn ? 'শিরোনাম' : 'Title';
           document.getElementById('expenseAmount').placeholder = isBn ? 'পরিমাণ (৳)' : 'Amount (৳)';
           document.getElementById('expenseAdditionalInfo').placeholder = isBn ? 'অতিরিক্ত তথ্য (ঐচ্ছিক)' : 'Additional info (optional)';
-          
+
           // Fund tabs
           if (document.getElementById('collectionTabBtn')) {
             document.querySelector('#collectionTabBtn .text-sm').textContent = isBn ? 'কালেকশন' : 'Collection';
@@ -3325,7 +5333,7 @@ setupScrollBehavior() {
               collectionMonth.textContent = isBn ? `৳ ${amount} এই মাসে` : `৳ ${amount} this month`;
             }
           }
-          
+
           if (document.getElementById('sadakahTabBtn')) {
             document.querySelector('#sadakahTabBtn .text-sm').textContent = isBn ? 'সাদাকাহ' : 'Sadakah';
             const sadakahCount = document.getElementById('sadakahTabCount');
@@ -3334,7 +5342,7 @@ setupScrollBehavior() {
               sadakahCount.textContent = isBn ? `${count} টি এন্ট্রি` : `${count} entries`;
             }
           }
-          
+
           // Sadakah list view
           const sadakahListTitle = document.querySelector('#sadakahListView h3');
           if (sadakahListTitle) {
@@ -3395,7 +5403,7 @@ setupScrollBehavior() {
 
           // Complete History Modal
           document.querySelector('#completeHistoryModal [data-close-modal]').textContent = isBn ? elementsToTranslate.close.bn : elementsToTranslate.close.en;
-          
+
           // Talib button and modal
           const talibBtn = document.getElementById('talibMenuBtn');
           if (talibBtn) {
@@ -3405,7 +5413,7 @@ setupScrollBehavior() {
           if (talibMenuTitle) {
             talibMenuTitle.textContent = isBn ? elementsToTranslate.talibMenu.bn : elementsToTranslate.talibMenu.en;
           }
-          
+
           // Admin Menu Modal
           const adminMenuTitle = document.querySelector('#adminMenuModal h2');
           if (adminMenuTitle) {
@@ -3415,13 +5423,13 @@ setupScrollBehavior() {
           if (adminUsersBtn) {
             adminUsersBtn.innerHTML = isBn ? '👥 ইউজারস' : '👥 Users';
           }
-          
-                    // Admin Users Modal
+
+          // Admin Users Modal
           const adminUsersTitle = document.querySelector('#adminUsersModal h2');
           if (adminUsersTitle) {
             adminUsersTitle.textContent = isBn ? 'ইউজার ম্যানেজমেন্ট' : 'Manage Users';
           }
-          
+
           // Role Confirmation Modals
           const roleConfirmTitle = document.querySelector('#roleConfirmModal h2');
           if (roleConfirmTitle) {
@@ -3431,7 +5439,7 @@ setupScrollBehavior() {
           if (roleConfirmText) {
             roleConfirmText.textContent = isBn ? 'আপনি কি নিশ্চিত যে আপনি এই ইউজারের রোল পরিবর্তন করতে চান?' : 'Are you sure you want to change this user\'s role?';
           }
-          
+
           const roleConsequencesTitle = document.querySelector('#roleConsequencesModal h2');
           if (roleConsequencesTitle) {
             roleConsequencesTitle.textContent = isBn ? '⚠️ গুরুত্বপূর্ণ: ফলাফল বুঝুন' : '⚠️ Important: Understand the Consequences';
@@ -3452,6 +5460,7 @@ setupScrollBehavior() {
       },
     };
 
+    
     // Start the application once the DOM is fully loaded
     document.addEventListener('DOMContentLoaded', () => App.init());
   </script>
@@ -3589,18 +5598,20 @@ RLS Policies (Enabled: ✅):
 
 ───────────────────────────────────────────────────────────────────────────
 
-┌─────────────────────────────────────────────────────────────────────────┐
+────────────────────────────────────────────────────────────────────────────
+
+┌────────────────────────────────────────────────────────────────────────┐
 │ TABLE: public.notices                                                   │
 │ Purpose: Community activity feed / announcements                        │
-└─────────────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────────────┘
 
 Columns:
-  ✓ id (BIGSERIAL, PRIMARY KEY)
-  ✓ text (TEXT) → Activity description
-  ✓ author_name (TEXT) → Name of person who posted
-  ✓ author_id (UUID) → References auth.users(id)
-  ✓ image_url (TEXT) → Optional image attachment
-  ✓ timestamp (TIMESTAMP, DEFAULT now())
+  ✔ id (BIGSERIAL, PRIMARY KEY)
+  ✔ text (TEXT) → Activity description
+  ✔ author_name (TEXT) → Name of person who posted
+  ✔ author_id (UUID) → References auth.users(id)
+  ✔ image_url (TEXT) → Optional image attachment
+  ✔ timestamp (TIMESTAMP, DEFAULT now())
 
 RLS Policies (Enabled: ✅):
   1. SELECT: "Everyone can see notices"
@@ -3619,7 +5630,78 @@ RLS Policies (Enabled: ✅):
      → Target: authenticated
      → Rule: is_admin()
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────────────────────────────────────────────────
+
+┌────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.notes                                                     │
+│ Purpose: Personal notes for students, moderators, and admins           │
+│ SPECIAL: Offline-first design with localStorage + cloud sync           │
+└────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (UUID, PRIMARY KEY) → Client-generated UUID for offline support
+  ✓ user_id (UUID, NOT NULL) → References auth.users(id) ON DELETE CASCADE
+  ✓ title (TEXT) → Note title (optional, falls back to first 3 words)
+  ✓ content (TEXT, NOT NULL) → Main note content with inline formatting:
+      **text** = bold
+      ++text++ = highlighted (red)
+      +*text*+ = bold + highlighted
+  ✓ datestamp (DATE, NOT NULL) → User-selected date (not auto-generated)
+  ✓ created_at (TIMESTAMP, DEFAULT now())
+  ✓ updated_at (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "Users can read their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  2. SELECT: "Admins can read all notes" ⚠️ DATABASE ONLY - NOT USED IN APP
+     → Target: authenticated
+     → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+     → Note: This policy exists for database flexibility but the app NEVER uses it.
+              Admins only see their OWN notes, respecting user privacy.
+     
+  3. INSERT: "Users can insert their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  4. UPDATE: "Users can update their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  5. DELETE: "Users can delete their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+
+Offline-First Architecture:
+  → Primary storage: localStorage (key: `notes_{userId}`)
+  → Cloud backup: Supabase (manual via "Backup to Cloud" button)
+  → Sync strategy: Local overrides server on backup
+  → Conflict resolution: Local version always wins
+  → Auto-sync: On app initialization (downloads from server)
+  → Merge logic: Keep local notes + add server notes not in local
+
+Access Control:
+  → Admin: Full access to notes feature (sees ONLY their own notes)
+  → Student: Full access to notes feature (sees ONLY their own notes)
+  → Moderator: Full access to notes feature (sees ONLY their own notes)
+  → User: No access to notes feature
+  
+Privacy Design:
+  ⚠️ IMPORTANT: Notes are completely private to each user
+  → Admins CANNOT see other users' notes in the app
+  → Even though RLS allows admin read access, the app never uses it
+  → Each user only queries: .eq('user_id', currentUser.id)
+  → This ensures student notes remain private and personal
+
+Notes Organization:
+  → Grouped by datestamp
+  → Single note per date → shown directly
+  → Multiple notes per date → shown in folder
+  → Sorted by datestamp (descending)
+  → Title fallback: First 3 words of content
+
+┌────────────────────────────────────────────────────────────────────────┐
 🔐 AUTHENTICATION & SECURITY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -3647,7 +5729,7 @@ Helper Functions (Database):
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📦 STORAGE BUCKETS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────────────────────────────────────────────────
 
 BUCKET: notices
   Purpose: Store images for activity posts
@@ -3662,7 +5744,40 @@ Storage Policies:
   → View: Public (anyone with URL)
   → Delete: Admin only
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────────────────────────────────────────────────
+💾 LOCAL STORAGE KEYS
+────────────────────────────────────────────────────────────────────────────
+
+Application-specific localStorage keys:
+
+1. authState → JSON: { userProfile, isAdmin }
+   Purpose: Cache user authentication state for offline access
+   
+2. notes_{userId} → JSON: Array of note objects
+   Purpose: Offline-first notes storage
+   
+3. notes_lastSync_{userId} → ISO timestamp
+   Purpose: Track last cloud sync time
+   
+4. totalFund → Number (string)
+   Purpose: Cache total fund amount
+   
+5. allFundData → JSON: Array of fund entries
+   Purpose: Cache all fund data for offline access
+   
+6. cachedMonthlyData → JSON: Object with monthly aggregates
+   Purpose: Cache monthly fund data
+   
+7. donorsData → JSON: Array of donor objects
+   Purpose: Cache blood donor list
+   
+8. noticesData → JSON: Array of notice objects
+   Purpose: Cache activities/notices
+   
+9. lang → String: 'en' or 'bn'
+   Purpose: Store language preference
+
+────────────────────────────────────────────────────────────────────────────
 💡 IMPORTANT CODING CONVENTIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -3723,8 +5838,18 @@ Storage Policies:
    
    Error: "Cannot read property 'from' of undefined"
    → Fix: Supabase client not initialized. Check: const db = createClient(...)
+   
+   Error: "Notes not syncing properly"
+   → Fix: Check localStorage key format: `notes_${userId}`
+   → Fix: Ensure user is authenticated before syncing
+   → Fix: Check if user role allows notes access (student/moderator/admin)
+   
+   Error: "Admin can see other users' notes" (PRIVACY VIOLATION!)
+   → Fix: This should NEVER happen. Always query with:
+          .eq('user_id', this.state.currentUser.id)
+   → Never query all notes, even for admins
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────────────────────────────────────────────────
 🔧 DEVELOPMENT WORKFLOW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -3792,7 +5917,7 @@ vault.* tables:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 QUICK REFERENCE: Common Queries
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────────────────────────────────────────────────
 
 // Get current user
 const { data: { user } } = await db.auth.getUser()
@@ -3831,7 +5956,26 @@ const { error } = await db.from('notices').insert({
   author_id: user.id
 })
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Fetch user's own notes (students, moderators, admins - privacy respected)
+const { data } = await db
+  .from('notes')
+  .select('*')
+  .eq('user_id', user.id)
+  .order('datestamp', { ascending: false })
+
+// Backup all notes to cloud (overwrites server with local)
+// 1. Delete all existing notes
+await db.from('notes').delete().eq('user_id', user.id)
+// 2. Insert all local notes
+await db.from('notes').insert(localNotesArray)
+
+// Save note to localStorage
+localStorage.setItem(`notes_${userId}`, JSON.stringify(notesArray))
+
+// Load notes from localStorage
+const notes = JSON.parse(localStorage.getItem(`notes_${userId}`) || '[]')
+
+────────────────────────────────────────────────────────────────────────────
 📝 MAINTENANCE NOTES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -3852,4 +5996,3 @@ App Version: 1.0
 ╚════════════════════════════════════════════════════════════════════════════╝
 
 -->
-
