@@ -1,0 +1,594 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    SUPABASE CONFIGURATION DOCUMENTATION                    ║
+║                         Esho Obodan Rakhi Fund App                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 PROJECT OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Project: Community Fund & Blood Donation Management System
+Database: PostgreSQL (Supabase)
+Authentication: Supabase Auth (Email/Password + Google OAuth)
+Storage: Supabase Storage (for images)
+Real-time: Supabase Realtime (for live updates)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🗄️ DATABASE SCHEMA - PUBLIC TABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.users                                                     │
+│ Purpose: Store user profiles and roles                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (UUID, PRIMARY KEY) → References auth.users(id) ON DELETE CASCADE
+  ✓ name (TEXT, NOT NULL) → User's full name
+  ✓ email (TEXT) → User's email address
+  ✓ role (TEXT, DEFAULT 'user') → User role: 'user', 'student', 'moderator', 'admin'
+  ✓ created_at (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "User Can Read Their Own Data and admin can read all data"
+     → Target: authenticated
+     → Rule: (auth.uid() = id) OR is_admin()
+     
+  2. INSERT: "Users can create their own profile"
+     → Target: public
+     → Rule: true
+     
+  3. UPDATE: "Admin Can Update Any User's Role"
+     → Target: authenticated
+     → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+
+───────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.fund                                                      │
+│ Purpose: Track all income (collection) and expenses (sadakah)          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ month (TEXT, NOT NULL) → Format: "YYYY-MM" (e.g., "2017-06")
+  ✓ type (TEXT, NOT NULL) → 'income' or 'expense'
+  ✓ name (TEXT) → Donor name (for income entries)
+  ✓ description (TEXT) → Sadakah title (for expense entries)
+  ✓ additional_info (TEXT) → Optional details for expenses
+  ✓ amount (NUMERIC, NOT NULL) → Amount in local currency
+  ✓ highlighted (BOOLEAN, DEFAULT false) → If true, shows in red
+  ✓ is_display (BOOLEAN, DEFAULT NULL) → **INVERSE LOGIC**: NULL/false = show in Sadakah tab, true = hide from Sadakah tab
+  ✓ is_calculation (BOOLEAN, DEFAULT NULL) → **INVERSE LOGIC**: NULL/false = include in calculations & Collection tab, true = exclude
+  ✓ timestamp (TIMESTAMP, DEFAULT now())
+  ✓ updated_by (UUID) → References auth.users(id)
+
+Sadakah Display Logic (Non-Admin Users):
+  → Collection Tab (Expense Section): Shows only is_calculation=true (NULL/false in DB)
+  → Sadakah Tab: Shows only is_display=true (NULL/false in DB)
+  → Admin View: Shows ALL sadakah entries regardless of flags
+  
+Sadakah Categories by Flags:
+  1. is_display=true, is_calculation=true (NULL, NULL): Regular sadakah - shows everywhere
+  2. is_display=true, is_calculation=false (NULL, true): Dedicated fundraiser donations - show in Sadakah tab only
+  3. is_display=false, is_calculation=true (true, NULL): Maintenance/operational expenses - show in Collection tab only
+  4. is_display=false, is_calculation=false (true, true): Planned sadakah - hidden from both tabs (admin only)
+
+Tab Calculations:
+  → Sadakah Tab Total: Sum of all is_display=true entries (regardless of is_calculation)
+  → "From Fund" Amount: Sum of all is_calculation=true entries (regardless of is_display)
+  → Complete History Modal: Shows only is_calculation=true entries
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "EveryoneCanSeeFund"
+     → Target: public
+     → Rule: true
+     
+  2. INSERT: "Only admins can add fund"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+     
+  3. UPDATE: "Only admin can update fund"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+     
+  4. DELETE: "Only admins delete fund"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+
+───────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.donors                                                    │
+│ Purpose: Blood donor directory with contact info and availability      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ user_id (UUID, UNIQUE) → References auth.users(id) ON DELETE CASCADE
+  ✓ name (TEXT, NOT NULL)
+  ✓ phone (TEXT, NOT NULL)
+  ✓ blood_group (TEXT, NOT NULL) → 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
+  ✓ location (TEXT, NOT NULL)
+  ✓ available (BOOLEAN, DEFAULT true)
+  ✓ created_by_admin (BOOLEAN, DEFAULT false) → True if admin added profile
+  ✓ created_at (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "EveryoneCanSeeDonorData"
+     → Target: public
+     → Rule: true
+     
+  2. INSERT: "UserCanCreateOwnDonorProfile"
+     → Target: authenticated
+     → Rule: (auth.uid() = user_id) OR (is_admin() AND user_id IS NULL)
+     
+  3. INSERT: "Admins can create donor profile"
+     → Target: authenticated
+     → Rule: is_admin() OR (auth.uid() = user_id)
+     
+  4. UPDATE: "UserCanUpdateOwnProfile"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  5. UPDATE: "Admins can update any donor profile"
+     → Target: authenticated
+     → Rule: is_admin()
+     
+  6. DELETE: "Users can delete own profile"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  7. DELETE: "Admins can delete any donor profile"
+     → Target: authenticated
+     → Rule: is_admin()
+
+───────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────
+
+┌────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.notices                                                   │
+│ Purpose: Community activity feed / announcements                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✔ id (BIGSERIAL, PRIMARY KEY)
+  ✔ text (TEXT) → Activity description
+  ✔ author_name (TEXT) → Name of person who posted
+  ✔ author_id (UUID) → References auth.users(id)
+  ✔ image_url (TEXT) → Optional image attachment
+  ✔ timestamp (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "Everyone can see notices"
+     → Target: public
+     → Rule: true
+     
+  2. INSERT: "Admin can post notices"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role = 'admin')
+     
+  3. UPDATE: "Admin can update notices"
+     → Target: authenticated
+     → Rule: is_admin()
+     
+  4. DELETE: "Admin can delete notices"
+     → Target: authenticated
+     → Rule: is_admin()
+
+────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.notifications                                               │
+│ Purpose: System notifications for users (targeted by role)                │
+└───────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ title (TEXT, NOT NULL) → Notification title/heading
+  ✓ content (TEXT, NOT NULL) → Notification message body
+  ✓ target_audience (TEXT, NOT NULL) → 'all' or 'student'
+      CHECK constraint: target_audience IN ('all', 'student')
+  ✓ created_by (UUID, NOT NULL) → References auth.users(id) ON DELETE CASCADE
+  ✓ created_at (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "Users can see notifications for their audience"
+     → Target: public
+     → Rule: target_audience = 'all' OR (target_audience = 'student' AND 
+             auth.uid() IN (SELECT id FROM users WHERE role IN ('student', 'admin', 'moderator')))
+     
+  2. INSERT: "Admin and moderators can create notifications"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role IN ('admin', 'moderator'))
+     
+  3. UPDATE: "Admin and moderators can update notifications"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role IN ('admin', 'moderator'))
+     
+  4. DELETE: "Admin and moderators can delete notifications"
+     → Target: authenticated
+     → Rule: auth.uid() IN (SELECT id FROM users WHERE role IN ('admin', 'moderator'))
+
+Notification Visibility Rules:
+  → Regular Users: See only 'all' targeted notifications
+  → Students: See 'all' + 'student' targeted notifications
+  → Admins/Moderators: See ALL notifications (both 'all' and 'student')
+
+Management Permissions:
+  → Admin: Can create, edit, bump, and delete ALL notifications
+  → Moderator: Can create, edit, bump, and delete ALL notifications
+  → Students/Users: Read-only access based on target audience
+
+UI Locations:
+  → Regular Users: Top bar notification icon (bell icon)
+  → Students: Talib Menu → Notifications button
+  → Admins: Admin Menu → Notifications button
+  → Moderators: (Future) Moderator Menu → Notifications button
+
+────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.notes                                                    │
+│ Purpose: Personal notes for students, moderators, and admins           │
+│ SPECIAL: Offline-first design with localStorage + cloud sync           │
+└────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (UUID, PRIMARY KEY) → Client-generated UUID for offline support
+  ✓ user_id (UUID, NOT NULL) → References auth.users(id) ON DELETE CASCADE
+  ✓ title (TEXT) → Note title (optional, falls back to first 3 words)
+  ✓ content (TEXT, NOT NULL) → Main note content with inline formatting:
+      **text** = bold
+      ++text++ = highlighted (red)
+      +*text*+ = bold + highlighted
+  ✓ datestamp (DATE, NOT NULL) → User-selected date (not auto-generated)
+  ✓ created_at (TIMESTAMP, DEFAULT now())
+  ✓ updated_at (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "Users can read their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  2. SELECT: "Admins can read all notes" ⚠️ DATABASE ONLY - NOT USED IN APP
+     → Target: authenticated
+     → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+     → Note: This policy exists for database flexibility but the app NEVER uses it.
+              Admins only see their OWN notes, respecting user privacy.
+     
+  3. INSERT: "Users can insert their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  4. UPDATE: "Users can update their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  5. DELETE: "Users can delete their own notes"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+
+Offline-First Architecture:
+  → Primary storage: localStorage (key: `notes_{userId}`)
+  → Cloud backup: Supabase (manual via "Backup to Cloud" button)
+  → Sync strategy: Local overrides server on backup
+  → Conflict resolution: Local version always wins
+  → Auto-sync: On app initialization (downloads from server)
+  → Merge logic: Keep local notes + add server notes not in local
+
+Access Control:
+  → Admin: Full access to notes feature (sees ONLY their own notes)
+  → Student: Full access to notes feature (sees ONLY their own notes)
+  → Moderator: Full access to notes feature (sees ONLY their own notes)
+  → User: No access to notes feature
+  
+Privacy Design:
+  ⚠️ IMPORTANT: Notes are completely private to each user
+  → Admins CANNOT see other users' notes in the app
+  → Even though RLS allows admin read access, the app never uses it
+  → Each user only queries: .eq('user_id', currentUser.id)
+  → This ensures student notes remain private and personal
+
+Notes Organization:
+  → Grouped by datestamp
+  → Single note per date → shown directly
+  → Multiple notes per date → shown in folder
+  → Sorted by datestamp (descending)
+  → Title fallback: First 3 words of content
+
+┌────────────────────────────────────────────────────────────────────────┐
+🔐 AUTHENTICATION & SECURITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Authentication Methods:
+  ✅ Email/Password (Primary)
+  ✅ Google OAuth (Social login)
+  ✅ Phone/SMS (Optional - configured but not actively used)
+
+Session Management:
+  → Client-side: Supabase Auth handles sessions automatically
+  → Storage: In-memory only (NO localStorage/sessionStorage used in app)
+  → Listener: auth.onAuthStateChange() tracks auth state changes
+  → Session Duration: Follows Supabase default (1 hour access token, 7 day refresh)
+
+OAuth Configuration:
+  → Provider: Google
+  → Redirect URLs: 
+     - Web: window.location.origin
+     - Mobile (Capacitor): com.eor.app://oauth
+  → Deep Links: Handled via Capacitor App URL listener
+
+Helper Functions (Database):
+  → is_admin(): Returns true if auth.uid() has role = 'admin'
+     Used in RLS policies for cleaner syntax
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 STORAGE BUCKETS
+────────────────────────────────────────────────────────────────────────────
+
+BUCKET: notices
+  Purpose: Store images for activity posts
+  Settings:
+    → Public: YES (all users can view images)
+    → Path Pattern: notices/{timestamp}_{filename}
+    → Allowed MIME Types: image/* (PNG, JPG, JPEG, GIF, WebP)
+    → Max File Size: Default Supabase limit (50MB)
+
+Storage Policies:
+  → Upload: Authenticated users only (via app logic)
+  → View: Public (anyone with URL)
+  → Delete: Admin only
+
+────────────────────────────────────────────────────────────────────────────
+💾 LOCAL STORAGE KEYS
+────────────────────────────────────────────────────────────────────────────
+
+Application-specific localStorage keys:
+
+1. authState → JSON: { userProfile, isAdmin }
+   Purpose: Cache user authentication state for offline access
+   
+2. notes_{userId} → JSON: Array of note objects
+   Purpose: Offline-first notes storage
+   
+3. notes_lastSync_{userId} → ISO timestamp
+   Purpose: Track last cloud sync time
+   
+4. totalFund → Number (string)
+   Purpose: Cache total fund amount
+   
+5. allFundData → JSON: Array of fund entries
+   Purpose: Cache all fund data for offline access
+   
+6. cachedMonthlyData → JSON: Object with monthly aggregates
+   Purpose: Cache monthly fund data
+   
+7. donorsData → JSON: Array of donor objects
+   Purpose: Cache blood donor list
+   
+8. noticesData → JSON: Array of notice objects
+   Purpose: Cache activities/notices
+   
+9. lang → String: 'en' or 'bn'
+   Purpose: Store language preference
+
+────────────────────────────────────────────────────────────────────────────
+💡 IMPORTANT CODING CONVENTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. NAMING CONVENTIONS
+   ⚠️ CRITICAL: Always convert between JavaScript and Database naming!
+   
+   Database (snake_case)     ←→     JavaScript (camelCase)
+   ────────────────────────────────────────────────────────
+   blood_group               ←→     bloodGroup
+   user_id                   ←→     userId
+   author_name              ←→     authorName
+   created_at               ←→     createdAt
+   additional_info          ←→     additionalInfo
+
+2. USER AUTHENTICATION REFERENCE
+   ✓ Current user object: db.auth.getUser() or session.user
+   ✓ User ID: currentUser.id (NOT currentUser.uid - that's Firebase!)
+   ✓ User email: currentUser.email
+   ✓ Session check: db.auth.getSession()
+
+3. DATABASE QUERIES (Supabase Syntax)
+   
+   ✅ CORRECT:
+   const { data, error } = await db.from('fund').select('*').eq('type', 'income')
+   
+   ❌ WRONG (Firebase syntax):
+   const doc = await db.collection('fund').doc(id).get()
+
+4. TIMESTAMPS
+   ✅ CORRECT: new Date().toISOString()
+   ❌ WRONG: firebase.firestore.FieldValue.serverTimestamp()
+   
+   Reading timestamps:
+   → new Date(timestamp).toLocaleString()
+   → For Bangladesh time: new Date(timestamp + 6*60*60*1000)
+
+5. STORAGE OPERATIONS
+   Upload:
+     const { data, error } = await db.storage
+       .from('notices')
+       .upload(path, file)
+   
+   Get Public URL:
+     const { data } = db.storage
+       .from('notices')
+       .getPublicUrl(path)
+
+6. COMMON ERRORS & SOLUTIONS
+
+   Error: "RLS policy violation"
+   → Fix: User doesn't have permission. Check RLS policies in table above.
+   
+   Error: "Column 'bloodGroup' does not exist"
+   → Fix: Use snake_case in queries: .select('blood_group')
+   
+   Error: "No session found"
+   → Fix: User not logged in. Check: await db.auth.getSession()
+   
+   Error: "Cannot read property 'from' of undefined"
+   → Fix: Supabase client not initialized. Check: const db = createClient(...)
+   
+   Error: "Notes not syncing properly"
+   → Fix: Check localStorage key format: `notes_${userId}`
+   → Fix: Ensure user is authenticated before syncing
+   → Fix: Check if user role allows notes access (student/moderator/admin)
+   
+   Error: "Admin can see other users' notes" (PRIVACY VIOLATION!)
+   → Fix: This should NEVER happen. Always query with:
+          .eq('user_id', this.state.currentUser.id)
+   → Never query all notes, even for admins
+
+────────────────────────────────────────────────────────────────────────────
+🔧 DEVELOPMENT WORKFLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Adding New Features Checklist:
+
+□ 1. Design database schema
+     → Decide on table structure and columns
+     → Choose appropriate data types
+     
+□ 2. Create table in Supabase Dashboard
+     → Use SQL editor or Table editor
+     
+□ 3. Enable RLS on new table
+     → Dashboard → Table → Settings → Enable RLS
+     
+□ 4. Create RLS policies
+     → SELECT: Who can read data?
+     → INSERT: Who can create records?
+     → UPDATE: Who can modify records?
+     → DELETE: Who can remove records?
+     
+□ 5. Test policies in Supabase SQL Editor
+     → Use auth.uid() = 'test-uuid' to simulate different users
+     
+□ 6. Update this documentation
+     → Add new table schema above
+     → Document all policies
+     
+□ 7. Implement in code
+     → Remember snake_case ←→ camelCase conversion!
+     → Handle {data, error} responses
+     
+□ 8. Test thoroughly
+     → Test as different user roles
+     → Test error cases (network failure, permission denied)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 DATABASE SYSTEM TABLES (Auto-generated by Supabase)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These tables are managed by Supabase. DO NOT modify directly!
+
+auth.* tables:
+  → auth.users - Core user authentication data
+  → auth.sessions - Active user sessions
+  → auth.identities - OAuth provider links
+  → auth.refresh_tokens - Token refresh data
+  → auth.mfa_factors - Multi-factor authentication
+  → auth.audit_log_entries - Authentication audit trail
+
+storage.* tables:
+  → storage.buckets - Storage bucket configuration
+  → storage.objects - Uploaded files metadata
+  → storage.migrations - Storage schema versions
+
+realtime.* tables:
+  → realtime.messages - Real-time pub/sub messages
+  → realtime.subscription - Active subscriptions
+
+extensions.* tables:
+  → pg_stat_statements - PostgreSQL query statistics
+
+vault.* tables:
+  → vault.secrets - Encrypted secrets storage
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 QUICK REFERENCE: Common Queries
+────────────────────────────────────────────────────────────────────────────
+
+// Get current user
+const { data: { user } } = await db.auth.getUser()
+
+// Check if user is admin
+const { data } = await db.from('users').select('role').eq('id', user.id).single()
+const isAdmin = data?.role === 'admin'
+
+// Fetch fund data for a month
+const { data, error } = await db
+  .from('fund')
+  .select('*')
+  .eq('month', '2025-10')
+  .order('timestamp', { ascending: true })
+
+// Add new fund entry (admin only)
+const { error } = await db.from('fund').insert({
+  month: '2025-10',
+  type: 'income',
+  name: 'John Doe',
+  amount: 1000,
+  updated_by: user.id
+})
+
+// Get all available blood donors
+const { data } = await db
+  .from('donors')
+  .select('*')
+  .eq('available', true)
+  .order('name')
+
+// Post new activity (admin only)
+const { error } = await db.from('notices').insert({
+  text: 'New announcement',
+  author_name: userName,
+  author_id: user.id
+})
+
+// Fetch user's own notes (students, moderators, admins - privacy respected)
+const { data } = await db
+  .from('notes')
+  .select('*')
+  .eq('user_id', user.id)
+  .order('datestamp', { ascending: false })
+
+// Backup all notes to cloud (overwrites server with local)
+// 1. Delete all existing notes
+await db.from('notes').delete().eq('user_id', user.id)
+// 2. Insert all local notes
+await db.from('notes').insert(localNotesArray)
+
+// Save note to localStorage
+localStorage.setItem(`notes_${userId}`, JSON.stringify(notesArray))
+
+// Load notes from localStorage
+const notes = JSON.parse(localStorage.getItem(`notes_${userId}`) || '[]')
+
+────────────────────────────────────────────────────────────────────────────
+📝 MAINTENANCE NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When updating this documentation:
+  ✓ Add new tables to "DATABASE SCHEMA - PUBLIC TABLES" section
+  ✓ Document all RLS policies for new tables
+  ✓ Update "Common Queries" section with new use cases
+  ✓ Add new error patterns to "Common Errors & Solutions"
+  ✓ Keep naming conventions consistent
+  ✓ Test all code examples before documenting
+
+Last Updated: October 2025
+Supabase Project: kszhmrhlsoqfxkcopvoe
+App Version: 1.0
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║  Remember: This is a vibe coding project. Keep the energy flowing! 🎵✨   ║
+╚════════════════════════════════════════════════════════════════════════════╝

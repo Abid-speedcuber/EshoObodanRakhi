@@ -1,4 +1,4 @@
-const CACHE_NAME = 'esho-obodan-rakhi-v2';
+const CACHE_NAME = 'esho-obodan-rakhi-v3';
 const urlsToCache = [
   '/',
   '/index.html',
