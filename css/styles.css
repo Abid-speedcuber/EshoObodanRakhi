@@ -214,62 +214,6 @@ html {
   transform: translateY(-2px);
 }
 
-    /* Formatting auras */
-    .format-bold {
-      font-weight: bold;
-      background-color: rgba(59, 130, 246, 0.08);
-      padding: 0 2px;
-      border-radius: 2px;
-    }
-    
-    .format-highlight {
-      color: #dc2626;
-      background-color: rgba(220, 38, 38, 0.08);
-      padding: 0 2px;
-      border-radius: 2px;
-    }
-    
-    .format-underline {
-      text-decoration: underline;
-      background-color: rgba(168, 85, 247, 0.08);
-      padding: 0 2px;
-      border-radius: 2px;
-    }
-    
-    /* Stacked formatting */
-    .format-bold.format-highlight {
-      font-weight: bold;
-      color: #dc2626;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%);
-    }
-    
-    .format-bold.format-underline {
-      font-weight: bold;
-      text-decoration: underline;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
-    }
-    
-    .format-highlight.format-underline {
-      color: #dc2626;
-      text-decoration: underline;
-      background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
-    }
-    
-    .format-bold.format-highlight.format-underline {
-      font-weight: bold;
-      color: #dc2626;
-      text-decoration: underline;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(220, 38, 38, 0.08) 50%, rgba(168, 85, 247, 0.08) 100%);
-    }
-    
-    #noteContentInput::placeholder {
-      color: #9ca3af;
-    }
-    
-    #noteContentDisplay {
-      color: #374151;
-    }
-
     /* Toggle Switch Styles */
 .switch {
   position: relative;
@@ -314,4 +258,96 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(24px);
+}
+
+/* Simple textarea styling for notes */
+#noteContentInput {
+  font-family: 'Courier New', monospace;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+#noteContentInput::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Formatting guide modal code blocks */
+.modal-content code {
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #1f2937;
+}
+
+.modal-content pre {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+/* Live formatting preview in editor */
+.format-marker {
+  color: #9ca3af;
+  opacity: 0.5;
+  font-size: 0.9em;
+}
+
+.format-bold {
+  font-weight: bold;
+}
+
+.format-italic {
+  font-style: italic;
+}
+
+.format-underline {
+  text-decoration: underline;
+}
+
+.format-red {
+  color: #dc2626;
+}
+
+/* Contenteditable placeholder */
+#noteContentInput:empty:before {
+  content: attr(placeholder);
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Simple textarea styling for notes */
+#noteContentInput {
+  font-family: 'Courier New', monospace;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Formatting guide modal code blocks */
+.modal-content code {
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #1f2937;
+}
+
+.modal-content pre {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  line-height: 1.4;
 }
