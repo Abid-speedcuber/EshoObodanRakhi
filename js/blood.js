@@ -4,6 +4,15 @@ window.BloodModule = {
     if (App.state.isLoading.donors) return;
     App.state.isLoading.donors = true;
     App.renderLoader('blood');
+    
+    // Reset filters when loading donors
+    document.getElementById('bloodFilter').value = 'all';
+    document.getElementById('bloodSearch').value = '';
+    document.getElementById('bloodSearch').classList.add('hide');
+    document.getElementById('bloodFilter').classList.remove('hide');
+    document.getElementById('bloodSearchBtn').classList.remove('hide');
+    document.getElementById('bloodClearBtn').classList.add('hide');
+    
     try {
       const { data, error } = await db.from('donors').select('*').order('name');
       if (error) throw error;
@@ -61,8 +70,8 @@ window.BloodModule = {
 
     let filteredDonors = App.state.allDonors;
 
-    // Apply blood group filter if not in search mode
-    if (!searchValue && filterValue !== 'all') {
+    // Apply blood group filter
+    if (filterValue !== 'all') {
       filteredDonors = filteredDonors.filter(d => d.blood_group === filterValue);
     }
 

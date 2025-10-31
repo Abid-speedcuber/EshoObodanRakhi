@@ -1388,14 +1388,6 @@ async function saveNote() {
         return App.showNotification('Please select a date', true);
     }
 
-    const selectedDate = new Date(datestamp);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (selectedDate > today) {
-        return App.showNotification('Cannot select a future date', true);
-    }
-
     const noteData = {
         id: noteId || generateNoteId(),
         title: title || null,

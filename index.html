@@ -781,8 +781,28 @@
   <div id="notesAccessDeniedModal" class="modal hide">
     <div class="modal-content" style="max-width: 400px;">
       <h2 class="text-xl font-bold mb-4 text-orange-600">⚠️ Access Restricted</h2>
-      <p class="text-gray-700 mb-4">You need at least student access to upload your notes to cloud.</p>
-      <p class="text-gray-700 mb-4" style="direction: rtl; text-align: right;">আপনার নোট ক্লাউডে আপলোড করতে অন্তত স্টুডেন্ট অ্যাক্সেস প্রয়োজন।</p>
+<p class="text-gray-700 mb-4">
+  You need at least <strong>student access</strong> to upload your notes to the cloud.  
+  You can request access by sending an email to  
+  <a 
+    href="mailto:abidashrafkhulna@gmail.com?subject=Request%20for%20Student%20Access&body=I%20would%20like%20to%20request%20student%20access%20to%20upload%20my%20notes%20to%20the%20cloud."
+    class="text-blue-600 hover:underline"
+  >
+    abidashrafkhulna@gmail.com
+  </a>.
+</p>
+
+<p class="text-gray-700 mb-4" style="direction: rtl; text-align: right;">
+  আপনার নোট ক্লাউডে আপলোড করতে অন্তত <strong>স্টুডেন্ট অ্যাক্সেস</strong> প্রয়োজন।  
+  আপনি স্টুডেন্ট অ্যাক্সেসের জন্য ইমেইল করতে পারেন —  
+  <a 
+    href="mailto:abidashrafkhulna@gmail.com?subject=স্টুডেন্ট%20অ্যাক্সেস%20রিকোয়েস্ট&body=I%20would%20like%20to%20request%20student%20access%20to%20upload%20my%20notes%20to%20the%20cloud."
+    class="text-blue-600 hover:underline"
+  >
+    abidashrafkhulna@gmail.com
+  </a>।
+</p>
+
       <button data-close-modal class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Close</button>
     </div>
   </div>
@@ -1382,12 +1402,20 @@ document.getElementById('sadakahTabCount').textContent = isBn
           return;
         }
 
-        this.elements.allSadakahList.innerHTML = sadakahList.map(item => {
-          // Use the month field instead of timestamp for display
-          const [year, month] = item.month.split('-');
-          const date = new Date(year, parseInt(month) - 1, 1);
-          const monthName = date.toLocaleString('default', { month: 'long' });
-          const additionalInfo = item.additional_info ? `<div class="text-sm text-gray-600 mt-1">${item.additional_info}</div>` : '';
+this.elements.allSadakahList.innerHTML = sadakahList.map(item => {
+  // Use the month field instead of timestamp for display
+  const [year, month] = item.month.split('-');
+  const date = new Date(year, parseInt(month) - 1, 1);
+  const monthName = date.toLocaleString('default', { month: 'long' });
+  
+  // Process additional info: preserve line breaks and make links clickable
+  let additionalInfo = '';
+  if (item.additional_info) {
+    let processedText = item.additional_info
+      .replace(/\n/g, '<br>')
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-600 underline hover:text-blue-800">$1</a>');
+    additionalInfo = `<div class="text-sm text-gray-600 mt-1">${processedText}</div>`;
+  }
 
           return `
             <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-300">
@@ -1830,20 +1858,45 @@ renderFundData(data) {
           element.innerHTML = `<div class="text-gray-400 text-center py-4">${noEntriesText}</div>`;
           return;
         }
-        element.innerHTML = items.map((item, index) => {
-          const textColor = item.highlighted ? 'text-red-600' : 'text-gray-800';
-          // Convert to Bangladesh time (UTC+6)
-          const bdTime = new Date(new Date(item.timestamp).getTime() + (6 * 60 * 60 * 1000));
-          const formattedTime = bdTime.toLocaleString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
-          return `
-                <div class="bg-${color}-50 p-1.5 rounded-lg text-sm relative group" title="${formattedTime}">
+element.innerHTML = items.map((item, index) => {
+  const textColor = item.highlighted ? 'text-red-600' : 'text-gray-800';
+  
+  // Determine background color for expenses based on display/calculation flags
+  let bgClass = `bg-${color}-50`;
+  let opacity = '';
+  
+  if (color === 'red' && item.type === 'expense') {
+    const isDisplay = !item.is_display; // NULL/false in DB = true (displayed)
+    const isCalculation = !item.is_calculation; // NULL/false in DB = true (calculated)
+    
+    if (isDisplay && isCalculation) {
+      // Both: normal (as it is)
+      bgClass = 'bg-red-50';
+    } else if (isDisplay && !isCalculation) {
+      // Only display: more transparent
+      bgClass = 'bg-red-50';
+      opacity = 'opacity-50';
+    } else if (!isDisplay && isCalculation) {
+      // Only calculation: darker
+      bgClass = 'bg-red-200';
+    } else {
+      // Neither: gray
+      bgClass = 'bg-gray-200';
+    }
+  }
+  
+  // Convert to Bangladesh time (UTC+6)
+  const bdTime = new Date(new Date(item.timestamp).getTime() + (6 * 60 * 60 * 1000));
+  const formattedTime = bdTime.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+  return `
+      <div class="${bgClass} ${opacity} p-1.5 rounded-lg text-sm relative group" title="${formattedTime}">
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
                             <span class="font-semibold text-gray-600">${index + 1}.</span>
@@ -1865,8 +1918,13 @@ renderFundData(data) {
 
 updateFundTotals(income, expense) {
   const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
-  // Expense already filtered by renderFundData, just sum it
-  const totalExpense = expense.reduce((sum, item) => sum + item.amount, 0);
+  
+  // For admin: only sum expenses that have is_calculation = true (NULL/false in DB)
+  // For non-admin: expense is already filtered by renderFundData
+  const totalExpense = this.state.isAdmin 
+    ? expense.filter(e => !e.is_calculation).reduce((sum, item) => sum + item.amount, 0)
+    : expense.reduce((sum, item) => sum + item.amount, 0);
+  
   const balance = totalIncome - totalExpense;
 
   this.elements.totalIncome.textContent = `৳ ${totalIncome}`;
@@ -2698,8 +2756,8 @@ document.getElementById('addExpenseForm').addEventListener('submit', async e => 
           }
         });
         document.getElementById('bloodFilter').addEventListener('change', () => {
-          this.state.allDonors = this.shuffleDonors(this.state.allDonors);
-          this.filterAndRenderDonors();
+          this.state.allDonors = window.BloodModule.shuffleDonors(this.state.allDonors);
+          window.BloodModule.filterAndRenderDonors();
         });
 
         // Blood search toggle
