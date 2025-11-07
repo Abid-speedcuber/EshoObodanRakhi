@@ -845,30 +845,43 @@ animateMonthChange(direction) {
   const container = document.getElementById('collectionView');
   if (!container) return;
   
-  const content = container.querySelector('.month-content') || container;
+  const slider = container.querySelector('.month-slider');
+  if (!slider) return;
   
-  // Apply fast animation class
-  content.classList.add('animating');
+  // Create a clone of the current content for the outgoing animation
+  const currentContent = slider.querySelector('.month-content');
+  const clone = currentContent.cloneNode(true);
+  clone.classList.add('month-content-clone');
   
-  // Slide out in the direction opposite to navigation
+  // Position the clone based on slide direction
   const slideDirection = direction > 0 ? -100 : 100;
-  content.style.transform = `translateX(${slideDirection}%)`;
+  clone.style.position = 'absolute';
+  clone.style.top = '0';
+  clone.style.left = '0';
+  clone.style.width = '100%';
+  clone.style.transform = 'translateX(0)';
   
+  // Position the incoming content on the opposite side
+  currentContent.style.transform = `translateX(${-slideDirection}%)`;
+  
+  // Add clone to slider
+  slider.appendChild(clone);
+  
+  // Force reflow
+  currentContent.offsetHeight;
+  
+  // Animate both: clone slides out, current slides in
+  currentContent.classList.add('animating');
+  clone.classList.add('animating');
+  
+  currentContent.style.transform = 'translateX(0)';
+  clone.style.transform = `translateX(${slideDirection}%)`;
+  
+  // Clean up after animation
   setTimeout(() => {
-    // Jump to opposite side instantly (no transition)
-    content.classList.remove('animating');
-    content.style.transform = `translateX(${-slideDirection}%)`;
-    
-    // Force reflow
-    content.offsetHeight;
-    
-    // Slide back to center with animation
-    content.classList.add('animating');
-    content.style.transform = 'translateX(0)';
-    
-    setTimeout(() => {
-      content.classList.remove('animating');
-    }, 150);
+    slider.removeChild(clone);
+    currentContent.classList.remove('animating');
+    currentContent.style.transform = '';
   }, 150);
 },
 
