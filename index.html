@@ -264,6 +264,41 @@
         <div id="notificationsList" class="space-y-3"></div>
       </div>
 
+      <!-- User Messages Section (for regular users) -->
+      <div id="userMessagesSection" class="section hide">
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xl font-bold text-gray-800">My Messages</h2>
+            <button id="composeNewMessageBtn" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition">
+              ✉️ New Message
+            </button>
+          </div>
+          <div id="messageCooldownWarning" class="hide bg-yellow-50 border-l-4 border-yellow-500 p-3 text-sm text-yellow-800 mt-3">
+            <span id="cooldownText"></span>
+          </div>
+        </div>
+        <div id="userMessagesList" class="space-y-3"></div>
+      </div>
+
+      <!-- Admin Messages Section -->
+      <div id="adminMessagesSection" class="section hide">
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+          <h2 class="text-xl font-bold text-gray-800 mb-3">User Messages</h2>
+          <div class="flex gap-2">
+            <button class="admin-message-tab bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex-1" data-tab="unread">
+              Unread
+            </button>
+            <button class="admin-message-tab bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition flex-1 border border-blue-600" data-tab="read">
+              Read
+            </button>
+            <button class="admin-message-tab bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition flex-1 border border-blue-600" data-tab="replied">
+              Replied
+            </button>
+          </div>
+        </div>
+        <div id="adminMessagesList" class="space-y-3"></div>
+      </div>
+
 <!-- Notes Section -->
 <div id="notesSection" class="section hide">
   <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
@@ -568,6 +603,11 @@
           class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-left px-4">
           🔔 Notifications
         </button>
+        <button id="messageAdminBtn"
+          class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition text-left px-4 relative">
+          💬 Message Admin
+          <span id="messageAdminBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>
+        </button>
       </div>
       <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
     </div>
@@ -585,6 +625,11 @@
         <button id="talibNotificationsBtn"
           class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-left px-4">
           🔔 Notifications
+        </button>
+        <button id="talibMessageAdminBtn"
+          class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition text-left px-4 relative">
+          💬 Message Admin
+          <span id="talibMessageAdminBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>
         </button>
       </div>
       <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
@@ -607,6 +652,11 @@
         <button id="adminNotificationsBtn"
           class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition text-left px-4">
           🔔 Notifications
+        </button>
+        <button id="adminMessagesBtn"
+          class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition text-left px-4 relative">
+          💬 User Messages
+          <span id="userMessagesBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>
         </button>
       </div>
       <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
@@ -778,6 +828,62 @@
         <button id="discardChangesBtn" class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition">Discard</button>
         <button id="keepEditingBtn" class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Keep Editing</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Compose Message Modal -->
+  <div id="composeMessageModal" class="modal hide">
+    <div class="modal-content" style="max-width: 480px;">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Message Admin</h2>
+      <form id="composeMessageForm">
+        <label class="block font-semibold text-gray-700 mb-2">Subject *</label>
+        <select id="messageSubject" class="modal-input mb-4" required>
+          <option value="" disabled selected>Select a subject</option>
+          <option value="Add my donation to the list">Add my donation to the list</option>
+          <option value="Remove the admin blood donor account with my name">Remove the admin blood donor account with my name</option>
+          <option value="Suggest a feature">Suggest a feature</option>
+          <option value="Other">Other</option>
+        </select>
+        
+        <div id="customSubjectSection" class="hide mb-4">
+          <input type="text" id="customSubject" class="modal-input" placeholder="Enter your subject">
+        </div>
+
+        <label class="block font-semibold text-gray-700 mb-2">Message (Optional)</label>
+        <textarea id="messageContent" class="modal-input h-32 mb-4" placeholder="Type your message here..."></textarea>
+
+        <div class="flex gap-2">
+          <button type="submit" class="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">Send</button>
+          <button type="button" data-close-modal class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View User Message Modal (for users) -->
+  <div id="viewUserMessageModal" class="modal hide">
+    <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <div class="border-b border-gray-200 pb-3 mb-3">
+        <h2 id="viewMessageSubject" class="text-xl font-bold text-gray-800 mb-1"></h2>
+        <div id="viewMessageTimestamp" class="text-sm text-gray-500"></div>
+      </div>
+      <div id="viewMessageContent" class="text-gray-700 mb-4 whitespace-pre-wrap"></div>
+      <div id="viewMessageReply"></div>
+      <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
+    </div>
+  </div>
+
+  <!-- View Admin Message Modal (for admins) -->
+  <div id="adminViewMessageModal" class="modal hide">
+    <div class="modal-content" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <div class="border-b border-gray-200 pb-3 mb-3">
+        <div class="text-sm text-gray-600 mb-1">From: <span id="adminViewMessageFrom" class="font-semibold"></span></div>
+        <h2 id="adminViewMessageSubject" class="text-xl font-bold text-gray-800 mb-1"></h2>
+        <div id="adminViewMessageTimestamp" class="text-sm text-gray-500"></div>
+      </div>
+      <div id="adminViewMessageContent" class="text-gray-700 mb-4 whitespace-pre-wrap"></div>
+      <div id="adminReplySection"></div>
+      <button data-close-modal class="w-full mt-4 bg-gray-400 text-white py-3 rounded-lg font-semibold">Close</button>
     </div>
   </div>
 
@@ -1287,6 +1393,13 @@ async fetchAllNotices() {
           case 'notices': this.loadNotices(); break;
           case 'notes': this.loadNotes(); break;
           case 'notifications': this.loadNotifications(); break;
+          case 'userMessages': 
+            window.MessagesModule.loadUserMessages();
+            window.MessagesModule.updateUserMessageBadge();
+            break;
+          case 'adminMessages': 
+            window.MessagesModule.loadAdminMessages('unread');
+            break;
         }
       },
 
@@ -1901,10 +2014,92 @@ bindEvents() {
           this.showSection('notifications');
         });
 
+        // Talib message admin button
+        document.getElementById('talibMessageAdminBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+          this.showSection('userMessages');
+        });
+
         // Admin notifications button
         document.getElementById('adminNotificationsBtn')?.addEventListener('click', () => {
           this.hideAllModals();
           this.showSection('notifications');
+        });
+
+        // Message admin button
+        document.getElementById('messageAdminBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+          this.showSection('userMessages');
+        });
+
+        // Admin messages button
+        document.getElementById('adminMessagesBtn')?.addEventListener('click', () => {
+          this.hideAllModals();
+          this.showSection('adminMessages');
+        });
+
+        // Compose new message button
+        document.getElementById('composeNewMessageBtn')?.addEventListener('click', () => {
+          window.MessagesModule.openComposeMessage();
+        });
+
+        // Admin message tabs
+        document.querySelectorAll('.admin-message-tab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            window.MessagesModule.loadAdminMessages(btn.dataset.tab);
+          });
+        });
+
+        // Compose message form
+        document.getElementById('composeMessageForm')?.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const subjectSelect = document.getElementById('messageSubject');
+          const customSubject = document.getElementById('customSubject');
+          const subject = subjectSelect.value === 'Other' ? customSubject.value.trim() : subjectSelect.value;
+          const message = document.getElementById('messageContent').value.trim();
+
+          if (!subject) {
+            this.showNotification('Please enter a subject', true);
+            return;
+          }
+
+          await window.MessagesModule.sendMessageToAdmin(subject, message);
+        });
+
+        // Custom subject toggle
+        document.getElementById('messageSubject')?.addEventListener('change', (e) => {
+          const customSection = document.getElementById('customSubjectSection');
+          if (e.target.value === 'Other') {
+            customSection.classList.remove('hide');
+          } else {
+            customSection.classList.add('hide');
+          }
+        });
+
+        // Update message status when admin closes message modal
+        const adminMsgModal = document.getElementById('adminViewMessageModal');
+        if (adminMsgModal) {
+          const closeBtn = adminMsgModal.querySelector('[data-close-modal]');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              window.MessagesModule.updateMessageStatusOnClose();
+            });
+          }
+        }
+
+        // Mark user reply as read when viewing
+        document.addEventListener('click', (e) => {
+          const viewMsgBtn = e.target.closest('[data-view-message]');
+          if (viewMsgBtn) {
+            const messageId = viewMsgBtn.dataset.viewMessage;
+            // Check if message has admin reply
+            setTimeout(() => {
+              const replySection = document.getElementById('viewMessageReply');
+              if (replySection && replySection.innerHTML.includes('Admin Reply')) {
+                window.MessagesModule.markUserReplyAsRead(messageId);
+              }
+            }, 100);
+          }
         });
 
         // Create notification button
@@ -3073,6 +3268,10 @@ if (sadakahCount) {
           if (talibNotifBtn) {
             talibNotifBtn.innerHTML = isBn ? '🔔 নোটিফিকেশন' : '🔔 Notifications';
           }
+          const talibMessageBtn = document.getElementById('talibMessageAdminBtn');
+          if (talibMessageBtn) {
+            talibMessageBtn.innerHTML = isBn ? '💬 অ্যাডমিনকে মেসেজ করুন<span id="talibMessageAdminBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>' : '💬 Message Admin<span id="talibMessageAdminBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>';
+          }
           const adminNotifBtn = document.getElementById('adminNotificationsBtn');
           if (adminNotifBtn) {
             adminNotifBtn.innerHTML = isBn ? '🔔 নোটিফিকেশন' : '🔔 Notifications';
@@ -3154,6 +3353,7 @@ if (sadakahCount) {
   <script id="auth" src="js/auth.js"></script>
   <script id="fund" src="js/fund.js"></script>
   <script id="notifications" src="js/notifications.js"></script>
+  <script id="messages" src="js/messages.js"></script>
 </body>
 
 </html>

@@ -178,11 +178,23 @@ window.FundModule = {
     }).join('');
   },
 
-  async loadFundData() {
-    if (App.state.isLoading.fund) return;
-    App.state.isLoading.fund = true;
-    App.renderLoader('fund');
-    App.updateMonthDisplay();
+async loadFundData() {
+  console.log('[loadFundData] Called for month:', App.state.currentMonth.toISOString());
+  
+  // Cancel any previous ongoing load
+  if (App.state.isLoading.fund) {
+    console.log('[loadFundData] Already loading, but will override with new month');
+  }
+  
+  console.log('[loadFundData] Setting loading flag to true');
+  App.state.isLoading.fund = true;
+  
+  // Store the month we're loading for - to handle race conditions
+  const loadingForMonth = App.state.currentMonth.toISOString();
+  console.log('[loadFundData] Loading for specific month:', loadingForMonth);
+  
+  App.renderLoader('fund');
+  App.updateMonthDisplay();
 
     const monthKey = `${App.state.currentMonth.getFullYear()}-${String(App.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
@@ -193,12 +205,20 @@ window.FundModule = {
     App.state.allFundData = allCached;
     App.state.cachedMonthlyData = monthlyCache;
     
-    // Render cached data immediately
-    const cachedMonthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
-    if (cachedMonthData.length > 0) {
-      this.renderFundData(cachedMonthData);
-      await this.calculateNetWorth();
-    }
+// Check if we're still on the same month before rendering
+if (loadingForMonth !== App.state.currentMonth.toISOString()) {
+  console.log('[loadFundData] Month changed during load, aborting this load');
+  App.state.isLoading.fund = false;
+  return;
+}
+
+// Render cached data immediately
+const cachedMonthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
+if (cachedMonthData.length > 0) {
+  console.log('[loadFundData] Rendering cached data for:', monthKey);
+  this.renderFundData(cachedMonthData);
+  await this.calculateNetWorth();
+}
 
     // Update collection tab total for non-admin (works offline with cache)
     if (!App.state.isAdmin) {
@@ -223,10 +243,18 @@ window.FundModule = {
         localStorage.setItem('cachedMonthlyData', JSON.stringify(monthlyCache));
         App.state.cachedMonthlyData = monthlyCache;
 
-        // Get current month data and re-render with fresh data
-        const monthData = allData.filter(d => d.month === monthKey);
-        this.renderFundData(monthData);
-        await this.calculateNetWorth();
+// Check again if we're still on the same month
+if (loadingForMonth !== App.state.currentMonth.toISOString()) {
+  console.log('[loadFundData] Month changed during network fetch, aborting render');
+  App.state.isLoading.fund = false;
+  return;
+}
+
+// Get current month data and re-render with fresh data
+const monthData = allData.filter(d => d.month === monthKey);
+console.log('[loadFundData] Rendering fresh data for:', monthKey);
+this.renderFundData(monthData);
+await this.calculateNetWorth();
         
         // Update collection tab with fresh data
         if (!App.state.isAdmin) {
@@ -238,7 +266,8 @@ window.FundModule = {
       // Already rendered cached data above, so just continue
     }
     
-    App.state.isLoading.fund = false;
+    console.log('[loadFundData] Completed, setting loading flag to false');
+App.state.isLoading.fund = false;
   },
 
   renderFundData(data) {
@@ -760,20 +789,88 @@ window.FundModule = {
     }
   },
 
-  changeMonth(delta) {
-    App.state.currentMonth.setMonth(App.state.currentMonth.getMonth() + delta);
-    // Prevent going before June 2017
-    if (App.state.currentMonth < new Date(2017, 5, 1)) {
-      App.state.currentMonth = new Date(2017, 5, 1);
-    }
-    // Prevent going beyond current month
+changeMonth(delta, skipAnimation = false) {
+  console.log('[changeMonth] Starting - Delta:', delta);
+  console.log('[changeMonth] Current month before change:', App.state.currentMonth.toISOString());
+  
+  // Create new date object to avoid mutation issues
+  const newMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + delta, 1);
+  
+  console.log('[changeMonth] Calculated new month:', newMonth.toISOString());
+  
+  // Prevent going before June 2017
+  const minDate = new Date(2017, 5, 1);
+  if (newMonth < minDate) {
+    console.log('[changeMonth] Clamping to minimum date: June 2017');
+    App.state.currentMonth = new Date(minDate);
+    return; // Don't animate if we hit the boundary
+  }
+  // Prevent going beyond current month
+  else {
     const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    if (App.state.currentMonth > currentMonthStart) {
-      App.state.currentMonth = currentMonthStart;
+    const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (newMonth > maxDate) {
+      console.log('[changeMonth] Clamping to maximum date:', maxDate.toISOString());
+      App.state.currentMonth = new Date(maxDate);
+      return; // Don't animate if we hit the boundary
+    } else {
+      App.state.currentMonth = newMonth;
     }
+  }
+  
+  console.log('[changeMonth] Final month after clamping:', App.state.currentMonth.toISOString());
+  
+  // Update UI immediately for snappy feel
+  App.updateMonthDisplay();
+  
+  // Apply animation if not skipped
+  if (!skipAnimation) {
+    this.animateMonthChange(delta);
+  }
+  
+  // Cancel any pending load and schedule new one
+  if (this.loadFundDataTimeout) {
+    console.log('[changeMonth] Cancelling previous load timeout');
+    clearTimeout(this.loadFundDataTimeout);
+  }
+  
+  // Debounce the actual data loading by 150ms
+  this.loadFundDataTimeout = setTimeout(() => {
+    console.log('[changeMonth] Debounce complete, loading data now');
     this.loadFundData();
-  },
+  }, 150);
+},
+
+animateMonthChange(direction) {
+  const container = document.getElementById('collectionView');
+  if (!container) return;
+  
+  const content = container.querySelector('.month-content') || container;
+  
+  // Apply fast animation class
+  content.classList.add('animating');
+  
+  // Slide out in the direction opposite to navigation
+  const slideDirection = direction > 0 ? -100 : 100;
+  content.style.transform = `translateX(${slideDirection}%)`;
+  
+  setTimeout(() => {
+    // Jump to opposite side instantly (no transition)
+    content.classList.remove('animating');
+    content.style.transform = `translateX(${-slideDirection}%)`;
+    
+    // Force reflow
+    content.offsetHeight;
+    
+    // Slide back to center with animation
+    content.classList.add('animating');
+    content.style.transform = 'translateX(0)';
+    
+    setTimeout(() => {
+      content.classList.remove('animating');
+    }, 150);
+  }, 150);
+},
 
   updateFundTabView() {
     if (App.state.isAdmin) return; // Admin sees everything always
@@ -1011,6 +1108,158 @@ window.FundModule = {
     renderHistory(isYearlyBrief);
   },
 
+  // Add swipe gesture support
+  swipeHandler: {
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    isDragging: false,
+    container: null,
+    content: null,
+    
+    init() {
+      const container = document.getElementById('collectionView');
+      if (!container) return;
+      
+      this.container = container;
+      
+      // Wrap content in slider if not already wrapped
+      if (!container.querySelector('.month-slider')) {
+        const slider = document.createElement('div');
+        slider.className = 'month-slider';
+        
+        const content = document.createElement('div');
+        content.className = 'month-content';
+        
+        // Move all children into content
+        while (container.firstChild) {
+          content.appendChild(container.firstChild);
+        }
+        
+        slider.appendChild(content);
+        container.appendChild(slider);
+      }
+      
+      this.content = container.querySelector('.month-content');
+      const slider = container.querySelector('.month-slider');
+      
+      // Touch events
+      slider.addEventListener('touchstart', this.handleStart.bind(this), { passive: false });
+      slider.addEventListener('touchmove', this.handleMove.bind(this), { passive: false });
+      slider.addEventListener('touchend', this.handleEnd.bind(this), { passive: false });
+      slider.addEventListener('touchcancel', this.handleEnd.bind(this), { passive: false });
+      
+      // Mouse events (for testing on desktop)
+      slider.addEventListener('mousedown', this.handleStart.bind(this));
+      slider.addEventListener('mousemove', this.handleMove.bind(this));
+      slider.addEventListener('mouseup', this.handleEnd.bind(this));
+      slider.addEventListener('mouseleave', this.handleEnd.bind(this));
+    },
+    
+    handleStart(e) {
+      const touch = e.touches ? e.touches[0] : e;
+      this.startX = touch.clientX;
+      this.startY = touch.clientY;
+      this.currentX = 0;
+      this.isDragging = true;
+      
+      this.container.querySelector('.month-slider').classList.add('swiping');
+      this.content.style.transition = 'none';
+    },
+    
+    handleMove(e) {
+      if (!this.isDragging) return;
+      
+      const touch = e.touches ? e.touches[0] : e;
+      const diffX = touch.clientX - this.startX;
+      const diffY = touch.clientY - this.startY;
+      
+      // If vertical scroll is more prominent, don't hijack the gesture
+      if (Math.abs(diffY) > Math.abs(diffX)) {
+        return;
+      }
+      
+      // Prevent default scroll when horizontal swipe is detected
+      e.preventDefault();
+      
+      this.currentX = diffX;
+      
+      // Apply resistance at boundaries
+      const resistance = 0.5;
+      const now = new Date();
+      const currentMonth = App.state.currentMonth;
+      const minDate = new Date(2017, 5, 1);
+      const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      let finalX = diffX;
+      
+      // Left boundary (newer months)
+      if (currentMonth >= maxDate && diffX < 0) {
+        finalX = diffX * resistance;
+      }
+      
+      // Right boundary (older months)
+      if (currentMonth <= minDate && diffX > 0) {
+        finalX = diffX * resistance;
+      }
+      
+      const percentage = (finalX / window.innerWidth) * 100;
+      this.content.style.transform = `translateX(${percentage}%)`;
+    },
+    
+    handleEnd(e) {
+      if (!this.isDragging) return;
+      
+      this.isDragging = false;
+      this.container.querySelector('.month-slider').classList.remove('swiping');
+      
+      const threshold = window.innerWidth * 0.25; // 25% of screen width
+      const velocity = Math.abs(this.currentX);
+      
+      // Determine if swipe was significant enough
+      let shouldChange = Math.abs(this.currentX) > threshold || velocity > 50;
+      
+      if (shouldChange) {
+        // Swipe right = go to previous month (delta: -1)
+        // Swipe left = go to next month (delta: +1)
+        const delta = this.currentX > 0 ? -1 : 1;
+        
+        // Check boundaries before changing
+        const newMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + delta, 1);
+        const minDate = new Date(2017, 5, 1);
+        const now = new Date();
+        const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        if (newMonth >= minDate && newMonth <= maxDate) {
+          // Animate completion
+          this.content.classList.add('animating-slow');
+          const direction = this.currentX > 0 ? 100 : -100;
+          this.content.style.transform = `translateX(${direction}%)`;
+          
+          setTimeout(() => {
+            this.content.classList.remove('animating-slow');
+            this.content.style.transition = 'none';
+            this.content.style.transform = 'translateX(0)';
+            
+            // Change month without animation (we already animated)
+            window.FundModule.changeMonth(delta, true);
+          }, 300);
+          
+          return;
+        }
+      }
+      
+      // Snap back to center
+      this.content.classList.add('animating-slow');
+      this.content.style.transform = 'translateX(0)';
+      
+      setTimeout(() => {
+        this.content.classList.remove('animating-slow');
+        this.content.style.transition = 'none';
+      }, 300);
+    }
+  },
+
   async copyCompleteHistory() {
     const modeToggle = document.getElementById('historyModeToggle');
     const isBn = localStorage.getItem('lang') === 'bn';
@@ -1167,3 +1416,10 @@ window.FundModule = {
     }
   }
 };
+
+// Initialize swipe handler when fund section is shown
+setTimeout(() => {
+  if (window.FundModule && window.FundModule.swipeHandler) {
+    window.FundModule.swipeHandler.init();
+  }
+}, 1000);

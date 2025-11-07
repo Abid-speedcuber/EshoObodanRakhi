@@ -156,8 +156,88 @@ RLS Policies (Enabled: ✅):
 ────────────────────────────────────────────────────────────────────────────
 
 ┌────────────────────────────────────────────────────────────────────────┐
-│ TABLE: public.notices                                                   │
-│ Purpose: Community activity feed / announcements                        │
+│ TABLE: public.messages                                                 │
+│ Purpose: User-Admin communication with 36-hour cooldown                │
+└────────────────────────────────────────────────────────────────────────┘
+
+Columns:
+  ✓ id (BIGSERIAL, PRIMARY KEY)
+  ✓ user_id (UUID, NOT NULL) → References auth.users(id) ON DELETE CASCADE
+  ✓ user_name (TEXT, NOT NULL) → Cached user name for display
+  ✓ subject (TEXT, NOT NULL) → Message subject/title
+  ✓ message (TEXT) → Optional message body
+  ✓ status (TEXT, NOT NULL, DEFAULT 'unread') → 'unread', 'read', or 'replied'
+      CHECK constraint: status IN ('unread', 'read', 'replied')
+  ✓ admin_reply (TEXT) → Admin's reply to the message
+  ✓ read_at (TIMESTAMP) → When admin first read the message
+  ✓ replied_at (TIMESTAMP) → When admin sent reply
+  ✓ user_read_reply (TIMESTAMP) → When user read admin's reply
+  ✓ created_at (TIMESTAMP, DEFAULT now())
+
+RLS Policies (Enabled: ✅):
+  1. SELECT: "Users can read their own messages"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  2. SELECT: "Admins can read all messages"
+     → Target: authenticated
+     → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+     
+  3. INSERT: "Users can insert their own messages"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+     
+  4. UPDATE: "Admins can update messages"
+     → Target: authenticated
+     → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+     
+  5. UPDATE: "Users can update user_read_reply"
+     → Target: authenticated
+     → Rule: auth.uid() = user_id
+
+Message Cooldown System:
+  → Cooldown Period: 36 hours between messages
+  → Storage: localStorage key `message_cooldown_{userId}`
+  → Value: Timestamp (ms) of last message sent
+  → Check: On page load and before compose modal opens
+  → Display: Live countdown in message tab UI (updates every minute)
+
+Message Status Workflow:
+  1. User sends message → status: 'unread'
+  2. Admin opens message → status: 'read', read_at set
+  3. Admin sends reply → status: 'replied', replied_at set, admin_reply filled
+  4. User views reply → user_read_reply set
+
+Access Control:
+  → Regular Users: Can send messages with 36-hour cooldown
+  → Students: Can send messages with 36-hour cooldown
+  → Admins: Can read all messages and reply (no cooldown)
+  → Moderators: No access to messaging system
+
+UI Locations:
+  → Regular Users: User Menu → Message Admin button
+  → Students: Talib Menu → Message Admin button
+  → Admins: Admin Menu → User Messages button
+
+Badge System:
+  → User/Student Badge: Red dot when admin has replied (unread reply)
+  → Admin Badge: Red dot when there are unread user messages
+
+Link Handling:
+  → All URLs in messages and replies are automatically converted to clickable links
+  → Links open in new tab with security attributes (target="_blank" rel="noopener noreferrer")
+  → Text is escaped to prevent XSS attacks
+
+Indexes:
+  → idx_messages_user_id: Fast user message lookups
+  → idx_messages_status: Fast status filtering
+  → idx_messages_created_at: Chronological ordering
+
+────────────────────────────────────────────────────────────────────────────
+
+┌────────────────────────────────────────────────────────────────────────┐
+│ TABLE: public.notices                                                  │
+│ Purpose: Community activity feed / announcements                       │
 └────────────────────────────────────────────────────────────────────────┘
 
 Columns:
@@ -576,10 +656,41 @@ await db.from('notes').delete().eq('user_id', user.id)
 await db.from('notes').insert(localNotesArray)
 
 // Save note to localStorage
+// Save note to localStorage
 localStorage.setItem(`notes_${userId}`, JSON.stringify(notesArray))
 
 // Load notes from localStorage
 const notes = JSON.parse(localStorage.getItem(`notes_${userId}`) || '[]')
+
+// Send message to admin (with cooldown check)
+const { error } = await db.from('messages').insert({
+  user_id: user.id,
+  user_name: userName,
+  subject: 'Subject here',
+  message: 'Optional message body'
+})
+
+// Fetch user's own messages
+const { data } = await db
+  .from('messages')
+  .select('*')
+  .eq('user_id', user.id)
+  .order('created_at', { ascending: false })
+
+// Admin: Reply to message
+const { error } = await db
+  .from('messages')
+  .update({
+    admin_reply: 'Reply text',
+    replied_at: new Date().toISOString(),
+    status: 'replied'
+  })
+  .eq('id', messageId)
+
+// Check message cooldown
+const cooldownKey = `message_cooldown_${userId}`
+const lastMessageTime = localStorage.getItem(cooldownKey)
+const canSend = !lastMessageTime || (Date.now() - parseInt(lastMessageTime)) >= (36 * 60 * 60 * 1000)
 
 ────────────────────────────────────────────────────────────────────────────
 📝 MAINTENANCE NOTES
@@ -600,3 +711,77 @@ App Version: 1.0
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║  Remember: This is a vibe coding project. Keep the energy flowing! 🎵✨   ║
 ╚════════════════════════════════════════════════════════════════════════════╝
+
+
+(last addition:
+
+-- Create messages table
+CREATE TABLE public.messages (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_name TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'replied')),
+  admin_reply TEXT,
+  read_at TIMESTAMP,
+  replied_at TIMESTAMP,
+  user_read_reply TIMESTAMP,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can read their own messages
+CREATE POLICY "Users can read their own messages"
+ON public.messages
+FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Policy: Admins can read all messages
+CREATE POLICY "Admins can read all messages"
+ON public.messages
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid() AND role = 'admin'
+  )
+);
+
+-- Policy: Users can insert their own messages
+CREATE POLICY "Users can insert their own messages"
+ON public.messages
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+-- Policy: Admins can update messages (for replies)
+CREATE POLICY "Admins can update messages"
+ON public.messages
+FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid() AND role = 'admin'
+  )
+);
+
+-- Policy: Users can update their own messages (for marking reply as read)
+CREATE POLICY "Users can update user_read_reply"
+ON public.messages
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Create index for faster queries
+CREATE INDEX idx_messages_user_id ON public.messages(user_id);
+CREATE INDEX idx_messages_status ON public.messages(status);
+CREATE INDEX idx_messages_created_at ON public.messages(created_at DESC);
+
+)

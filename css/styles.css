@@ -39,7 +39,7 @@ body {
 /* Very wide tablets in portrait (e.g., iPad Pro) */
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
   .mobile-container {
-    max-width: 600px;
+    max-width: 100%;
   }
 }
 
@@ -378,4 +378,37 @@ input:checked + .slider:before {
   font-family: 'Courier New', monospace;
   font-size: 0.85em;
   line-height: 1.4;
+}
+
+/* Month transition container */
+#collectionView {
+  position: relative;
+  overflow: hidden;
+}
+
+.month-slider {
+  position: relative;
+  width: 100%;
+  touch-action: pan-y;
+}
+
+.month-content {
+  position: relative;
+  width: 100%;
+  transition: none;
+  will-change: transform;
+}
+
+.month-content.animating {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.month-content.animating-slow {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevent text selection during swipe */
+.month-slider.swiping * {
+  user-select: none;
+  -webkit-user-select: none;
 }
