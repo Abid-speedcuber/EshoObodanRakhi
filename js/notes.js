@@ -505,9 +505,21 @@ function escapeHtml(text) {
 }
 
 function getPlainTextFromEditor(editor) {
-    let text = editor.innerText || editor.textContent || '';
+    // Use innerText which respects line breaks better
+    let text = editor.innerText || '';
+    
+    // Fallback to manual parsing if innerText is not available
+    if (!text) {
+        text = editor.textContent || '';
+    }
+    
     // Replace non-breaking spaces with regular spaces
     text = text.replace(/\u00A0/g, ' ');
+    
+    // Normalize line breaks
+    text = text.replace(/\r\n/g, '\n');
+    text = text.replace(/\r/g, '\n');
+    
     return text;
 }
 
@@ -580,64 +592,164 @@ function editNote(noteId = null) {
 }
 
 function setupNoteEditorEventListeners(editor) {
+    let isComposing = false;
     let debounceTimer;
+    let justPressedEnter = false;
+    
+    // Track composition (multilingual input)
+    editor.addEventListener('compositionstart', () => {
+        console.log('[Editor] Composition started');
+        isComposing = true;
+    });
+    
+    editor.addEventListener('compositionend', () => {
+        console.log('[Editor] Composition ended');
+        isComposing = false;
+    });
     
     const handleInput = () => {
+        if (isComposing) {
+            console.log('[Editor] Skipping input - composing');
+            return;
+        }
+        
+        if (justPressedEnter) {
+            console.log('[Editor] Skipping input - just pressed enter');
+            justPressedEnter = false;
+            return;
+        }
+        
         clearTimeout(debounceTimer);
+        
         debounceTimer = setTimeout(() => {
+            console.log('[Editor] Updating formatting...');
             const plainText = getPlainTextFromEditor(editor);
-            const cursorPos = saveCursorPosition(editor);
+            const cursorPos = getCaretCharacterOffsetWithin(editor);
+            console.log('[Editor] Cursor position before update:', cursorPos);
+            console.log('[Editor] Text length:', plainText.length);
+            
             editor.innerHTML = parseFormattingForEditor(plainText);
-            restoreCursorPosition(editor, cursorPos);
-        }, 300);
+            
+            console.log('[Editor] Restoring cursor to:', cursorPos);
+            setCaretCharacterOffsetWithin(editor, cursorPos);
+        }, 500);
+    };
+    
+    // Handle Enter key properly - immediately insert newline
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            console.log('[Editor] Enter key pressed');
+            e.preventDefault();
+            
+            // Insert a <br> at cursor position using execCommand
+            document.execCommand('insertLineBreak');
+            
+            // Trigger formatting update immediately
+            setTimeout(() => {
+                const plainText = getPlainTextFromEditor(editor);
+                const cursorPos = getCaretCharacterOffsetWithin(editor);
+                console.log('[Editor] Formatting after Enter, cursor at:', cursorPos);
+                
+                editor.innerHTML = parseFormattingForEditor(plainText);
+                setCaretCharacterOffsetWithin(editor, cursorPos);
+            }, 10);
+            
+            return false;
+        }
     };
     
     editor.removeEventListener('input', handleInput);
+    editor.removeEventListener('keydown', handleKeyDown);
     editor.addEventListener('input', handleInput);
+    editor.addEventListener('keydown', handleKeyDown);
 }
 
-function saveCursorPosition(editor) {
+function getCaretCharacterOffsetWithin(element) {
+    let caretOffset = 0;
     const sel = window.getSelection();
-    if (sel.rangeCount === 0) return 0;
     
-    const range = sel.getRangeAt(0);
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(editor);
-    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    if (sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(element);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        
+        // Get the text content directly from the range
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(preCaretRange.cloneContents());
+        
+        // Replace BR tags with newlines before getting text
+        tempDiv.querySelectorAll('br').forEach(br => {
+            br.replaceWith('\n');
+        });
+        
+        caretOffset = tempDiv.textContent.length;
+    }
     
-    return preCaretRange.toString().length;
+    return caretOffset;
 }
 
-function restoreCursorPosition(editor, position) {
+function setCaretCharacterOffsetWithin(element, offset) {
+    console.log('[Cursor] Setting cursor to offset:', offset);
     const sel = window.getSelection();
     const range = document.createRange();
     
-    let charCount = 0;
-    let nodeStack = [editor];
-    let foundPosition = false;
+    const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+        null
+    );
     
-    while (nodeStack.length > 0 && !foundPosition) {
-        const node = nodeStack.pop();
-        
+    let charCount = 0;
+    let found = false;
+    let node;
+    
+    while (node = walker.nextNode()) {
         if (node.nodeType === Node.TEXT_NODE) {
-            const nextCharCount = charCount + node.length;
-            if (position <= nextCharCount) {
-                range.setStart(node, position - charCount);
+            const textLength = node.textContent.length;
+            
+            if (offset <= charCount + textLength) {
+                const offsetInNode = offset - charCount;
+                console.log('[Cursor] Found position in text node at offset:', offsetInNode);
+                range.setStart(node, offsetInNode);
                 range.collapse(true);
-                foundPosition = true;
+                found = true;
+                break;
             }
-            charCount = nextCharCount;
-        } else {
-            for (let i = node.childNodes.length - 1; i >= 0; i--) {
-                nodeStack.push(node.childNodes[i]);
+            
+            charCount += textLength;
+        } else if (node.nodeName === 'BR') {
+            charCount += 1; // BR counts as 1 character (newline)
+            
+            if (offset === charCount) {
+                // Position is right after this BR
+                console.log('[Cursor] Position right after BR');
+                range.setStartAfter(node);
+                range.collapse(true);
+                found = true;
+                break;
             }
         }
     }
     
-    if (foundPosition) {
-        sel.removeAllRanges();
-        sel.addRange(range);
+    if (!found) {
+        console.log('[Cursor] Position not found, placing at end');
+        range.selectNodeContents(element);
+        range.collapse(false);
     }
+    
+    sel.removeAllRanges();
+    sel.addRange(range);
+    console.log('[Cursor] Cursor set successfully at offset:', offset);
+}
+
+// Keep old functions for backward compatibility but mark as unused
+function saveCursorPosition(editor) {
+    return getCaretCharacterOffsetWithin(editor);
+}
+
+function restoreCursorPosition(editor, position) {
+    setCaretCharacterOffsetWithin(editor, position);
 }
 
 async function saveNote() {

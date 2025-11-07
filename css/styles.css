@@ -24,6 +24,25 @@ body {
   }
 }
 
+/* Tablet portrait mode - wider screens */
+@media (min-width: 481px) and (max-width: 767px) {
+  .mobile-container {
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .desktop-padding {
+    background: white;
+  }
+}
+
+/* Very wide tablets in portrait (e.g., iPad Pro) */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .mobile-container {
+    max-width: 600px;
+  }
+}
+
 .hide {
   display: none !important;
 }
@@ -329,6 +348,15 @@ input:checked + .slider:before {
   line-height: 1.6;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Better mobile keyboard support */
+#noteContentInput:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
 }
 
 /* Formatting guide modal code blocks */
