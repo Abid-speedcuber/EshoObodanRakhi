@@ -111,8 +111,16 @@ Columns:
   ✓ blood_group (TEXT, NOT NULL) → 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'
   ✓ location (TEXT, NOT NULL)
   ✓ available (BOOLEAN, DEFAULT true)
+  ✓ last_donated (DATE) → Date of last blood donation (NULL if never donated or not tracked)
   ✓ created_by_admin (BOOLEAN, DEFAULT false) → True if admin added profile
   ✓ created_at (TIMESTAMP, DEFAULT now())
+
+Availability Logic:
+  → If last_donated is within 100 days from today: Force unavailable (overrides available toggle)
+  → Otherwise: Use available toggle value
+  → Display: Show "Last donated: [date]" on card if last_donated is set
+  → Admins: Can set/change last_donated for any profile
+  → Users: Can set/change their own last_donated
 
 RLS Policies (Enabled: ✅):
   1. SELECT: "EveryoneCanSeeDonorData"

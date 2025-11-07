@@ -21,8 +21,7 @@ window.BloodModule = {
     } catch {
       App.state.allDonors = JSON.parse(localStorage.getItem('donorsData') || '[]');
     }
-    // Randomize donors before rendering
-    App.state.allDonors = this.shuffleDonors(App.state.allDonors);
+    // Render donors (shuffling will be handled in filterAndRenderDonors)
     this.filterAndRenderDonors();
 
     // Check if non-admin user has donor profile and show/hide prompt
@@ -90,9 +89,12 @@ window.BloodModule = {
       });
     }
 
-    // Randomize the donor list only if not searching
-    if (!searchValue) {
-      filteredDonors = this.shuffleDonors(filteredDonors);
+    // Sort: unavailable donors at the end
+    filteredDonors = this.sortDonorsByAvailability(filteredDonors);
+    
+    // Randomize the donor list only if not searching and user is not admin
+    if (!searchValue && !App.state.isAdmin) {
+      filteredDonors = this.shuffleAvailableDonors(filteredDonors);
     }
 
     if (filteredDonors.length === 0) {
@@ -103,9 +105,24 @@ window.BloodModule = {
     const isBn = localStorage.getItem('lang') === 'bn';
     App.elements.donorsList.innerHTML = filteredDonors.map(donor => {
       const isAdminProfile = donor.created_by_admin;
-      const availableClass = donor.available ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-300';
-      const availableText = donor.available ? (isBn ? '✓অ্যাভেইলেবল' : '✓ Available') : (isBn ? '✖ অ্যাভেইলেবল নয়' : '✖ Not Available');
-      const availableColor = donor.available ? 'text-green-700' : 'text-gray-500';
+      
+      // Check if donor is within 100 days of last donation
+      let isRecentlyDonated = false;
+      let daysSinceDonation = null;
+      if (donor.last_donated) {
+        const lastDonatedDate = new Date(donor.last_donated);
+        const today = new Date();
+        const diffTime = today - lastDonatedDate;
+        daysSinceDonation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        isRecentlyDonated = daysSinceDonation < 100;
+      }
+      
+      // Determine actual availability (override if recently donated)
+      const actuallyAvailable = donor.available && !isRecentlyDonated;
+      
+      const availableClass = actuallyAvailable ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-300';
+      const availableText = actuallyAvailable ? (isBn ? '✔অ্যাভেইলেবল' : '✔ Available') : (isBn ? '✖ অ্যাভেইলেবল নয়' : '✖ Not Available');
+      const availableColor = actuallyAvailable ? 'text-green-700' : 'text-gray-500';
       const nameColor = isAdminProfile ? 'text-gray-500' : 'text-gray-800';
       const adminBadge = isAdminProfile ? '<span class="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded ml-2">Admin</span>' : '';
 
@@ -120,9 +137,10 @@ window.BloodModule = {
           <div class="flex justify-between items-start mb-2">
             <div>
               <div class="flex items-center">
-                <h3 class="font-bold text-lg ${nameColor}">${highlightedName}${!donor.available ? ' <span class="text-sm font-normal text-gray-500">(not available)</span>' : ''}</h3>
+                <h3 class="font-bold text-lg ${nameColor}">${highlightedName}${!actuallyAvailable ? ' <span class="text-sm font-normal text-gray-500">(not available)</span>' : ''}</h3>
               </div>
               <div class="text-sm text-gray-600 flex items-center gap-1"><img src="svgs/icon-location.svg"> ${highlightedLocation}</div>
+              ${donor.last_donated ? `<div class="text-xs text-gray-500 mt-1">${isBn ? 'শেষ দান' : 'Last donated'}: ${new Date(donor.last_donated).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}${isRecentlyDonated ? ` <span class="text-orange-600">(${isBn ? daysSinceDonation + ' দিন আগে' : daysSinceDonation + ' days ago'})</span>` : ''}</div>` : ''}
             </div>
             <div class="text-2xl font-bold text-red-600">${highlightedBloodGroup}</div>
           </div>
@@ -170,6 +188,15 @@ window.BloodModule = {
         form.elements.donorBloodGroup.value = data.blood_group || '';
         form.elements.donorLocation.value = data.location || '';
         form.elements.donorAvailable.checked = data.available;
+        
+        // Handle last donated
+        const hasLastDonated = !!data.last_donated;
+        document.getElementById('donorHasLastDonated').checked = hasLastDonated;
+        document.getElementById('donorLastDonated').classList.toggle('hide', !hasLastDonated);
+        if (hasLastDonated) {
+          document.getElementById('donorLastDonated').value = data.last_donated;
+        }
+        
         document.getElementById('donorId').value = donorId;
         App.elements.deleteDonorBtn.classList.remove('hide');
       }
@@ -182,6 +209,15 @@ window.BloodModule = {
         form.elements.donorBloodGroup.value = data.blood_group || '';
         form.elements.donorLocation.value = data.location || '';
         form.elements.donorAvailable.checked = data.available;
+        
+        // Handle last donated
+        const hasLastDonated = !!data.last_donated;
+        document.getElementById('donorHasLastDonated').checked = hasLastDonated;
+        document.getElementById('donorLastDonated').classList.toggle('hide', !hasLastDonated);
+        if (hasLastDonated) {
+          document.getElementById('donorLastDonated').value = data.last_donated;
+        }
+        
         document.getElementById('donorId').value = data.id;
         App.elements.deleteDonorBtn.classList.remove('hide');
       } else {
@@ -217,5 +253,53 @@ window.BloodModule = {
     } catch (err) {
       console.error('Error fetching donors:', err);
     }
+  },
+
+  // Check if donor is actually available (considering recent donation)
+  isDonorAvailable(donor) {
+    if (!donor.available) return false;
+    
+    if (donor.last_donated) {
+      const lastDonatedDate = new Date(donor.last_donated);
+      const today = new Date();
+      const diffTime = today - lastDonatedDate;
+      const daysSinceDonation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      if (daysSinceDonation < 100) return false;
+    }
+    
+    return true;
+  },
+
+  // Sort donors: available first, unavailable last
+  sortDonorsByAvailability(donors) {
+    return donors.sort((a, b) => {
+      const aAvailable = this.isDonorAvailable(a);
+      const bAvailable = this.isDonorAvailable(b);
+      
+      if (aAvailable && !bAvailable) return -1;
+      if (!aAvailable && bAvailable) return 1;
+      return 0;
+    });
+  },
+
+  // Shuffle only the available donors, keeping unavailable ones at the end
+  shuffleAvailableDonors(donors) {
+    const available = [];
+    const unavailable = [];
+    
+    // Separate available and unavailable donors
+    donors.forEach(donor => {
+      if (this.isDonorAvailable(donor)) {
+        available.push(donor);
+      } else {
+        unavailable.push(donor);
+      }
+    });
+    
+    // Shuffle only the available donors
+    const shuffledAvailable = this.shuffleDonors(available);
+    
+    // Combine: shuffled available donors + unavailable donors at the end
+    return [...shuffledAvailable, ...unavailable];
   }
 };
