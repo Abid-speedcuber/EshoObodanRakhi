@@ -55,7 +55,7 @@ window.NotificationsModule = {
     list.innerHTML = notifications.map(notif => {
       const date = new Date(notif.created_at);
       const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      const targetBadge = notif.target_audience === 'student' 
+      const targetBadge = notif.target_audience === 'student'
         ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded ml-2">Students</span>'
         : '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded ml-2">All Users</span>';
 

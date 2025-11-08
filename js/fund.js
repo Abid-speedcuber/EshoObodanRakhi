@@ -7,7 +7,7 @@ window.FundModule = {
   async updateCollectionTabTotal() {
     // Always use cached data first for instant display
     this.updateCollectionTabTotalOffline();
-    
+
     // Then try to update from server in background (only at init/refresh)
     if (App.shouldFetchFreshData) {
       try {
@@ -40,10 +40,10 @@ window.FundModule = {
 
   updateCollectionTabTotalOffline() {
     try {
-      const allCached = App.state.allFundData.length > 0 
-        ? App.state.allFundData 
+      const allCached = App.state.allFundData.length > 0
+        ? App.state.allFundData
         : JSON.parse(localStorage.getItem('allFundData') || '[]');
-      
+
       const allIncome = allCached.filter(d => d.type === 'income');
       const totalIncome = allIncome.reduce((sum, item) => sum + item.amount, 0);
 
@@ -80,7 +80,7 @@ window.FundModule = {
       if (entry.type === 'expense' && !entry.is_calculation) return acc - entry.amount;
       return acc;
     }, 0);
-    
+
     App.state.totalFund = total;
     App.elements.totalFundDisplay.textContent = `৳ ${total.toLocaleString()}`;
 
@@ -92,9 +92,8 @@ window.FundModule = {
     // Try to use pre-calculated cache first
     try {
       const cachedExpenses = JSON.parse(localStorage.getItem('allSadakahCache') || '[]');
-      
+
       if (cachedExpenses.length > 0) {
-        console.log('Using cached sadakah history');
         this.renderAllSadakahList(cachedExpenses);
         const totalAmount = cachedExpenses.reduce((sum, item) => sum + item.amount, 0);
         const totalCount = cachedExpenses.length;
@@ -105,12 +104,12 @@ window.FundModule = {
     } catch (err) {
       console.error('Error loading cached sadakah:', err);
     }
-    
+
     // Fallback to calculating from allFundData
-    const allCached = App.state.allFundData.length > 0 
-      ? App.state.allFundData 
+    const allCached = App.state.allFundData.length > 0
+      ? App.state.allFundData
       : JSON.parse(localStorage.getItem('allFundData') || '[]');
-    
+
     // Filter by isDisplay: show only entries where is_display is NULL or false (inverse logic)
     const cachedExpenses = allCached.filter(d => d.type === 'expense' && !d.is_display)
       .sort((a, b) => {
@@ -124,16 +123,16 @@ window.FundModule = {
       const displayTotal = cachedExpenses.reduce((sum, item) => sum + item.amount, 0);
 
       // Total of all isCalculation sadakahs (must fetch from full dataset)
-      const allCachedData = App.state.allFundData.length > 0 
-        ? App.state.allFundData 
+      const allCachedData = App.state.allFundData.length > 0
+        ? App.state.allFundData
         : JSON.parse(localStorage.getItem('allFundData') || '[]');
       const calculationExpenses = allCachedData.filter(d => d.type === 'expense' && !d.is_calculation);
       const calculationTotal = calculationExpenses.reduce((sum, item) => sum + item.amount, 0);
 
       const isBn = localStorage.getItem('lang') === 'bn';
       document.getElementById('sadakahTabTotal').textContent = `৳ ${displayTotal.toLocaleString()}`;
-      document.getElementById('sadakahTabCount').textContent = isBn 
-        ? `৳ ${calculationTotal.toLocaleString()} ফান্ড থেকে` 
+      document.getElementById('sadakahTabCount').textContent = isBn
+        ? `৳ ${calculationTotal.toLocaleString()} ফান্ড থেকে`
         : `৳ ${calculationTotal.toLocaleString()} from fund`;
     } else {
       const isBn = localStorage.getItem('lang') === 'bn';
@@ -155,7 +154,7 @@ window.FundModule = {
       const [year, month] = item.month.split('-');
       const date = new Date(year, parseInt(month) - 1, 1);
       const monthName = date.toLocaleString('default', { month: 'long' });
-      
+
       // Process additional info: preserve line breaks and make links clickable
       let additionalInfo = '';
       if (item.additional_info) {
@@ -178,47 +177,40 @@ window.FundModule = {
     }).join('');
   },
 
-async loadFundData() {
-  console.log('[loadFundData] Called for month:', App.state.currentMonth.toISOString());
-  
-  // Cancel any previous ongoing load
-  if (App.state.isLoading.fund) {
-    console.log('[loadFundData] Already loading, but will override with new month');
-  }
-  
-  console.log('[loadFundData] Setting loading flag to true');
-  App.state.isLoading.fund = true;
-  
-  // Store the month we're loading for - to handle race conditions
-  const loadingForMonth = App.state.currentMonth.toISOString();
-  console.log('[loadFundData] Loading for specific month:', loadingForMonth);
-  
-  App.renderLoader('fund');
-  App.updateMonthDisplay();
+  async loadFundData() {
+
+    // Cancel any previous ongoing load
+    if (App.state.isLoading.fund) {
+    }
+    App.state.isLoading.fund = true;
+
+    // Store the month we're loading for - to handle race conditions
+    const loadingForMonth = App.state.currentMonth.toISOString();
+
+    App.renderLoader('fund');
+    App.updateMonthDisplay();
 
     const monthKey = `${App.state.currentMonth.getFullYear()}-${String(App.state.currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
     // Load from cache first (for immediate display)
     const allCached = JSON.parse(localStorage.getItem('allFundData') || '[]');
     const monthlyCache = JSON.parse(localStorage.getItem('cachedMonthlyData') || '{}');
-    
+
     App.state.allFundData = allCached;
     App.state.cachedMonthlyData = monthlyCache;
-    
-// Check if we're still on the same month before rendering
-if (loadingForMonth !== App.state.currentMonth.toISOString()) {
-  console.log('[loadFundData] Month changed during load, aborting this load');
-  App.state.isLoading.fund = false;
-  return;
-}
 
-// Render cached data immediately
-const cachedMonthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
-if (cachedMonthData.length > 0) {
-  console.log('[loadFundData] Rendering cached data for:', monthKey);
-  this.renderFundData(cachedMonthData);
-  await this.calculateNetWorth();
-}
+    // Check if we're still on the same month before rendering
+    if (loadingForMonth !== App.state.currentMonth.toISOString()) {
+      App.state.isLoading.fund = false;
+      return;
+    }
+
+    // Render cached data immediately
+    const cachedMonthData = monthlyCache[monthKey] || allCached.filter(d => d.month === monthKey);
+    if (cachedMonthData.length > 0) {
+      this.renderFundData(cachedMonthData);
+      await this.calculateNetWorth();
+    }
 
     // Update collection tab total for non-admin (works offline with cache)
     if (!App.state.isAdmin) {
@@ -243,41 +235,37 @@ if (cachedMonthData.length > 0) {
         localStorage.setItem('cachedMonthlyData', JSON.stringify(monthlyCache));
         App.state.cachedMonthlyData = monthlyCache;
 
-// Check again if we're still on the same month
-if (loadingForMonth !== App.state.currentMonth.toISOString()) {
-  console.log('[loadFundData] Month changed during network fetch, aborting render');
-  App.state.isLoading.fund = false;
-  return;
-}
+        // Check again if we're still on the same month
+        if (loadingForMonth !== App.state.currentMonth.toISOString()) {
+          App.state.isLoading.fund = false;
+          return;
+        }
 
-// Get current month data and re-render with fresh data
-const monthData = allData.filter(d => d.month === monthKey);
-console.log('[loadFundData] Rendering fresh data for:', monthKey);
-this.renderFundData(monthData);
-await this.calculateNetWorth();
-        
+        // Get current month data and re-render with fresh data
+        const monthData = allData.filter(d => d.month === monthKey);
+        this.renderFundData(monthData);
+        await this.calculateNetWorth();
+
         // Update collection tab with fresh data
         if (!App.state.isAdmin) {
           this.updateCollectionTabTotal();
         }
       }
     } catch (err) {
-      console.log('Using cached data (offline mode):', err);
       // Already rendered cached data above, so just continue
     }
-    
-    console.log('[loadFundData] Completed, setting loading flag to false');
-App.state.isLoading.fund = false;
+
+    App.state.isLoading.fund = false;
   },
 
   renderFundData(data) {
     const income = data.filter(d => d.type === 'income');
     const expense = data.filter(d => d.type === 'expense');
-    
+
     // For admin: show all expenses
     // For non-admin (Collection tab): only show expenses with isCalculation=true (NULL/false in DB)
     const expenseToShow = App.state.isAdmin ? expense : expense.filter(e => !e.is_calculation);
-    
+
     this.renderFundList(income, App.elements.incomeList, 'green');
     this.renderFundList(expenseToShow, App.elements.expenseList, 'red');
     this.updateFundTotals(income, expenseToShow);
@@ -292,18 +280,18 @@ App.state.isLoading.fund = false;
       element.innerHTML = `<div class="text-gray-400 text-center py-4">${noEntriesText}</div>`;
       return;
     }
-    
+
     element.innerHTML = items.map((item, index) => {
       const textColor = item.highlighted ? 'text-red-600' : 'text-gray-800';
-      
+
       // Determine background color for expenses based on display/calculation flags
       let bgClass = `bg-${color}-50`;
       let opacity = '';
-      
+
       if (color === 'red' && item.type === 'expense') {
         const isDisplay = !item.is_display; // NULL/false in DB = true (displayed)
         const isCalculation = !item.is_calculation; // NULL/false in DB = true (calculated)
-        
+
         if (isDisplay && isCalculation) {
           // Both: normal (as it is)
           bgClass = 'bg-red-50';
@@ -319,7 +307,7 @@ App.state.isLoading.fund = false;
           bgClass = 'bg-gray-200';
         }
       }
-      
+
       // Convert to Bangladesh time (UTC+6)
       const bdTime = new Date(new Date(item.timestamp).getTime() + (6 * 60 * 60 * 1000));
       const formattedTime = bdTime.toLocaleString('en-GB', {
@@ -330,9 +318,12 @@ App.state.isLoading.fund = false;
         minute: '2-digit',
         hour12: true
       });
-      
+
+      // Alternating background colors (very subtle)
+      const rowBg = index % 2 === 0 ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)';
+
       return `
-        <div class="${bgClass} ${opacity} p-1.5 rounded-lg text-sm relative group" title="${formattedTime}">
+        <div class="${bgClass} ${opacity} p-1.5 rounded-lg text-sm relative group" title="${formattedTime}" style="background-image: linear-gradient(${rowBg}, ${rowBg});">
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <span class="font-semibold text-gray-600">${index + 1}.</span>
@@ -354,13 +345,13 @@ App.state.isLoading.fund = false;
 
   updateFundTotals(income, expense) {
     const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
-    
+
     // For admin: only sum expenses that have is_calculation = true (NULL/false in DB)
     // For non-admin: expense is already filtered by renderFundData
-    const totalExpense = App.state.isAdmin 
+    const totalExpense = App.state.isAdmin
       ? expense.filter(e => !e.is_calculation).reduce((sum, item) => sum + item.amount, 0)
       : expense.reduce((sum, item) => sum + item.amount, 0);
-    
+
     const balance = totalIncome - totalExpense;
 
     App.elements.totalIncome.textContent = `৳ ${totalIncome}`;
@@ -408,12 +399,11 @@ App.state.isLoading.fund = false;
 
   async loadYearlyChartData() {
     const year = App.state.currentYear;
-    
+
     // Try to use pre-calculated cache first
     try {
       const yearlyCache = JSON.parse(localStorage.getItem('yearlyOverviewCache') || '{}');
       if (yearlyCache[year]) {
-        console.log('Using cached yearly overview for', year);
         const { monthlyIncome, monthlyExpense, monthlyBalance } = yearlyCache[year];
         this.renderYearlyChart(monthlyIncome, monthlyExpense, monthlyBalance);
         return;
@@ -421,7 +411,7 @@ App.state.isLoading.fund = false;
     } catch (err) {
       console.error('Error loading cached yearly overview:', err);
     }
-    
+
     // Fallback to calculating from allFundData
     let data = [];
     const allCached = App.state.allFundData.length > 0
@@ -434,7 +424,6 @@ App.state.isLoading.fund = false;
     });
 
     if (!data || data.length === 0) {
-      console.log('No data available for year:', year);
       const canvas = App.elements.yearlyChart;
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -728,11 +717,11 @@ App.state.isLoading.fund = false;
       document.getElementById('expenseAmount').value = data.amount || '';
       document.getElementById('expenseAdditionalInfo').value = data.additional_info || '';
       document.getElementById('expenseHighlighted').checked = data.highlighted || false;
-      
+
       // Inverse logic: NULL/false in DB = checked (true) in UI
       document.getElementById('expenseDisplay').checked = !data.is_display;
       document.getElementById('expenseCalculation').checked = !data.is_calculation;
-      
+
       // Show advanced options if any non-default values
       if (data.highlighted || data.is_display || data.is_calculation) {
         document.getElementById('advancedOptions').classList.remove('hide');
@@ -789,101 +778,132 @@ App.state.isLoading.fund = false;
     }
   },
 
-changeMonth(delta, skipAnimation = false) {
-  console.log('[changeMonth] Starting - Delta:', delta);
-  console.log('[changeMonth] Current month before change:', App.state.currentMonth.toISOString());
-  
-  // Create new date object to avoid mutation issues
-  const newMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + delta, 1);
-  
-  console.log('[changeMonth] Calculated new month:', newMonth.toISOString());
-  
-  // Prevent going before June 2017
-  const minDate = new Date(2017, 5, 1);
-  if (newMonth < minDate) {
-    console.log('[changeMonth] Clamping to minimum date: June 2017');
-    App.state.currentMonth = new Date(minDate);
-    return; // Don't animate if we hit the boundary
-  }
-  // Prevent going beyond current month
-  else {
+  changeMonth(delta, skipAnimation = false) {
+
+    // Create new date object to avoid mutation issues
+    const newMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + delta, 1);
+
+    // Check boundaries
+    const minDate = new Date(2017, 5, 1);
     const now = new Date();
     const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    if (newMonth > maxDate) {
-      console.log('[changeMonth] Clamping to maximum date:', maxDate.toISOString());
-      App.state.currentMonth = new Date(maxDate);
-      return; // Don't animate if we hit the boundary
-    } else {
-      App.state.currentMonth = newMonth;
-    }
-  }
-  
-  console.log('[changeMonth] Final month after clamping:', App.state.currentMonth.toISOString());
-  
-  // Update UI immediately for snappy feel
-  App.updateMonthDisplay();
-  
-  // Apply animation if not skipped
-  if (!skipAnimation) {
-    this.animateMonthChange(delta);
-  }
-  
-  // Cancel any pending load and schedule new one
-  if (this.loadFundDataTimeout) {
-    console.log('[changeMonth] Cancelling previous load timeout');
-    clearTimeout(this.loadFundDataTimeout);
-  }
-  
-  // Debounce the actual data loading by 150ms
-  this.loadFundDataTimeout = setTimeout(() => {
-    console.log('[changeMonth] Debounce complete, loading data now');
-    this.loadFundData();
-  }, 150);
-},
 
-animateMonthChange(direction) {
-  const container = document.getElementById('collectionView');
-  if (!container) return;
-  
-  const slider = container.querySelector('.month-slider');
-  if (!slider) return;
-  
-  // Create a clone of the current content for the outgoing animation
-  const currentContent = slider.querySelector('.month-content');
-  const clone = currentContent.cloneNode(true);
-  clone.classList.add('month-content-clone');
-  
-  // Position the clone based on slide direction
-  const slideDirection = direction > 0 ? -100 : 100;
-  clone.style.position = 'absolute';
-  clone.style.top = '0';
-  clone.style.left = '0';
-  clone.style.width = '100%';
-  clone.style.transform = 'translateX(0)';
-  
-  // Position the incoming content on the opposite side
-  currentContent.style.transform = `translateX(${-slideDirection}%)`;
-  
-  // Add clone to slider
-  slider.appendChild(clone);
-  
-  // Force reflow
-  currentContent.offsetHeight;
-  
-  // Animate both: clone slides out, current slides in
-  currentContent.classList.add('animating');
-  clone.classList.add('animating');
-  
-  currentContent.style.transform = 'translateX(0)';
-  clone.style.transform = `translateX(${slideDirection}%)`;
-  
-  // Clean up after animation
-  setTimeout(() => {
-    slider.removeChild(clone);
-    currentContent.classList.remove('animating');
-    currentContent.style.transform = '';
-  }, 150);
-},
+    let shouldLoadData = true;
+
+    // Prevent going before June 2017
+    if (newMonth < minDate) {
+      App.showNotification('Cannot go before June 2017', true);
+      return; // Just return without doing anything
+    }
+
+    // Prevent going beyond current month
+    if (newMonth > maxDate) {
+      App.showNotification('Cannot go beyond current month', true);
+      return; // Just return without doing anything
+    }
+
+    // If we got here, the month change is valid
+    App.state.currentMonth = newMonth;
+
+    // STEP 1: Update the month name text
+    App.updateMonthDisplay();
+
+    // STEP 2: Animate the content sliding if not skipped
+    if (!skipAnimation) {
+      this.animateMonthChange(delta);
+    } else {
+      // If animation skipped, load data immediately
+      this.loadFundData();
+      return;
+    }
+
+    // STEP 3: Cancel any pending data load
+    if (this.loadFundDataTimeout) {
+      clearTimeout(this.loadFundDataTimeout);
+    }
+
+    // STEP 4: Schedule new data load to start slightly before animation completes
+    this.loadFundDataTimeout = setTimeout(() => {
+      this.loadFundData();
+    }, 250);
+  },
+
+  animateMonthChange(direction) {
+
+    const container = document.getElementById('collectionView');
+    if (!container) {
+      return;
+    }
+
+    let slider = container.querySelector('.month-slider');
+
+    // If slider doesn't exist, create it now (for button navigation)
+    if (!slider) {
+      slider = document.createElement('div');
+      slider.className = 'month-slider';
+
+      const content = document.createElement('div');
+      content.className = 'month-content';
+
+      // Move all children into content
+      while (container.firstChild) {
+        content.appendChild(container.firstChild);
+      }
+
+      slider.appendChild(content);
+      container.appendChild(slider);
+    }
+
+    const currentContent = slider.querySelector('.month-content');
+    if (!currentContent) {
+      return;
+    }
+
+    // STEP 1: Clone the CURRENT (old) content to slide out
+    const clone = currentContent.cloneNode(true);
+    clone.classList.add('month-content-clone');
+    clone.style.position = 'absolute';
+    clone.style.top = '0';
+    clone.style.left = '0';
+    clone.style.width = '100%';
+    clone.style.transform = 'translateX(0)';
+    clone.style.transition = 'none';
+    clone.style.zIndex = '2'; // Clone on top
+
+    // STEP 2: Add clone to slider
+    slider.appendChild(clone);
+
+    // STEP 3: Keep current content in place but hide it visually
+    currentContent.style.position = 'relative';
+    currentContent.style.zIndex = '1'; // Below clone
+    currentContent.style.opacity = '0'; // Hide but keep structure
+
+    // STEP 4: Start animation immediately
+    const slideDirection = direction > 0 ? 100 : -100;
+
+    // Force reflow
+    slider.offsetHeight;
+
+    requestAnimationFrame(() => {
+
+      clone.style.transition = 'transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)';
+      clone.style.transform = `translateX(${-slideDirection}%)`;
+    });
+
+    // STEP 5: Clean up after animation
+    setTimeout(() => {
+
+      // Remove the clone
+      if (slider.contains(clone)) {
+        slider.removeChild(clone);
+      }
+
+      // Show the content (which should now have new data)
+      currentContent.style.opacity = '1';
+      currentContent.style.position = '';
+      currentContent.style.zIndex = '';
+    }, 300);
+  },
 
   updateFundTabView() {
     if (App.state.isAdmin) return; // Admin sees everything always
@@ -892,6 +912,12 @@ animateMonthChange(direction) {
 
     App.elements.collectionView.classList.toggle('hide', !isCollection);
     App.elements.sadakahListView.classList.toggle('hide', isCollection);
+
+    // Show/hide month navigation based on active tab
+    const monthNav = document.getElementById('monthNavigation');
+    if (monthNav) {
+      monthNav.classList.toggle('hide', !isCollection);
+    }
 
     // Update active tab styling
     document.getElementById('collectionTabBtn').classList.toggle('bg-emerald-100', isCollection);
@@ -972,23 +998,22 @@ animateMonthChange(direction) {
     try {
       monthlyData = JSON.parse(localStorage.getItem('completeHistoryCache') || 'null');
       if (monthlyData) {
-        console.log('Using cached complete history');
       }
     } catch (err) {
       console.error('Error loading cached history:', err);
     }
-    
+
     // Fallback to calculating from allFundData
     if (!monthlyData) {
       const data = App.state.allFundData.length > 0
         ? App.state.allFundData
         : JSON.parse(localStorage.getItem('allFundData') || '[]');
-      
+
       if (!data || data.length === 0) {
         content.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 2rem;">কোনো তথ্য নেই</div>';
         return;
       }
-      
+
       monthlyData = this.calculateCompleteHistory(data);
     }
 
@@ -1126,149 +1151,383 @@ animateMonthChange(direction) {
     startX: 0,
     startY: 0,
     currentX: 0,
+    lastX: 0,
+    lastTime: 0,
+    velocity: 0,
     isDragging: false,
     container: null,
     content: null,
-    
+    previewClone: null,
+    swipeDirection: 0,
+    baseOffset: 0,
+    // Tuned parameters
+    SNAP_VELOCITY: 0.35,
+    SNAP_DISTANCE_RATIO: 0.28,
+    EDGE_RESISTANCE: 0.25,
+    SETTLE_DURATION: 480,
+
     init() {
       const container = document.getElementById('collectionView');
       if (!container) return;
-      
+
       this.container = container;
-      
+
       // Wrap content in slider if not already wrapped
       if (!container.querySelector('.month-slider')) {
         const slider = document.createElement('div');
         slider.className = 'month-slider';
-        
+
         const content = document.createElement('div');
         content.className = 'month-content';
-        
+
         // Move all children into content
         while (container.firstChild) {
           content.appendChild(container.firstChild);
         }
-        
+
         slider.appendChild(content);
         container.appendChild(slider);
       }
-      
+
       this.content = container.querySelector('.month-content');
       const slider = container.querySelector('.month-slider');
-      
+
       // Touch events
       slider.addEventListener('touchstart', this.handleStart.bind(this), { passive: false });
       slider.addEventListener('touchmove', this.handleMove.bind(this), { passive: false });
       slider.addEventListener('touchend', this.handleEnd.bind(this), { passive: false });
       slider.addEventListener('touchcancel', this.handleEnd.bind(this), { passive: false });
-      
+
       // Mouse events (for testing on desktop)
       slider.addEventListener('mousedown', this.handleStart.bind(this));
       slider.addEventListener('mousemove', this.handleMove.bind(this));
       slider.addEventListener('mouseup', this.handleEnd.bind(this));
       slider.addEventListener('mouseleave', this.handleEnd.bind(this));
     },
-    
-    handleStart(e) {
+
+    computeVelocity(nowX, nowTime) {
+      const dx = nowX - this.lastX;
+      const dt = nowTime - this.lastTime;
+      if (dt <= 0) return this.velocity;
+      const inst = dx / dt;
+      this.velocity = this.velocity * 0.25 + inst * 0.75;
+      this.lastX = nowX;
+      this.lastTime = nowTime;
+      return this.velocity;
+    },
+
+    async handleStart(e) {
       const touch = e.touches ? e.touches[0] : e;
       this.startX = touch.clientX;
       this.startY = touch.clientY;
       this.currentX = 0;
+      this.lastX = touch.clientX;
+      this.lastTime = performance.now();
+      this.velocity = 0;
       this.isDragging = true;
-      
+      this.swipeDirection = 0;
+      this.baseOffset = 0;
+
       this.container.querySelector('.month-slider').classList.add('swiping');
       this.content.style.transition = 'none';
+
+      // Remove any existing preview clone
+      if (this.previewClone && this.previewClone.parentNode) {
+        this.previewClone.parentNode.removeChild(this.previewClone);
+        this.previewClone = null;
+      }
+
+      // Pre-create previews for both directions so they're ready immediately
+      this.previewCloneLeft = null;
+      this.previewCloneRight = null;
     },
-    
-    handleMove(e) {
+
+    async createPreviewForMonth(delta) {
+
+      // Calculate which month we're previewing
+      const previewMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + delta, 1);
+      const monthKey = `${previewMonth.getFullYear()}-${String(previewMonth.getMonth() + 1).padStart(2, '0')}`;
+
+      // Get data for that month from cache
+      const allCached = App.state.allFundData.length > 0
+        ? App.state.allFundData
+        : JSON.parse(localStorage.getItem('allFundData') || '[]');
+
+      const monthData = allCached.filter(d => d.month === monthKey);
+
+      // Create a temporary container to render preview
+      const preview = document.createElement('div');
+      preview.className = 'month-content-clone';
+      preview.style.position = 'absolute';
+      preview.style.top = '0';
+      preview.style.left = '0';
+      preview.style.width = '100%';
+      preview.style.minHeight = '100%';
+      preview.style.background = '#ffffff';
+      preview.style.backgroundColor = '#ffffff';
+      preview.style.transition = 'none';
+      preview.style.zIndex = '1';
+      preview.style.pointerEvents = 'none';
+
+      // Clone the structure of current content but with preview data
+      preview.innerHTML = this.content.innerHTML;
+
+      // Render the preview data into the clone
+      const previewIncome = preview.querySelector('#incomeList');
+      const previewExpense = preview.querySelector('#expenseList');
+
+      if (previewIncome && previewExpense) {
+        const income = monthData.filter(d => d.type === 'income');
+        const expense = monthData.filter(d => d.type === 'expense');
+        const expenseToShow = App.state.isAdmin ? expense : expense.filter(e => !e.is_calculation);
+
+        // Use the same render function
+        window.FundModule.renderFundList(income, previewIncome, 'green');
+        window.FundModule.renderFundList(expenseToShow, previewExpense, 'red');
+
+        // Update totals
+        const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
+        const totalExpense = expenseToShow.reduce((sum, item) => sum + item.amount, 0);
+        const balance = totalIncome - totalExpense;
+
+        const totalIncomeEl = preview.querySelector('#totalIncome');
+        const totalExpenseEl = preview.querySelector('#totalExpense');
+        const monthlyBalanceEl = preview.querySelector('#monthlyBalance');
+
+        if (totalIncomeEl) totalIncomeEl.textContent = `৳ ${totalIncome}`;
+        if (totalExpenseEl) totalExpenseEl.textContent = `৳ ${totalExpense}`;
+        if (monthlyBalanceEl) {
+          monthlyBalanceEl.textContent = `৳ ${balance}`;
+          monthlyBalanceEl.style.color = balance >= 0 ? 'var(--brand-green-dark)' : '#dc2626';
+        }
+      }
+      return preview;
+    },
+
+    async handleMove(e) {
       if (!this.isDragging) return;
-      
+
       const touch = e.touches ? e.touches[0] : e;
       const diffX = touch.clientX - this.startX;
       const diffY = touch.clientY - this.startY;
-      
+
       // If vertical scroll is more prominent, don't hijack the gesture
       if (Math.abs(diffY) > Math.abs(diffX)) {
         return;
       }
-      
+
       // Prevent default scroll when horizontal swipe is detected
       e.preventDefault();
-      
-      this.currentX = diffX;
-      
-      // Apply resistance at boundaries
-      const resistance = 0.5;
-      const now = new Date();
+
+      const now = performance.now();
+      const curX = touch.clientX;
+      this.computeVelocity(curX, now);
+
+      let diffXWithResistance = diffX;
+      const containerWidth = this.container.offsetWidth;
+
+      // Apply edge resistance
+      const now2 = new Date();
       const currentMonth = App.state.currentMonth;
       const minDate = new Date(2017, 5, 1);
-      const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+      const maxDate = new Date(now2.getFullYear(), now2.getMonth(), 1);
+
+      // Left boundary (newer months) - resist left swipe
+      if (currentMonth >= maxDate && diffX < 0) {
+        diffXWithResistance = diffX * this.EDGE_RESISTANCE;
+      }
+
+      // Right boundary (older months) - resist right swipe
+      if (currentMonth <= minDate && diffX > 0) {
+        diffXWithResistance = diffX * this.EDGE_RESISTANCE;
+      }
+
+      this.currentX = diffXWithResistance;
+
+      // Determine swipe direction and create preview if needed
+      // diffX > 0 = swiping right = go to PREVIOUS month (delta = -1)
+      // diffX < 0 = swiping left = go to NEXT month (delta = +1)
+      const newDirection = diffX > 0 ? -1 : 1;
+
+      if (newDirection !== this.swipeDirection && Math.abs(diffX) > 5) {
+        this.swipeDirection = newDirection;
+
+        // Remove old preview if direction changed
+        if (this.previewClone && this.previewClone.parentNode) {
+          this.previewClone.parentNode.removeChild(this.previewClone);
+        }
+
+        // Create new preview for the direction immediately
+        const previewMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + this.swipeDirection, 1);
+        const minDate = new Date(2017, 5, 1);
+        const now = new Date();
+        const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        // Only create preview if within bounds
+        if (previewMonth >= minDate && previewMonth <= maxDate) {
+          this.previewClone = await this.createPreviewForMonth(this.swipeDirection);
+          const slider = this.container.querySelector('.month-slider');
+          slider.appendChild(this.previewClone);
+
+          // Position preview immediately at correct starting position
+          const containerWidth = this.container.offsetWidth;
+          const previewOffset = this.swipeDirection > 0 ? -containerWidth : containerWidth;
+          this.previewClone.style.transform = `translateX(${previewOffset}px)`;
+          this.previewClone.style.transition = 'none';
+        }
+      }
+
+      // Apply resistance at boundaries
+      const resistance = 0.5;
       let finalX = diffX;
-      
+
       // Left boundary (newer months)
       if (currentMonth >= maxDate && diffX < 0) {
         finalX = diffX * resistance;
       }
-      
+
       // Right boundary (older months)
       if (currentMonth <= minDate && diffX > 0) {
         finalX = diffX * resistance;
       }
-      
-      const percentage = (finalX / window.innerWidth) * 100;
-      this.content.style.transform = `translateX(${percentage}%)`;
+
+      // Move content directly by pixel amount (not percentage)
+      this.content.style.transform = `translateX(${finalX}px)`;
+
+      // Position preview clone ADJACENT to current content - BOTH VISIBLE
+      if (this.previewClone) {
+        const containerWidth = this.container.offsetWidth;
+
+        // Preview should be exactly one screen width away from current position
+        // If swiping right (diffX > 0, showing previous month), preview starts at -100% and moves right
+        // If swiping left (diffX < 0, showing next month), preview starts at +100% and moves left
+        let previewX;
+        if (this.swipeDirection > 0) {
+          // Swiping right = showing next month (which comes from right side)
+          previewX = containerWidth + finalX;
+        } else {
+          // Swiping left = showing previous month (which comes from left side)
+          previewX = -containerWidth + finalX;
+        }
+
+        this.previewClone.style.transform = `translateX(${previewX}px)`;
+        this.previewClone.style.visibility = 'visible';
+        this.previewClone.style.opacity = '1';
+      }
     },
-    
+
     handleEnd(e) {
       if (!this.isDragging) return;
-      
+
       this.isDragging = false;
       this.container.querySelector('.month-slider').classList.remove('swiping');
-      
-      const threshold = window.innerWidth * 0.25; // 25% of screen width
-      const velocity = Math.abs(this.currentX);
-      
+
+      const containerWidth = this.container.offsetWidth;
+      const absDelta = Math.abs(this.currentX);
+      const vel = this.velocity;
+
       // Determine if swipe was significant enough
-      let shouldChange = Math.abs(this.currentX) > threshold || velocity > 50;
-      
-      if (shouldChange) {
-        // Swipe right = go to previous month (delta: -1)
-        // Swipe left = go to next month (delta: +1)
-        const delta = this.currentX > 0 ? -1 : 1;
-        
+      // Either high velocity OR significant distance
+      let shouldChange = false;
+      let targetDirection = 0;
+
+      if (Math.abs(vel) > this.SNAP_VELOCITY) {
+        // High velocity swipe - respect the direction
+        shouldChange = true;
+        targetDirection = vel < 0 ? 1 : -1; // negative velocity = swiping left = next month
+      } else if (absDelta > containerWidth * this.SNAP_DISTANCE_RATIO) {
+        // Slow but significant drag distance
+        shouldChange = true;
+        targetDirection = this.currentX < 0 ? 1 : -1;
+      }
+
+      // Calculate dynamic settle duration based on velocity
+      let settleDuration = this.SETTLE_DURATION;
+      if (Math.abs(vel) > this.SNAP_VELOCITY) {
+        settleDuration = Math.max(260, this.SETTLE_DURATION * 0.7);
+      }
+
+      if (shouldChange && this.swipeDirection !== 0) {
+        const delta = this.swipeDirection;
+
         // Check boundaries before changing
         const newMonth = new Date(App.state.currentMonth.getFullYear(), App.state.currentMonth.getMonth() + delta, 1);
         const minDate = new Date(2017, 5, 1);
         const now = new Date();
         const maxDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        
+
         if (newMonth >= minDate && newMonth <= maxDate) {
-          // Animate completion
-          this.content.classList.add('animating-slow');
-          const direction = this.currentX > 0 ? 100 : -100;
-          this.content.style.transform = `translateX(${direction}%)`;
-          
+          // DON'T snap back - continue the animation in the same direction
+          this.content.classList.remove('animating-slow');
+          this.content.classList.add('animating');
+          this.content.style.transition = `transform ${settleDuration}ms cubic-bezier(0.18, 0.89, 0.32, 1.28)`;
+
+          // Current content should slide off in the direction of the swipe
+          const direction = this.currentX > 0 ? containerWidth : -containerWidth;
+          this.content.style.transform = `translateX(${direction}px)`;
+
+          // Animate preview into center from its current position
+          if (this.previewClone) {
+            this.previewClone.classList.remove('animating-slow');
+            this.previewClone.classList.add('animating');
+            this.previewClone.style.transition = `transform ${settleDuration}ms cubic-bezier(0.18, 0.89, 0.32, 1.28)`;
+
+            // Preview should end at center (0)
+            // It's currently at containerWidth + currentX (or -containerWidth + currentX)
+            // So we just need to move it to 0
+            this.previewClone.style.transform = 'translateX(0px)';
+            this.previewClone.style.zIndex = '2';
+          }
+
+          // Change month immediately (data will load while animation plays)
           setTimeout(() => {
-            this.content.classList.remove('animating-slow');
-            this.content.style.transition = 'none';
-            this.content.style.transform = 'translateX(0)';
-            
-            // Change month without animation (we already animated)
             window.FundModule.changeMonth(delta, true);
-          }, 300);
-          
+          }, 50);
+
+          // Clean up after animation completes
+          setTimeout(() => {
+
+            this.content.classList.remove('animating');
+            this.content.style.transition = '';
+            this.content.style.transform = '';
+
+            // Remove preview clone
+            if (this.previewClone && this.previewClone.parentNode) {
+              this.previewClone.parentNode.removeChild(this.previewClone);
+              this.previewClone = null;
+            }
+          }, settleDuration + 50);
+
           return;
+        } else {
+          //noting. literally nothing
         }
       }
-      
+
       // Snap back to center
-      this.content.classList.add('animating-slow');
+      this.content.classList.remove('animating-slow');
+      this.content.classList.add('animating');
+      this.content.style.transition = `transform 300ms cubic-bezier(0.18, 0.89, 0.32, 1.28)`;
       this.content.style.transform = 'translateX(0)';
-      
+
+      // Animate preview back off screen
+      if (this.previewClone) {
+        this.previewClone.classList.remove('animating-slow');
+        this.previewClone.classList.add('animating');
+        this.previewClone.style.transition = `transform 300ms cubic-bezier(0.18, 0.89, 0.32, 1.28)`;
+        const previewOffset = this.swipeDirection > 0 ? -containerWidth : containerWidth;
+        this.previewClone.style.transform = `translateX(${previewOffset}px)`;
+      }
+
       setTimeout(() => {
         this.content.classList.remove('animating-slow');
         this.content.style.transition = 'none';
+
+        // Remove preview clone
+        if (this.previewClone && this.previewClone.parentNode) {
+          this.previewClone.parentNode.removeChild(this.previewClone);
+          this.previewClone = null;
+        }
       }, 300);
     }
   },

@@ -134,6 +134,63 @@ img {
   overflow-y: auto;
 }
 
+/* Fullscreen notes modal - covers only mobile container area */
+#noteEditModal {
+  padding: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: stretch;
+}
+
+#noteEditModal .modal-content {
+  background: white;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Desktop: match mobile container width */
+@media (min-width: 768px) {
+  #noteEditModal .modal-content {
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+  }
+}
+
+#noteEditModal .modal-content > div:first-child {
+  flex-shrink: 0;
+}
+
+#noteEditModal .modal-content > form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#noteEditModal .note-editor-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#noteEditModal #noteContentInput {
+  min-height: 300px;
+  height: auto;
+}
+
+#noteEditModal .flex.gap-2 {
+  flex-shrink: 0;
+}
+
 .modal.hide {
   pointer-events: none;
 }
@@ -380,39 +437,69 @@ input:checked + .slider:before {
   line-height: 1.4;
 }
 
-/* Month transition container */
+/* Month transition container - MUST allow horizontal overflow for slide animation */
 #collectionView {
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* Hide content that slides off-screen */
 }
 
+/* Container that holds both static and sliding parts */
+.month-view-container {
+  position: relative;
+}
+
+/* Static elements that don't move during slide */
+.month-nav-static {
+  position: relative;
+  z-index: 10;
+  background: white;
+}
+
+/* Month slider - container for sliding content */
 .month-slider {
   position: relative;
   width: 100%;
-  touch-action: pan-y;
+  height: 100%;
+  touch-action: pan-y; /* Allow vertical scrolling, handle horizontal ourselves */
+  overflow: visible; /* Show both pages during swipe */
+  background: white;
 }
 
+/* Parent must clip to hide overflow */
+#collectionView {
+  position: relative;
+  overflow: hidden !important; /* Clip at container level */
+  width: 100%;
+}
+
+/* Month content - the actual content that slides */
 .month-content {
   position: relative;
   width: 100%;
-  transition: none;
-  will-change: transform;
+  transition: none; /* No transition by default */
+  will-change: transform; /* Optimize for animation */
+  background: white; /* Ensure it's not transparent */
 }
 
+/* When animating via button click - smooth 300ms transition with uniform speed */
 .month-content.animating {
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s linear;
 }
 
+/* When animating via swipe gesture - keep existing slower transition */
 .month-content.animating-slow {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Clone of old content that slides out */
 .month-content-clone {
-  pointer-events: none;
+  pointer-events: none; /* Don't capture clicks */
+  background: white; /* Ensure it's not transparent */
 }
 
+/* Clone also gets smooth transition when animating */
 .month-content-clone.animating {
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s linear;
 }
 
 /* Prevent text selection during swipe */

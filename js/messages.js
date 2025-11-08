@@ -3,29 +3,28 @@
 
 window.MessagesModule = {
   // State
-  lastMessageTime: null,
   canSendMessage: true,
   cooldownEndTime: null,
 
   // Update cooldown warning display
-  updateCooldownWarning() {
+  async updateCooldownWarning() {
     const warningDiv = document.getElementById('messageCooldownWarning');
     const cooldownText = document.getElementById('cooldownText');
-    
+
     if (!warningDiv || !cooldownText || !App.state.currentUser) return;
 
-    this.checkMessageCooldown(App.state.currentUser.id);
-    
+    await this.checkMessageCooldown(App.state.currentUser.id);
+
     if (!this.canSendMessage && this.cooldownEndTime) {
       const remaining = this.cooldownEndTime - Date.now();
       const hours = Math.floor(remaining / (60 * 60 * 1000));
       const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-      
+
       const isBn = localStorage.getItem('lang') === 'bn';
-      const timeText = isBn 
+      const timeText = isBn
         ? `আপনি ${hours} ঘন্টা ${minutes} মিনিট পরে আবার মেসেজ পাঠাতে পারবেন`
         : `You can send another message in ${hours}h ${minutes}m`;
-      
+
       cooldownText.textContent = timeText;
       warningDiv.classList.remove('hide');
     } else {
@@ -34,40 +33,54 @@ window.MessagesModule = {
   },
 
   // Check if user can send a message (36 hour cooldown)
-  checkMessageCooldown(userId) {
-    const cooldownKey = `message_cooldown_${userId}`;
-    const lastMessageTime = localStorage.getItem(cooldownKey);
-    
-    if (!lastMessageTime) {
+  async checkMessageCooldown(userId) {
+    try {
+      const { data, error } = await db
+        .from('users')
+        .select('last_message_time')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (!data || !data.last_message_time) {
+        this.canSendMessage = true;
+        this.cooldownEndTime = null;
+        return true;
+      }
+
+      const cooldownMs = 36 * 60 * 60 * 1000; // 36 hours in milliseconds
+      const lastMessageTime = new Date(data.last_message_time).getTime();
+      const timeSinceLastMessage = Date.now() - lastMessageTime;
+
+      if (timeSinceLastMessage >= cooldownMs) {
+        this.canSendMessage = true;
+        this.cooldownEndTime = null;
+        return true;
+      }
+
+      this.canSendMessage = false;
+      this.cooldownEndTime = lastMessageTime + cooldownMs;
+      return false;
+    } catch (err) {
+      console.error('Error checking message cooldown:', err);
+      // On error, allow sending (fail open)
       this.canSendMessage = true;
       this.cooldownEndTime = null;
       return true;
     }
-
-    const cooldownMs = 36 * 60 * 60 * 1000; // 36 hours in milliseconds
-    const timeSinceLastMessage = Date.now() - parseInt(lastMessageTime);
-    
-    if (timeSinceLastMessage >= cooldownMs) {
-      this.canSendMessage = true;
-      this.cooldownEndTime = null;
-      return true;
-    }
-
-    this.canSendMessage = false;
-    this.cooldownEndTime = parseInt(lastMessageTime) + cooldownMs;
-    return false;
   },
 
   // Format cooldown time remaining
   getCooldownTimeRemaining() {
     if (!this.cooldownEndTime) return '';
-    
+
     const remaining = this.cooldownEndTime - Date.now();
     if (remaining <= 0) return '';
-    
+
     const hours = Math.floor(remaining / (60 * 60 * 1000));
     const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-    
+
     return `${hours}h ${minutes}m`;
   },
 
@@ -75,17 +88,17 @@ window.MessagesModule = {
   async loadUserMessages() {
     const isBn = localStorage.getItem('lang') === 'bn';
     const messagesList = document.getElementById('userMessagesList');
-    
+
     if (!messagesList) return;
-    
+
     messagesList.innerHTML = '<div class="loader"></div>';
 
     // Update cooldown warning
-    this.updateCooldownWarning();
+    await this.updateCooldownWarning();
     // Start interval to update every minute
     if (this.cooldownInterval) clearInterval(this.cooldownInterval);
-    this.cooldownInterval = setInterval(() => {
-      this.updateCooldownWarning();
+    this.cooldownInterval = setInterval(async () => {
+      await this.updateCooldownWarning();
     }, 60000); // Update every minute
 
     try {
@@ -109,7 +122,7 @@ window.MessagesModule = {
       messagesList.innerHTML = data.map(msg => {
         let bgColor = 'bg-yellow-50 border-yellow-200';
         let statusText = isBn ? 'পাঠানো হয়েছে' : 'Sent';
-        
+
         if (msg.admin_reply) {
           bgColor = 'bg-sky-50 border-sky-200';
           statusText = isBn ? 'উত্তর পাওয়া গেছে' : 'Replied';
@@ -159,7 +172,7 @@ window.MessagesModule = {
   // View a user's own message
   async viewUserMessage(messageId) {
     const isBn = localStorage.getItem('lang') === 'bn';
-    
+
     try {
       const { data, error } = await db
         .from('messages')
@@ -180,11 +193,11 @@ window.MessagesModule = {
 
       document.getElementById('viewMessageSubject').textContent = data.subject;
       document.getElementById('viewMessageTimestamp').textContent = timestamp;
-      
+
       // Make links clickable in message content
       const messageContent = data.message || (isBn ? '(কোনো মেসেজ নেই)' : '(No message)');
       document.getElementById('viewMessageContent').innerHTML = this.linkifyText(messageContent);
-      
+
       const replySection = document.getElementById('viewMessageReply');
       if (data.admin_reply) {
         const replyTime = new Date(data.replied_at).toLocaleString('en-GB', {
@@ -215,17 +228,17 @@ window.MessagesModule = {
   },
 
   // Open compose message modal
-  openComposeMessage() {
+  async openComposeMessage() {
     const isBn = localStorage.getItem('lang') === 'bn';
-    
+
     // Check cooldown
-    this.checkMessageCooldown(App.state.currentUser.id);
-    
+    await this.checkMessageCooldown(App.state.currentUser.id);
+
     if (!this.canSendMessage) {
       const timeRemaining = this.getCooldownTimeRemaining();
       App.showNotification(
-        isBn 
-          ? `আপনি ${timeRemaining} পরে আবার মেসেজ পাঠাতে পারবেন` 
+        isBn
+          ? `আপনি ${timeRemaining} পরে আবার মেসেজ পাঠাতে পারবেন`
           : `You can send another message in ${timeRemaining}`,
         true
       );
@@ -243,8 +256,8 @@ window.MessagesModule = {
     if (!this.canSendMessage) {
       const timeRemaining = this.getCooldownTimeRemaining();
       App.showNotification(
-        isBn 
-          ? `আপনি ${timeRemaining} পরে আবার মেসেজ পাঠাতে পারবেন` 
+        isBn
+          ? `আপনি ${timeRemaining} পরে আবার মেসেজ পাঠাতে পারবেন`
           : `You can send another message in ${timeRemaining}`,
         true
       );
@@ -252,7 +265,8 @@ window.MessagesModule = {
     }
 
     try {
-      const { error } = await db.from('messages').insert({
+      // Insert message
+      const { error: messageError } = await db.from('messages').insert({
         user_id: App.state.currentUser.id,
         user_name: App.state.userProfile.name,
         subject,
@@ -260,12 +274,18 @@ window.MessagesModule = {
         status: 'unread'
       });
 
-      if (error) throw error;
+      if (messageError) throw messageError;
 
-      // Set cooldown
-      const cooldownKey = `message_cooldown_${App.state.currentUser.id}`;
-      localStorage.setItem(cooldownKey, Date.now().toString());
-      this.checkMessageCooldown(App.state.currentUser.id);
+      // Update last_message_time in users table
+      const { error: userError } = await db
+        .from('users')
+        .update({ last_message_time: new Date().toISOString() })
+        .eq('id', App.state.currentUser.id);
+
+      if (userError) throw userError;
+
+      // Refresh cooldown state
+      await this.checkMessageCooldown(App.state.currentUser.id);
 
       App.showNotification(isBn ? 'মেসেজ পাঠানো হয়েছে!' : 'Message sent!');
       App.hideAllModals();
@@ -281,9 +301,9 @@ window.MessagesModule = {
   async loadAdminMessages(tab = 'unread') {
     const isBn = localStorage.getItem('lang') === 'bn';
     const messagesList = document.getElementById('adminMessagesList');
-    
+
     if (!messagesList) return;
-    
+
     messagesList.innerHTML = '<div class="loader"></div>';
 
     // Update tab buttons
@@ -322,16 +342,13 @@ window.MessagesModule = {
       }
 
       messagesList.innerHTML = data.map(msg => {
-        const isLocalRead = localStorage.getItem(`msg_read_${msg.id}`) === 'true';
-        const isLocalReplied = localStorage.getItem(`msg_replied_${msg.id}`) === 'true';
-        
         let cardClass = 'bg-white';
         let textClass = 'text-gray-800';
         let fontWeight = 'font-semibold';
-        
-        if (isLocalReplied) {
+
+        if (msg.status === 'replied') {
           cardClass = 'bg-blue-50';
-        } else if (isLocalRead) {
+        } else if (msg.status === 'read') {
           textClass = 'text-gray-500';
           fontWeight = 'font-normal';
         }
@@ -345,7 +362,7 @@ window.MessagesModule = {
           hour12: true
         });
 
-        const truncatedMessage = msg.message 
+        const truncatedMessage = msg.message
           ? (msg.message.length > 100 ? msg.message.substring(0, 100) + '...' : msg.message)
           : (isBn ? '(কোনো মেসেজ নেই)' : '(No message)');
 
@@ -384,7 +401,7 @@ window.MessagesModule = {
   // View message as admin
   async viewAdminMessage(messageId, currentTab) {
     const isBn = localStorage.getItem('lang') === 'bn';
-    
+
     try {
       const { data, error } = await db
         .from('messages')
@@ -394,10 +411,20 @@ window.MessagesModule = {
 
       if (error) throw error;
 
-      // Mark as read locally (will sync to DB on modal close)
-      localStorage.setItem(`msg_read_${messageId}`, 'true');
-      localStorage.setItem(`current_message_id`, messageId);
-      localStorage.setItem(`current_message_tab`, currentTab);
+      // Mark as read in database immediately if status is 'unread'
+      if (data.status === 'unread') {
+        await db
+          .from('messages')
+          .update({
+            read_at: new Date().toISOString(),
+            status: 'read'
+          })
+          .eq('id', parseInt(messageId));
+      }
+
+      // Store current message context for navigation
+      this.currentMessageId = messageId;
+      this.currentMessageTab = currentTab;
 
       const timestamp = new Date(data.created_at).toLocaleString('en-GB', {
         day: '2-digit',
@@ -411,11 +438,11 @@ window.MessagesModule = {
       document.getElementById('adminViewMessageFrom').textContent = data.user_name;
       document.getElementById('adminViewMessageSubject').textContent = data.subject;
       document.getElementById('adminViewMessageTimestamp').textContent = timestamp;
-      
+
       // Make links clickable in message content
       const messageContent = data.message || (isBn ? '(কোনো মেসেজ নেই)' : '(No message)');
       document.getElementById('adminViewMessageContent').innerHTML = this.linkifyText(messageContent);
-      
+
       // Show/hide reply section based on status
       const replySection = document.getElementById('adminReplySection');
       if (data.status === 'replied' || data.admin_reply) {
@@ -495,14 +522,11 @@ window.MessagesModule = {
 
       if (error) throw error;
 
-      // Mark as replied locally
-      localStorage.setItem(`msg_replied_${messageId}`, 'true');
-
       App.showNotification(isBn ? 'উত্তর পাঠানো হয়েছে!' : 'Reply sent!');
       App.hideAllModals();
-      
+
       // Reload messages in current tab
-      const currentTab = localStorage.getItem('current_message_tab') || 'unread';
+      const currentTab = this.currentMessageTab || 'unread';
       this.loadAdminMessages(currentTab);
 
     } catch (err) {
@@ -511,43 +535,12 @@ window.MessagesModule = {
     }
   },
 
-  // Update message status on modal close
+  // Update message status on modal close (no longer needed - handled in viewAdminMessage)
   async updateMessageStatusOnClose() {
-    const messageId = localStorage.getItem('current_message_id');
-    if (!messageId) return;
-
-    const isRead = localStorage.getItem(`msg_read_${messageId}`) === 'true';
-    const isReplied = localStorage.getItem(`msg_replied_${messageId}`) === 'true';
-
-    if (isReplied) {
-      // Already handled in sendAdminReply
-      return;
-    }
-
-    if (isRead) {
-      try {
-        const { data } = await db
-          .from('messages')
-          .select('status')
-          .eq('id', parseInt(messageId))
-          .single();
-
-        if (data && data.status === 'unread') {
-          await db
-            .from('messages')
-            .update({
-              read_at: new Date().toISOString(),
-              status: 'read'
-            })
-            .eq('id', parseInt(messageId));
-        }
-      } catch (err) {
-        console.error('Error updating message status:', err);
-      }
-    }
-
-    localStorage.removeItem('current_message_id');
-    localStorage.removeItem('current_message_tab');
+    // Status is now updated immediately when message is viewed
+    // Clean up context variables
+    this.currentMessageId = null;
+    this.currentMessageTab = null;
   },
 
   // Update badge for user (show red dot if there's a reply)
@@ -616,19 +609,19 @@ window.MessagesModule = {
   // Convert URLs in text to clickable links
   linkifyText(text) {
     if (!text) return text;
-    
+
     // URL regex pattern
     const urlPattern = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-    
+
     // Replace URLs with anchor tags
     return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>');
   }
 };
 
 // Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Check message cooldown on init
   if (App.state.currentUser) {
-    window.MessagesModule.checkMessageCooldown(App.state.currentUser.id);
+    await window.MessagesModule.checkMessageCooldown(App.state.currentUser.id);
   }
 });

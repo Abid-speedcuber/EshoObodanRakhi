@@ -4,7 +4,7 @@ window.BloodModule = {
     if (App.state.isLoading.donors) return;
     App.state.isLoading.donors = true;
     App.renderLoader('blood');
-    
+
     // Reset filters when loading donors
     document.getElementById('bloodFilter').value = 'all';
     document.getElementById('bloodSearch').value = '';
@@ -12,7 +12,7 @@ window.BloodModule = {
     document.getElementById('bloodFilter').classList.remove('hide');
     document.getElementById('bloodSearchBtn').classList.remove('hide');
     document.getElementById('bloodClearBtn').classList.add('hide');
-    
+
     try {
       const { data, error } = await db.from('donors').select('*').order('name');
       if (error) throw error;
@@ -91,7 +91,7 @@ window.BloodModule = {
 
     // Sort: unavailable donors at the end
     filteredDonors = this.sortDonorsByAvailability(filteredDonors);
-    
+
     // Randomize the donor list only if not searching and user is not admin
     if (!searchValue && !App.state.isAdmin) {
       filteredDonors = this.shuffleAvailableDonors(filteredDonors);
@@ -105,7 +105,7 @@ window.BloodModule = {
     const isBn = localStorage.getItem('lang') === 'bn';
     App.elements.donorsList.innerHTML = filteredDonors.map(donor => {
       const isAdminProfile = donor.created_by_admin;
-      
+
       // Check if donor is within 100 days of last donation
       let isRecentlyDonated = false;
       let daysSinceDonation = null;
@@ -116,10 +116,10 @@ window.BloodModule = {
         daysSinceDonation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         isRecentlyDonated = daysSinceDonation < 100;
       }
-      
+
       // Determine actual availability (override if recently donated)
       const actuallyAvailable = donor.available && !isRecentlyDonated;
-      
+
       const availableClass = actuallyAvailable ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-300';
       const availableText = actuallyAvailable ? (isBn ? '✔অ্যাভেইলেবল' : '✔ Available') : (isBn ? '✖ অ্যাভেইলেবল নয়' : '✖ Not Available');
       const availableColor = actuallyAvailable ? 'text-green-700' : 'text-gray-500';
@@ -188,7 +188,7 @@ window.BloodModule = {
         form.elements.donorBloodGroup.value = data.blood_group || '';
         form.elements.donorLocation.value = data.location || '';
         form.elements.donorAvailable.checked = data.available;
-        
+
         // Handle last donated
         const hasLastDonated = !!data.last_donated;
         document.getElementById('donorHasLastDonated').checked = hasLastDonated;
@@ -196,7 +196,7 @@ window.BloodModule = {
         if (hasLastDonated) {
           document.getElementById('donorLastDonated').value = data.last_donated;
         }
-        
+
         document.getElementById('donorId').value = donorId;
         App.elements.deleteDonorBtn.classList.remove('hide');
       }
@@ -209,7 +209,7 @@ window.BloodModule = {
         form.elements.donorBloodGroup.value = data.blood_group || '';
         form.elements.donorLocation.value = data.location || '';
         form.elements.donorAvailable.checked = data.available;
-        
+
         // Handle last donated
         const hasLastDonated = !!data.last_donated;
         document.getElementById('donorHasLastDonated').checked = hasLastDonated;
@@ -217,7 +217,7 @@ window.BloodModule = {
         if (hasLastDonated) {
           document.getElementById('donorLastDonated').value = data.last_donated;
         }
-        
+
         document.getElementById('donorId').value = data.id;
         App.elements.deleteDonorBtn.classList.remove('hide');
       } else {
@@ -258,7 +258,7 @@ window.BloodModule = {
   // Check if donor is actually available (considering recent donation)
   isDonorAvailable(donor) {
     if (!donor.available) return false;
-    
+
     if (donor.last_donated) {
       const lastDonatedDate = new Date(donor.last_donated);
       const today = new Date();
@@ -266,7 +266,7 @@ window.BloodModule = {
       const daysSinceDonation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       if (daysSinceDonation < 100) return false;
     }
-    
+
     return true;
   },
 
@@ -275,7 +275,7 @@ window.BloodModule = {
     return donors.sort((a, b) => {
       const aAvailable = this.isDonorAvailable(a);
       const bAvailable = this.isDonorAvailable(b);
-      
+
       if (aAvailable && !bAvailable) return -1;
       if (!aAvailable && bAvailable) return 1;
       return 0;
@@ -286,7 +286,7 @@ window.BloodModule = {
   shuffleAvailableDonors(donors) {
     const available = [];
     const unavailable = [];
-    
+
     // Separate available and unavailable donors
     donors.forEach(donor => {
       if (this.isDonorAvailable(donor)) {
@@ -295,10 +295,10 @@ window.BloodModule = {
         unavailable.push(donor);
       }
     });
-    
+
     // Shuffle only the available donors
     const shuffledAvailable = this.shuffleDonors(available);
-    
+
     // Combine: shuffled available donors + unavailable donors at the end
     return [...shuffledAvailable, ...unavailable];
   }

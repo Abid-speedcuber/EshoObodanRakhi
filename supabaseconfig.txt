@@ -42,6 +42,9 @@ RLS Policies (Enabled: ✅):
      → Target: authenticated
      → Rule: EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
 
+  4. Additional Columns:
+    ✓ last_message_time (TIMESTAMP) → Timestamp of last message sent by user (for 36-hour cooldown enforcement)
+
 ───────────────────────────────────────────────────────────────────────────
 
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -197,20 +200,21 @@ RLS Policies (Enabled: ✅):
 
 Message Cooldown System:
   → Cooldown Period: 36 hours between messages
-  → Storage: localStorage key `message_cooldown_{userId}`
-  → Value: Timestamp (ms) of last message sent
-  → Check: On page load and before compose modal opens
+  → Storage: Database - users.last_message_time column
+  → Value: Timestamp of last message sent
+  → Check: On page load, before compose modal opens, and after sending message
   → Display: Live countdown in message tab UI (updates every minute)
+  → Enforcement: Server-side via database timestamp (cannot be bypassed by clearing browser data)
 
 Message Status Workflow:
-  1. User sends message → status: 'unread'
-  2. Admin opens message → status: 'read', read_at set
+  1. User sends message → status: 'unread', last_message_time updated in users table
+  2. Admin opens message → status: 'read', read_at set (immediate update on view)
   3. Admin sends reply → status: 'replied', replied_at set, admin_reply filled
   4. User views reply → user_read_reply set
 
 Access Control:
-  → Regular Users: Can send messages with 36-hour cooldown
-  → Students: Can send messages with 36-hour cooldown
+  → Regular Users: Can send messages with 36-hour cooldown (enforced by database)
+  → Students: Can send messages with 36-hour cooldown (enforced by database)
   → Admins: Can read all messages and reply (no cooldown)
   → Moderators: No access to messaging system
 
@@ -228,10 +232,16 @@ Link Handling:
   → Links open in new tab with security attributes (target="_blank" rel="noopener noreferrer")
   → Text is escaped to prevent XSS attacks
 
+Status Tracking:
+  → All status changes (read/replied) are immediately persisted to database
+  → No localStorage used for message state tracking
+  → Status is always accurate across devices and sessions
+
 Indexes:
   → idx_messages_user_id: Fast user message lookups
   → idx_messages_status: Fast status filtering
   → idx_messages_created_at: Chronological ordering
+
 
 ────────────────────────────────────────────────────────────────────────────
 
@@ -460,8 +470,11 @@ Application-specific localStorage keys:
 8. noticesData → JSON: Array of notice objects
    Purpose: Cache activities/notices
    
-9. lang → String: 'en' or 'bn'
-   Purpose: Store language preference
+Note: Message cooldown and status tracking have been REMOVED from localStorage.
+These are now managed entirely by the database for security and reliability:
+  - Cooldown: users.last_message_time column
+  - Message status: messages.status, read_at, replied_at columns
+  - No more localStorage keys: message_cooldown_{userId}, msg_read_{id}, msg_replied_{id}
 
 ────────────────────────────────────────────────────────────────────────────
 💡 IMPORTANT CODING CONVENTIONS
@@ -687,10 +700,15 @@ const { error } = await db
   })
   .eq('id', messageId)
 
-// Check message cooldown
-const cooldownKey = `message_cooldown_${userId}`
-const lastMessageTime = localStorage.getItem(cooldownKey)
-const canSend = !lastMessageTime || (Date.now() - parseInt(lastMessageTime)) >= (36 * 60 * 60 * 1000)
+// Check message cooldown (database-controlled)
+const { data } = await db
+  .from('users')
+  .select('last_message_time')
+  .eq('id', userId)
+  .single()
+
+const canSend = !data?.last_message_time || 
+  (Date.now() - new Date(data.last_message_time).getTime()) >= (36 * 60 * 60 * 1000)
 
 ────────────────────────────────────────────────────────────────────────────
 📝 MAINTENANCE NOTES
@@ -711,77 +729,3 @@ App Version: 1.0
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║  Remember: This is a vibe coding project. Keep the energy flowing! 🎵✨   ║
 ╚════════════════════════════════════════════════════════════════════════════╝
-
-
-(last addition:
-
--- Create messages table
-CREATE TABLE public.messages (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  user_name TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  message TEXT,
-  status TEXT NOT NULL DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'replied')),
-  admin_reply TEXT,
-  read_at TIMESTAMP,
-  replied_at TIMESTAMP,
-  user_read_reply TIMESTAMP,
-  created_at TIMESTAMP DEFAULT now()
-);
-
--- Enable RLS
-ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can read their own messages
-CREATE POLICY "Users can read their own messages"
-ON public.messages
-FOR SELECT
-TO authenticated
-USING (auth.uid() = user_id);
-
--- Policy: Admins can read all messages
-CREATE POLICY "Admins can read all messages"
-ON public.messages
-FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = auth.uid() AND role = 'admin'
-  )
-);
-
--- Policy: Users can insert their own messages
-CREATE POLICY "Users can insert their own messages"
-ON public.messages
-FOR INSERT
-TO authenticated
-WITH CHECK (auth.uid() = user_id);
-
--- Policy: Admins can update messages (for replies)
-CREATE POLICY "Admins can update messages"
-ON public.messages
-FOR UPDATE
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = auth.uid() AND role = 'admin'
-  )
-);
-
--- Policy: Users can update their own messages (for marking reply as read)
-CREATE POLICY "Users can update user_read_reply"
-ON public.messages
-FOR UPDATE
-TO authenticated
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
-
--- Create index for faster queries
-CREATE INDEX idx_messages_user_id ON public.messages(user_id);
-CREATE INDEX idx_messages_status ON public.messages(status);
-CREATE INDEX idx_messages_created_at ON public.messages(created_at DESC);
-
-)

@@ -367,21 +367,21 @@ function stripFormatting(text) {
 
 function parseFormattingForDisplay(text) {
     if (!text) return '';
-    
+
     let html = text;
-    
+
     // Parse inline formatting (WITHOUT showing markers)
     html = html.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
     html = html.replace(/\+([^+]+)\+/g, '<em>$1</em>');
     html = html.replace(/_([^_]+)_/g, '<span style="text-decoration: underline;">$1</span>');
     html = html.replace(/%([^%]+)%/g, '<span style="color: #dc2626;">$1</span>');
-    
+
     // Parse numbered lists
     html = html.replace(/#\((num)([^)]*)\)\n([\s\S]*?)\n#/g, (match, type, params, content) => {
         const lines = content.trim().split('\n');
         let listType = 'decimal';
         let startNum = 1;
-        
+
         const paramMatch = params.match(/t=([a-zA-Z0-9]+)/);
         if (paramMatch) {
             const t = paramMatch[1];
@@ -390,28 +390,28 @@ function parseFormattingForDisplay(text) {
             else if (t === 'I') listType = 'upper-roman';
             else if (t === 'bn') listType = 'bengali';
         }
-        
+
         const startMatch = params.match(/s=(\d+)/);
         if (startMatch) {
             startNum = parseInt(startMatch[1]);
         }
-        
+
         const items = lines.map(line => `<li>${line}</li>`).join('');
         return `<ol style="list-style-type: ${listType}; margin-left: 20px; padding-left: 20px;" start="${startNum}">${items}</ol>`;
     });
-    
+
     // Parse bullet lists
     html = html.replace(/#\((bul)([^)]*)\)\n([\s\S]*?)\n#/g, (match, type, params, content) => {
         const lines = content.trim().split('\n');
         let bulletStyle = 'disc';
-        
+
         const paramMatch = params.match(/t=([a-z]+)/);
         if (paramMatch) {
             const t = paramMatch[1];
             if (t === 'sq') bulletStyle = 'square';
             else if (t === 'ci') bulletStyle = 'circle';
         }
-        
+
         const items = lines.map(line => {
             if (paramMatch && paramMatch[1] === 'ar') {
                 return `<li style="list-style: none;">→ ${line}</li>`;
@@ -420,18 +420,18 @@ function parseFormattingForDisplay(text) {
         }).join('');
         return `<ul style="list-style-type: ${bulletStyle}; margin-left: 20px; padding-left: 20px;">${items}</ul>`;
     });
-    
+
     html = html.replace(/\n/g, '<br>');
-    
+
     return html;
 }
 
 function parseFormattingForEditor(text) {
     if (!text) return '';
-    
+
     let html = '';
     let i = 0;
-    
+
     while (i < text.length) {
         // Check for bold *text*
         if (text[i] === '*' && text.indexOf('*', i + 1) !== -1) {
@@ -441,7 +441,7 @@ function parseFormattingForEditor(text) {
             i = endIndex + 1;
             continue;
         }
-        
+
         // Check for italic +text+
         if (text[i] === '+' && text.indexOf('+', i + 1) !== -1) {
             const endIndex = text.indexOf('+', i + 1);
@@ -450,7 +450,7 @@ function parseFormattingForEditor(text) {
             i = endIndex + 1;
             continue;
         }
-        
+
         // Check for underline _text_
         if (text[i] === '_' && text.indexOf('_', i + 1) !== -1) {
             const endIndex = text.indexOf('_', i + 1);
@@ -459,7 +459,7 @@ function parseFormattingForEditor(text) {
             i = endIndex + 1;
             continue;
         }
-        
+
         // Check for red %text%
         if (text[i] === '%' && text.indexOf('%', i + 1) !== -1) {
             const endIndex = text.indexOf('%', i + 1);
@@ -468,7 +468,7 @@ function parseFormattingForEditor(text) {
             i = endIndex + 1;
             continue;
         }
-        
+
         // Check for list markers
         if (text.substring(i).match(/^#\((num|bul)[^)]*\)/)) {
             const match = text.substring(i).match(/^#\((num|bul)[^)]*\)/);
@@ -476,14 +476,14 @@ function parseFormattingForEditor(text) {
             i += match[0].length;
             continue;
         }
-        
+
         // Check for closing #
-        if (text[i] === '#' && (i === 0 || text[i-1] === '\n') && (i === text.length - 1 || text[i+1] === '\n' || text[i+1] === '\r')) {
+        if (text[i] === '#' && (i === 0 || text[i - 1] === '\n') && (i === text.length - 1 || text[i + 1] === '\n' || text[i + 1] === '\r')) {
             html += `<span class="format-marker">#</span>`;
             i++;
             continue;
         }
-        
+
         // Regular character
         if (text[i] === '\n') {
             html += '<br>';
@@ -494,7 +494,7 @@ function parseFormattingForEditor(text) {
         }
         i++;
     }
-    
+
     return html;
 }
 
@@ -507,19 +507,19 @@ function escapeHtml(text) {
 function getPlainTextFromEditor(editor) {
     // Use innerText which respects line breaks better
     let text = editor.innerText || '';
-    
+
     // Fallback to manual parsing if innerText is not available
     if (!text) {
         text = editor.textContent || '';
     }
-    
+
     // Replace non-breaking spaces with regular spaces
     text = text.replace(/\u00A0/g, ' ');
-    
+
     // Normalize line breaks
     text = text.replace(/\r\n/g, '\n');
     text = text.replace(/\r/g, '\n');
-    
+
     return text;
 }
 
@@ -558,12 +558,12 @@ function editNote(noteId = null) {
         document.getElementById('noteTitleInput').value = note.title || '';
         document.getElementById('noteDateInput').value = note.datestamp;
         document.getElementById('deleteNoteEditBtn').classList.remove('hide');
-        
+
         setTimeout(() => {
             const editor = document.getElementById('noteContentInput');
             editor.innerHTML = parseFormattingForEditor(note.content);
             setupNoteEditorEventListeners(editor);
-            
+
             // Place cursor at end
             const range = document.createRange();
             const sel = window.getSelection();
@@ -578,7 +578,7 @@ function editNote(noteId = null) {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('noteDateInput').value = today;
         document.getElementById('deleteNoteEditBtn').classList.add('hide');
-        
+
         setTimeout(() => {
             const editor = document.getElementById('noteContentInput');
             editor.innerHTML = '';
@@ -595,69 +595,59 @@ function setupNoteEditorEventListeners(editor) {
     let isComposing = false;
     let debounceTimer;
     let justPressedEnter = false;
-    
+
     // Track composition (multilingual input)
     editor.addEventListener('compositionstart', () => {
-        console.log('[Editor] Composition started');
         isComposing = true;
     });
-    
+
     editor.addEventListener('compositionend', () => {
-        console.log('[Editor] Composition ended');
         isComposing = false;
     });
-    
+
     const handleInput = () => {
         if (isComposing) {
-            console.log('[Editor] Skipping input - composing');
             return;
         }
-        
+
         if (justPressedEnter) {
-            console.log('[Editor] Skipping input - just pressed enter');
             justPressedEnter = false;
             return;
         }
-        
+
         clearTimeout(debounceTimer);
-        
+
         debounceTimer = setTimeout(() => {
-            console.log('[Editor] Updating formatting...');
             const plainText = getPlainTextFromEditor(editor);
             const cursorPos = getCaretCharacterOffsetWithin(editor);
-            console.log('[Editor] Cursor position before update:', cursorPos);
-            console.log('[Editor] Text length:', plainText.length);
-            
+
             editor.innerHTML = parseFormattingForEditor(plainText);
-            
-            console.log('[Editor] Restoring cursor to:', cursorPos);
+
             setCaretCharacterOffsetWithin(editor, cursorPos);
         }, 500);
     };
-    
+
     // Handle Enter key properly - immediately insert newline
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
-            console.log('[Editor] Enter key pressed');
             e.preventDefault();
-            
+
             // Insert a <br> at cursor position using execCommand
             document.execCommand('insertLineBreak');
-            
+
             // Trigger formatting update immediately
             setTimeout(() => {
                 const plainText = getPlainTextFromEditor(editor);
                 const cursorPos = getCaretCharacterOffsetWithin(editor);
-                console.log('[Editor] Formatting after Enter, cursor at:', cursorPos);
-                
+
                 editor.innerHTML = parseFormattingForEditor(plainText);
                 setCaretCharacterOffsetWithin(editor, cursorPos);
             }, 10);
-            
+
             return false;
         }
     };
-    
+
     editor.removeEventListener('input', handleInput);
     editor.removeEventListener('keydown', handleKeyDown);
     editor.addEventListener('input', handleInput);
@@ -667,63 +657,60 @@ function setupNoteEditorEventListeners(editor) {
 function getCaretCharacterOffsetWithin(element) {
     let caretOffset = 0;
     const sel = window.getSelection();
-    
+
     if (sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
         const preCaretRange = range.cloneRange();
         preCaretRange.selectNodeContents(element);
         preCaretRange.setEnd(range.endContainer, range.endOffset);
-        
+
         // Get the text content directly from the range
         const tempDiv = document.createElement('div');
         tempDiv.appendChild(preCaretRange.cloneContents());
-        
+
         // Replace BR tags with newlines before getting text
         tempDiv.querySelectorAll('br').forEach(br => {
             br.replaceWith('\n');
         });
-        
+
         caretOffset = tempDiv.textContent.length;
     }
-    
+
     return caretOffset;
 }
 
 function setCaretCharacterOffsetWithin(element, offset) {
-    console.log('[Cursor] Setting cursor to offset:', offset);
     const sel = window.getSelection();
     const range = document.createRange();
-    
+
     const walker = document.createTreeWalker(
         element,
         NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
         null
     );
-    
+
     let charCount = 0;
     let found = false;
     let node;
-    
+
     while (node = walker.nextNode()) {
         if (node.nodeType === Node.TEXT_NODE) {
             const textLength = node.textContent.length;
-            
+
             if (offset <= charCount + textLength) {
                 const offsetInNode = offset - charCount;
-                console.log('[Cursor] Found position in text node at offset:', offsetInNode);
                 range.setStart(node, offsetInNode);
                 range.collapse(true);
                 found = true;
                 break;
             }
-            
+
             charCount += textLength;
         } else if (node.nodeName === 'BR') {
             charCount += 1; // BR counts as 1 character (newline)
-            
+
             if (offset === charCount) {
                 // Position is right after this BR
-                console.log('[Cursor] Position right after BR');
                 range.setStartAfter(node);
                 range.collapse(true);
                 found = true;
@@ -731,16 +718,14 @@ function setCaretCharacterOffsetWithin(element, offset) {
             }
         }
     }
-    
+
     if (!found) {
-        console.log('[Cursor] Position not found, placing at end');
         range.selectNodeContents(element);
         range.collapse(false);
     }
-    
+
     sel.removeAllRanges();
     sel.addRange(range);
-    console.log('[Cursor] Cursor set successfully at offset:', offset);
 }
 
 // Keep old functions for backward compatibility but mark as unused
@@ -779,6 +764,17 @@ async function saveNote() {
     if (noteId) {
         const index = App.state.notes.findIndex(n => n.id === noteId);
         if (index !== -1) {
+            // Add old version to recycle bin before updating
+            const oldNote = App.state.notes[index];
+            if (!App.state.notesRecycleBin) {
+                App.state.notesRecycleBin = [];
+            }
+            App.state.notesRecycleBin.push({
+                ...oldNote,
+                deletedAt: new Date().toISOString(),
+                reason: 'edited'
+            });
+
             App.state.notes[index] = noteData;
         }
     } else {
