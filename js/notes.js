@@ -18,13 +18,18 @@ function loadNotesFromLocalStorage() {
             App.state.notes = JSON.parse(cachedNotes);
         }
 
-        const recycleBinKey = `notes_recycleBin_${userId}`;
-        const recycleBin = localStorage.getItem(recycleBinKey);
-        App.state.notesRecycleBin = recycleBin ? JSON.parse(recycleBin) : [];
+        const deletedIdsKey = `notes_deletedIds_${userId}`;
+        const deletedIds = localStorage.getItem(deletedIdsKey);
+        App.state.notesDeletedIds = deletedIds ? JSON.parse(deletedIds) : [];
+
+        const recycleBin2Key = `notes_recycleBin2_${userId}`;
+        const recycleBin2 = localStorage.getItem(recycleBin2Key);
+        App.state.notesRecycleBin2 = recycleBin2 ? JSON.parse(recycleBin2) : [];
     } catch (err) {
         console.error('Error loading notes from localStorage:', err);
         App.state.notes = [];
-        App.state.notesRecycleBin = [];
+        App.state.notesDeletedIds = [];
+        App.state.notesRecycleBin2 = [];
     }
 }
 
@@ -34,8 +39,11 @@ function saveNotesToLocalStorage() {
         const notesKey = `notes_${userId}`;
         localStorage.setItem(notesKey, JSON.stringify(App.state.notes));
 
-        const recycleBinKey = `notes_recycleBin_${userId}`;
-        localStorage.setItem(recycleBinKey, JSON.stringify(App.state.notesRecycleBin || []));
+        const deletedIdsKey = `notes_deletedIds_${userId}`;
+        localStorage.setItem(deletedIdsKey, JSON.stringify(App.state.notesDeletedIds || []));
+
+        const recycleBin2Key = `notes_recycleBin2_${userId}`;
+        localStorage.setItem(recycleBin2Key, JSON.stringify(App.state.notesRecycleBin2 || []));
     } catch (err) {
         console.error('Error saving notes to localStorage:', err);
     }
@@ -51,41 +59,39 @@ async function syncNotesFromServer() {
 
         const serverNotes = data || [];
         const localNotes = App.state.notes;
-        const recycleBin = App.state.notesRecycleBin || [];
+        const deletedIds = new Set(App.state.notesDeletedIds || []);
 
-        const deletedIds = new Set(recycleBin.map(note => note.id));
-
-        const serverNotesMap = new Map();
-        serverNotes.forEach(note => {
-            if (!deletedIds.has(note.id)) {
-                serverNotesMap.set(note.id, {
-                    ...note,
-                    datestamp: note.datestamp
-                });
-            }
-        });
-
+        // Create maps for easier lookup
         const localNotesMap = new Map();
         localNotes.forEach(note => {
             localNotesMap.set(note.id, note);
         });
 
         const mergedNotes = [];
+        const processedIds = new Set();
 
+        // First, keep all local notes (they have priority)
         localNotes.forEach(note => {
             mergedNotes.push(note);
+            processedIds.add(note.id);
         });
 
+        // Then, add server notes that:
+        // 1. Don't exist locally (new notes from other devices)
+        // 2. Are not in the deleted IDs list
         serverNotes.forEach(serverNote => {
-            if (!localNotesMap.has(serverNote.id) && !deletedIds.has(serverNote.id)) {
+            const noteId = serverNote.id;
+            
+            if (!processedIds.has(noteId) && !deletedIds.has(noteId)) {
                 mergedNotes.push({
-                    id: serverNote.id,
+                    id: noteId,
                     title: serverNote.title,
                     content: serverNote.content,
                     datestamp: serverNote.datestamp,
                     createdAt: serverNote.created_at,
                     updatedAt: serverNote.updated_at
                 });
+                processedIds.add(noteId);
             }
         });
 
@@ -94,7 +100,8 @@ async function syncNotesFromServer() {
 
         const lastSyncKey = `notes_lastSync_${App.state.currentUser.id}`;
         localStorage.setItem(lastSyncKey, new Date().toISOString());
-        updateLastSyncDisplay();
+
+        console.log(`Synced: ${localNotes.length} local + ${serverNotes.length} server = ${mergedNotes.length} total (${deletedIds.size} filtered)`);
 
     } catch (err) {
         console.error('Error syncing notes from server:', err);
@@ -190,15 +197,22 @@ async function backupNotesToServer() {
         return App.showNotification('You must be logged in to backup notes', true);
     }
 
+    if (!canBackupNotesToCloud()) {
+        return App.showModal('notesAccessDeniedModal');
+    }
+
     App.showNotification('Backing up notes to cloud...');
 
     try {
+        // Delete all existing notes for this user on server
         const { error: deleteError } = await db.from('notes').delete().eq('user_id', App.state.currentUser.id);
 
         if (deleteError) throw deleteError;
 
+        // Upload current local notes to server
         if (App.state.notes.length > 0) {
             const notesToInsert = App.state.notes.map(note => ({
+                id: note.id, // IMPORTANT: Keep the same ID
                 user_id: App.state.currentUser.id,
                 title: note.title || null,
                 content: note.content,
@@ -212,56 +226,40 @@ async function backupNotesToServer() {
             if (insertError) throw insertError;
         }
 
-        App.state.notesRecycleBin = [];
-        const userId = App.state.currentUser.id;
-        const recycleBinKey = `notes_recycleBin_${userId}`;
-        localStorage.removeItem(recycleBinKey);
+        // Keep deleted IDs list and recycle bin intact
+        saveNotesToLocalStorage();
 
         const lastSyncKey = `notes_lastSync_${App.state.currentUser.id}`;
         localStorage.setItem(lastSyncKey, new Date().toISOString());
-        updateLastSyncDisplay();
 
         App.showNotification(`Successfully backed up ${App.state.notes.length} note(s) to cloud!`);
+        updateUnsyncedCount();
+        
     } catch (err) {
         console.error('Error backing up notes:', err);
         App.showNotification('Failed to backup notes: ' + err.message, true);
     }
 }
 
-function updateLastSyncDisplay() {
-    const lastSyncElement = document.getElementById('notesLastSync');
-    if (!lastSyncElement) return;
+function updateUnsyncedCount() {
+    const unsyncedElement = document.getElementById('notesUnsyncedCount');
+    if (!unsyncedElement) return;
 
     if (!App.state.currentUser) {
-        lastSyncElement.textContent = '';
+        unsyncedElement.textContent = '';
         return;
     }
 
-    const lastSyncKey = `notes_lastSync_${App.state.currentUser.id}`;
-    const lastSync = localStorage.getItem(lastSyncKey);
+    const count = App.state.notes.length;
 
-    if (lastSync) {
-        const syncDate = new Date(lastSync);
-        const now = new Date();
-        const diffMs = now - syncDate;
-        const diffMins = Math.floor(diffMs / 60000);
-
-        let timeAgo;
-        if (diffMins < 1) {
-            timeAgo = 'just now';
-        } else if (diffMins < 60) {
-            timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-        } else if (diffMins < 1440) {
-            const hours = Math.floor(diffMins / 60);
-            timeAgo = `${hours} hour${hours > 1 ? 's' : ''} ago`;
-        } else {
-            const days = Math.floor(diffMins / 1440);
-            timeAgo = `${days} day${days > 1 ? 's' : ''} ago`;
-        }
-
-        lastSyncElement.textContent = `Last synced: ${timeAgo}`;
+    if (count === 0) {
+        unsyncedElement.textContent = '';
+    } else if (count === 1) {
+        unsyncedElement.textContent = 'You have 1 note you haven\'t backed up';
+        unsyncedElement.style.display = 'block';
     } else {
-        lastSyncElement.textContent = 'Never synced';
+        unsyncedElement.textContent = `You have ${count} notes you haven't backed up`;
+        unsyncedElement.style.display = 'block';
     }
 }
 
@@ -270,14 +268,22 @@ function loadNotes() {
     App.state.isLoading.notes = true;
 
     loadNotesFromLocalStorage();
+
+    // Show edit mode button only if user has access
+    const editModeBtn = document.getElementById('notesEditModeBtn');
+    if (editModeBtn) {
+        editModeBtn.classList.toggle('hide', !canAccessNotes());
+    }
+
     renderNotes();
-    updateLastSyncDisplay();
+    updateUnsyncedCount();
 
     App.state.isLoading.notes = false;
 }
 
 function renderNotes() {
     const notesList = App.elements.notesList;
+    const isEditMode = App.state.notesEditMode || false;
 
     if (!canAccessNotes()) {
         notesList.innerHTML = '<div class="text-gray-400 text-center py-8">You need to be a student, moderator, or admin to access notes.</div>';
@@ -314,18 +320,22 @@ function renderNotes() {
             const preview = stripFormatting(note.content.substring(0, 100)) + (note.content.length > 100 ? '...' : '');
 
             html += `
-          <div class="bg-white rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition" data-note-id="${note.id}">
+          <div class="bg-white rounded-xl shadow-lg p-4 ${isEditMode ? 'note-selectable flex items-center' : 'cursor-pointer hover:shadow-xl'} transition" data-note-id="${note.id}">
+            ${isEditMode ? '<input type="checkbox" class="note-checkbox" data-note-id="' + note.id + '">' : ''}
+            <div class="flex-1">
             <div class="flex justify-between items-start mb-2">
               <h3 class="font-bold text-gray-800">${title}</h3>
               <span class="text-xs text-gray-500">${formattedDate}</span>
             </div>
             <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
           </div>
+          </div>
         `;
         } else {
             html += `
           <div class="bg-blue-50 rounded-xl shadow-lg p-4 border-l-4 border-blue-400">
             <div class="flex justify-between items-center mb-3">
+              ${isEditMode ? '<input type="checkbox" class="note-checkbox group-checkbox" data-date="' + datestamp + '">' : ''}
               <h3 class="font-bold text-gray-800">📅 ${formattedDate}</h3>
               <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">${notes.length} notes</span>
             </div>
@@ -333,8 +343,9 @@ function renderNotes() {
               ${notes.map(note => {
                 const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
                 return `
-                  <div class="bg-white rounded-lg p-3 cursor-pointer hover:shadow-md transition" data-note-id="${note.id}">
-                    <p class="text-sm font-semibold text-gray-700">${title}</p>
+                  <div class="bg-white rounded-lg p-3 ${isEditMode ? 'note-selectable flex items-center' : 'cursor-pointer hover:shadow-md'} transition" data-note-id="${note.id}">
+                    ${isEditMode ? '<input type="checkbox" class="note-checkbox" data-note-id="' + note.id + '">' : ''}
+                    <p class="text-sm font-semibold text-gray-700 flex-1">${title}</p>
                   </div>
                 `;
             }).join('')}
@@ -347,11 +358,343 @@ function renderNotes() {
     notesList.innerHTML = html;
 
     notesList.querySelectorAll('[data-note-id]').forEach(el => {
-        el.addEventListener('click', () => {
-            const noteId = el.dataset.noteId;
-            viewNote(noteId);
+        if (!isEditMode) {
+            el.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('note-checkbox')) {
+                    const noteId = el.dataset.noteId;
+                    viewNote(noteId);
+                }
+            });
+        } else {
+            // In edit mode, clicking selects the note
+            el.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('note-checkbox')) {
+                    const checkbox = el.querySelector('.note-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        el.classList.toggle('note-selected', checkbox.checked);
+                    }
+                }
+            });
+        }
+    });
+
+    // Handle checkbox changes
+    if (isEditMode) {
+        notesList.querySelectorAll('.note-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const noteEl = e.target.closest('[data-note-id]');
+                if (noteEl) {
+                    noteEl.classList.toggle('note-selected', e.target.checked);
+                }
+            });
+        });
+
+        // Handle group checkboxes
+        notesList.querySelectorAll('.group-checkbox').forEach(groupCheckbox => {
+            groupCheckbox.addEventListener('change', (e) => {
+                const date = e.target.dataset.date;
+                const container = e.target.closest('.bg-blue-50');
+                const noteCheckboxes = container.querySelectorAll('.note-checkbox:not(.group-checkbox)');
+                noteCheckboxes.forEach(cb => {
+                    cb.checked = e.target.checked;
+                    const noteEl = cb.closest('[data-note-id]');
+                    if (noteEl) {
+                        noteEl.classList.toggle('note-selected', e.target.checked);
+                    }
+                });
+            });
+        });
+    }
+}
+
+function renderRecycleBin() {
+    const recycleBinList = document.getElementById('notesRecycleBinList');
+    const recycleBin2 = App.state.notesRecycleBin2 || [];
+
+    if (recycleBin2.length === 0) {
+        recycleBinList.innerHTML = '<div class="text-gray-400 text-center py-8">Recycle bin is empty</div>';
+        return;
+    }
+
+    const sortedNotes = [...recycleBin2].sort((a, b) => {
+        return new Date(b.deletedAt) - new Date(a.deletedAt);
+    });
+
+    let html = sortedNotes.map(note => {
+        const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
+        const deletedDate = new Date(note.deletedAt).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return `
+            <div class="bg-gray-50 rounded-xl shadow-lg p-4 note-selectable flex items-center transition" data-note-id="${note.id}">
+                <input type="checkbox" class="note-checkbox" data-note-id="${note.id}">
+                <div class="flex-1">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-gray-800">${title}</h3>
+                        <span class="text-xs text-gray-500">Deleted: ${deletedDate}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 line-clamp-2">${stripFormatting(note.content.substring(0, 100))}${note.content.length > 100 ? '...' : ''}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    recycleBinList.innerHTML = html;
+
+    // Handle clicks and checkboxes
+    recycleBinList.querySelectorAll('[data-note-id]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('note-checkbox')) {
+                const checkbox = el.querySelector('.note-checkbox');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    el.classList.toggle('note-selected', checkbox.checked);
+                }
+            }
         });
     });
+
+    recycleBinList.querySelectorAll('.note-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const noteEl = e.target.closest('[data-note-id]');
+            if (noteEl) {
+                noteEl.classList.toggle('note-selected', e.target.checked);
+            }
+        });
+    });
+}
+
+function enterEditMode(startInRecycleBin = false) {
+    App.state.notesEditMode = true;
+
+    // Show tabs and edit buttons, hide normal buttons
+    document.getElementById('notesEditModeTabs').classList.remove('hide');
+    document.getElementById('notesNormalButtons').classList.add('hide');
+    document.getElementById('notesEditButtons').classList.remove('hide');
+    document.getElementById('notesAddButtonContainer').classList.add('hide');
+    document.getElementById('notesBackBtn').classList.add('hide');
+
+    // Update tab counts
+    document.getElementById('notesTabYourNotesCount').textContent = App.state.notes.length;
+    document.getElementById('notesTabRecycleBinCount').textContent = (App.state.notesRecycleBin2 || []).length;
+
+    if (startInRecycleBin) {
+        switchToRecycleBinTab();
+    } else {
+        switchToYourNotesTab();
+    }
+}
+
+function exitEditMode() {
+    App.state.notesEditMode = false;
+
+    // Hide tabs and edit buttons, show normal buttons
+    document.getElementById('notesEditModeTabs').classList.add('hide');
+    document.getElementById('notesEditButtons').classList.add('hide');
+    document.getElementById('notesNormalButtons').classList.remove('hide');
+    document.getElementById('notesAddButtonContainer').classList.remove('hide');
+    document.getElementById('notesBackBtn').classList.remove('hide');
+
+    // Show your notes list
+    document.getElementById('notesList').classList.remove('hide');
+    document.getElementById('notesRecycleBinList').classList.add('hide');
+
+    renderNotes();
+}
+
+function switchToYourNotesTab() {
+    // Update tab styles
+    document.getElementById('notesTabYourNotes').classList.add('bg-blue-600', 'text-white');
+    document.getElementById('notesTabYourNotes').classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+
+    document.getElementById('notesTabRecycleBin').classList.remove('bg-blue-600', 'text-white');
+    document.getElementById('notesTabRecycleBin').classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+
+    // Show your notes, hide recycle bin
+    document.getElementById('notesList').classList.remove('hide');
+    document.getElementById('notesRecycleBinList').classList.add('hide');
+
+    // Update action buttons
+    const actionButtonsContainer = document.getElementById('notesEditActions');
+    if (actionButtonsContainer) {
+        actionButtonsContainer.innerHTML = `
+            <button id="deleteMultipleBtn" class="bg-gray-100 text-white p-2 rounded-lg hover:bg-gray-200 transition" title="Delete Selected">
+                <img src="svgs/icon-delete.svg">
+            </button>
+        `;
+
+        document.getElementById('deleteMultipleBtn')?.addEventListener('click', () => {
+            window.NotesModule.deleteSelectedNotes();
+        });
+    }
+
+    renderNotes();
+}
+
+function switchToRecycleBinTab() {
+    // Update tab styles
+    document.getElementById('notesTabRecycleBin').classList.add('bg-blue-600', 'text-white');
+    document.getElementById('notesTabRecycleBin').classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+
+    document.getElementById('notesTabYourNotes').classList.remove('bg-blue-600', 'text-white');
+    document.getElementById('notesTabYourNotes').classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+
+    // Hide your notes, show recycle bin
+    document.getElementById('notesList').classList.add('hide');
+    document.getElementById('notesRecycleBinList').classList.remove('hide');
+
+    // Update action buttons
+    const actionButtonsContainer = document.getElementById('notesEditActions');
+    if (actionButtonsContainer) {
+        actionButtonsContainer.innerHTML = `
+            <button id="reviveBtn" class="bg-gray-100 text-white p-2 rounded-lg hover:bg-gray-200 transition" title="Restore Selected">
+                <img src="svgs/icon-restore.svg" style="transform: scale(2.1);">
+            </button>
+            <button id="deletePermanentlyBtn" class="bg-gray-100 text-white p-2 rounded-lg hover:bg-gray-200 transition" title="Delete Permanently">
+                <img src="svgs/icon-delete.svg">
+            </button>
+        `;
+
+        document.getElementById('reviveBtn')?.addEventListener('click', () => {
+            window.NotesModule.reviveSelectedNotes();
+        });
+
+        document.getElementById('deletePermanentlyBtn')?.addEventListener('click', () => {
+            window.NotesModule.deleteFromRecycleBin();
+        });
+    }
+
+    renderRecycleBin();
+}
+
+function getSelectedNotes(fromRecycleBin = false) {
+    const container = fromRecycleBin ? document.getElementById('notesRecycleBinList') : document.getElementById('notesList');
+    const selectedCheckboxes = container.querySelectorAll('.note-checkbox:checked');
+    return Array.from(selectedCheckboxes).map(cb => cb.dataset.noteId);
+}
+
+function deleteSelectedNotes() {
+    const selectedIds = getSelectedNotes(false);
+
+    if (selectedIds.length === 0) {
+        return App.showNotification('Please select notes to delete', true);
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} note(s)?`)) {
+        return;
+    }
+
+    // Initialize arrays if needed
+    if (!App.state.notesDeletedIds) {
+        App.state.notesDeletedIds = [];
+    }
+    if (!App.state.notesRecycleBin2) {
+        App.state.notesRecycleBin2 = [];
+    }
+
+    selectedIds.forEach(noteId => {
+        const noteIndex = App.state.notes.findIndex(n => n.id === noteId);
+        if (noteIndex !== -1) {
+            const deletedNote = App.state.notes[noteIndex];
+            
+            // Track deleted ID
+            if (!App.state.notesDeletedIds.includes(noteId)) {
+                App.state.notesDeletedIds.push(noteId);
+            }
+            
+            // Move to recycle bin
+            App.state.notesRecycleBin2.push({
+                ...deletedNote,
+                deletedAt: new Date().toISOString()
+            });
+            
+            App.state.notes.splice(noteIndex, 1);
+        }
+    });
+
+    saveNotesToLocalStorage();
+    updateUnsyncedCount();
+
+    // Update tab count
+    document.getElementById('notesTabYourNotesCount').textContent = App.state.notes.length;
+    document.getElementById('notesTabRecycleBinCount').textContent = App.state.notesRecycleBin2.length;
+
+    renderNotes();
+    App.showNotification(`Deleted ${selectedIds.length} note(s)`);
+}
+
+function deleteFromRecycleBin() {
+    const selectedIds = getSelectedNotes(true);
+
+    if (selectedIds.length === 0) {
+        return App.showNotification('Please select notes to delete permanently', true);
+    }
+
+    if (!confirm(`Are you sure you want to permanently delete ${selectedIds.length} note(s)? This cannot be undone.`)) {
+        return;
+    }
+
+    selectedIds.forEach(noteId => {
+        const noteIndex = App.state.notesRecycleBin2.findIndex(n => n.id === noteId);
+        if (noteIndex !== -1) {
+            App.state.notesRecycleBin2.splice(noteIndex, 1);
+        }
+        // Keep the ID in deletedIds list to prevent re-sync permanently
+    });
+
+    saveNotesToLocalStorage();
+
+    // Update tab count
+    document.getElementById('notesTabRecycleBinCount').textContent = App.state.notesRecycleBin2.length;
+
+    renderRecycleBin();
+    App.showNotification(`Permanently deleted ${selectedIds.length} note(s)`);
+}
+
+function reviveSelectedNotes() {
+    const selectedIds = getSelectedNotes(true);
+
+    if (selectedIds.length === 0) {
+        return App.showNotification('Please select notes to revive', true);
+    }
+
+    selectedIds.forEach(noteId => {
+        const noteIndex = App.state.notesRecycleBin2.findIndex(n => n.id === noteId);
+        if (noteIndex !== -1) {
+            const revivedNote = { ...App.state.notesRecycleBin2[noteIndex] };
+            delete revivedNote.deletedAt;
+            
+            // Add back to active notes
+            App.state.notes.push(revivedNote);
+            
+            // Remove from recycle bin
+            App.state.notesRecycleBin2.splice(noteIndex, 1);
+            
+            // Remove from deleted IDs list (allow re-sync)
+            if (App.state.notesDeletedIds) {
+                const deletedIndex = App.state.notesDeletedIds.indexOf(noteId);
+                if (deletedIndex !== -1) {
+                    App.state.notesDeletedIds.splice(deletedIndex, 1);
+                }
+            }
+        }
+    });
+
+    saveNotesToLocalStorage();
+    updateUnsyncedCount();
+
+    // Update tab counts
+    document.getElementById('notesTabYourNotesCount').textContent = App.state.notes.length;
+    document.getElementById('notesTabRecycleBinCount').textContent = App.state.notesRecycleBin2.length;
+
+    renderRecycleBin();
+    App.showNotification(`Revived ${selectedIds.length} note(s)`);
 }
 
 function stripFormatting(text) {
@@ -788,7 +1131,12 @@ async function saveNote() {
 }
 
 function generateNoteId() {
-    return 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    // Generate a 32-character unique ID
+    const timestamp = Date.now().toString(36);
+    const randomPart1 = Math.random().toString(36).substring(2, 15);
+    const randomPart2 = Math.random().toString(36).substring(2, 15);
+    const id = (timestamp + randomPart1 + randomPart2).substring(0, 32).padEnd(32, '0');
+    return id;
 }
 
 async function deleteNote(noteId) {
@@ -797,16 +1145,32 @@ async function deleteNote(noteId) {
     const index = App.state.notes.findIndex(n => n.id === noteId);
     if (index !== -1) {
         const deletedNote = App.state.notes[index];
-        if (!App.state.notesRecycleBin) {
-            App.state.notesRecycleBin = [];
-        }
-        App.state.notesRecycleBin.push(deletedNote);
 
+        // Add note ID to deleted IDs list (prevents re-sync)
+        if (!App.state.notesDeletedIds) {
+            App.state.notesDeletedIds = [];
+        }
+        if (!App.state.notesDeletedIds.includes(noteId)) {
+            App.state.notesDeletedIds.push(noteId);
+        }
+
+        // Add to recycle bin 2 (user-facing)
+        if (!App.state.notesRecycleBin2) {
+            App.state.notesRecycleBin2 = [];
+        }
+        App.state.notesRecycleBin2.push({
+            ...deletedNote,
+            deletedAt: new Date().toISOString()
+        });
+
+        // Remove from active notes
         App.state.notes.splice(index, 1);
+        
         saveNotesToLocalStorage();
+        updateUnsyncedCount();
         App.hideAllModals();
         renderNotes();
-        App.showNotification('Note deleted.');
+        App.showNotification('Note moved to recycle bin');
     }
 }
 
@@ -843,9 +1207,10 @@ window.NotesModule = {
     exportNotesToFile,
     importNotesFromFile,
     backupNotesToServer,
-    updateLastSyncDisplay,
+    updateUnsyncedCount,
     loadNotes,
     renderNotes,
+    renderRecycleBin,
     stripFormatting,
     parseFormatting: parseFormattingForDisplay,
     viewNote,
@@ -855,5 +1220,12 @@ window.NotesModule = {
     saveNote,
     generateNoteId,
     deleteNote,
-    checkUnsavedChanges
+    checkUnsavedChanges,
+    enterEditMode,
+    exitEditMode,
+    switchToYourNotesTab,
+    switchToRecycleBinTab,
+    deleteSelectedNotes,
+    deleteFromRecycleBin,
+    reviveSelectedNotes
 };

@@ -2,15 +2,15 @@
   "id": "com.eor.app",
   "name": "Esho Obodan Rakhi",
   "short_name": "Esho Obodan Rakhi",
-  "description": "Esho Obodan Rakhi- Sadakah Fund",
-  "start_url": "/index.html",
+  "description": "Esho Obodan Rakhi: Ekmatro Allahr Jonno",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
-  "orientation": "portrait",
-  "background_color": "#10b981",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
   "theme_color": "#059669",
-  "categories": ["finance", "health", "lifestyle"],
+  "categories": ["finance", "health", "lifestyle", "productivity"],
   "lang": "en",
   "dir": "ltr",
   "icons": [
@@ -21,36 +21,49 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-app.png",
+      "src": "svgs/icon-app.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-app.png",
+      "src": "svgs/icon-app.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "svgs/icon-app.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%23f0fdf4'/%3E%3Crect y='0' width='540' height='80' fill='%2310b981'/%3E%3Ctext x='20' y='45' font-size='24' fill='white' font-family='system-ui' font-weight='bold'%3EEsho Obodan Rakhi%3C/text%3E%3Ctext x='20' y='65' font-size='14' fill='white' opacity='0.9' font-family='system-ui'%3ECommunity Fund Management%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%23f0fdf4'/%3E%3Crect y='0' width='540' height='80' fill='%23059669'/%3E%3Ctext x='20' y='50' font-size='20' fill='white' font-family='system-ui' font-weight='bold'%3EEsho Obodan Rakhi%3C/text%3E%3Crect x='20' y='100' width='500' height='100' rx='12' fill='white' stroke='%23d1d5db' stroke-width='2'/%3E%3Ctext x='40' y='135' font-size='16' fill='%231f2937' font-family='system-ui' font-weight='600'%3EFund Overview%3C/text%3E%3Ctext x='40' y='165' font-size='32' fill='%23059669' font-family='system-ui' font-weight='bold'%3E৳ 50,000%3C/text%3E%3C/svg%3E",
       "sizes": "540x720",
       "type": "image/svg+xml",
       "form_factor": "narrow",
-      "label": "Home screen showing fund overview"
+      "label": "Fund overview and management"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%23fef2f2'/%3E%3Crect y='0' width='540' height='80' fill='%23dc2626'/%3E%3Ctext x='20' y='50' font-size='20' fill='white' font-family='system-ui' font-weight='bold'%3EBlood Donors%3C/text%3E%3Crect x='20' y='100' width='500' height='80' rx='12' fill='white' stroke='%23fca5a5' stroke-width='2'/%3E%3Ctext x='40' y='135' font-size='16' fill='%231f2937' font-family='system-ui' font-weight='600'%3EMohammad Ahmed%3C/text%3E%3Ctext x='480' y='135' font-size='18' fill='%23dc2626' font-family='system-ui' font-weight='bold' text-anchor='end'%3EA+%3C/text%3E%3C/svg%3E",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Blood donor directory"
     }
   ],
   "shortcuts": [
     {
       "name": "Fund History",
       "short_name": "Fund",
-      "description": "View fund collection and expenses",
+      "description": "View collection and sadakah records",
       "url": "/?section=fund",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%2310b981'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E৳%3C/text%3E%3C/svg%3E",
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='20' fill='%23059669'/%3E%3Ctext x='48' y='58' font-size='48' text-anchor='middle' fill='white'%3E৳%3C/text%3E%3C/svg%3E",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }
@@ -59,11 +72,11 @@
     {
       "name": "Blood Donors",
       "short_name": "Donors",
-      "description": "Find blood donors",
+      "description": "Find blood donors by group and location",
       "url": "/?section=blood",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%23ef4444'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E🩸%3C/text%3E%3C/svg%3E",
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='20' fill='%23dc2626'/%3E%3Cpath d='M48 70c-8-8-16-14-16-22 0-6 4-10 10-10 3 0 5 1 6 3 1-2 3-3 6-3 6 0 10 4 10 10 0 8-8 14-16 22z' fill='white'/%3E%3C/svg%3E",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }
@@ -72,11 +85,24 @@
     {
       "name": "Activities",
       "short_name": "Activities",
-      "description": "View community activities",
+      "description": "View community activities and announcements",
       "url": "/?section=notices",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%233b82f6'/%3E%3Ctext x='48' y='48' font-size='40' text-anchor='middle' dy='.3em' fill='white'%3E📢%3C/text%3E%3C/svg%3E",
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='20' fill='%233b82f6'/%3E%3Cpath d='M48 28c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 6c7.7 0 14 6.3 14 14s-6.3 14-14 14-14-6.3-14-14 6.3-14 14-14z' fill='white'/%3E%3Ccircle cx='48' cy='48' r='4' fill='white'/%3E%3C/svg%3E",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "short_name": "Notes",
+      "description": "Quick access to personal notes",
+      "url": "/?section=notes",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='20' fill='%23059669'/%3E%3Crect x='24' y='28' width='48' height='40' rx='4' fill='white'/%3E%3Cline x1='32' y1='38' x2='64' y2='38' stroke='%23059669' stroke-width='2'/%3E%3Cline x1='32' y1='48' x2='64' y2='48' stroke='%23059669' stroke-width='2'/%3E%3Cline x1='32' y1='58' x2='52' y2='58' stroke='%23059669' stroke-width='2'/%3E%3C/svg%3E",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }
@@ -85,14 +111,17 @@
   ],
   "related_applications": [],
   "prefer_related_applications": false,
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
+  "protocol_handlers": [
+    {
+      "protocol": "web+eor",
+      "url": "/?action=%s"
     }
-  }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred"
 }

@@ -1,15 +1,16 @@
 {
-  "name": "etest",
+  "name": "ftest",
   "version": "1.0.0",
   "main": "serviceWorker.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:css": "npx @tailwindcss/cli -i ./tailwind.css -o ./style.css --minify"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "tailwindcss": "^4.0.0"
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "tailwindcss": "^4.1.17"
   }
 }

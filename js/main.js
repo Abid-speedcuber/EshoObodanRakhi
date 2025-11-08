@@ -37,7 +37,9 @@ const App = {
         notes: [], // All notes in memory
         currentNote: null, // Currently viewing/editing note
         notesNeedSync: false, // Track if local notes differ from server
-        notesRecycleBin: [], // Deleted notes that shouldn't come back from server
+        notesDeletedIds: [], // IDs of notes that user has deleted (prevent re-sync)
+        notesRecycleBin2: [], // Actual recycle bin for deleted notes (user-facing)
+        notesEditMode: false, // Edit mode state for multi-select
     },
 
     shouldFetchFreshData: true, // Flag to control when to fetch from server
@@ -1021,6 +1023,20 @@ const App = {
             this.showSection('userMessages');
         });
 
+        // Back to home buttons
+        document.getElementById('notificationsBackBtn')?.addEventListener('click', () => {
+            this.showSection('fund');
+        });
+        document.getElementById('userMessagesBackBtn')?.addEventListener('click', () => {
+            this.showSection('fund');
+        });
+        document.getElementById('adminMessagesBackBtn')?.addEventListener('click', () => {
+            this.showSection('fund');
+        });
+        document.getElementById('notesBackBtn')?.addEventListener('click', () => {
+            this.showSection('fund');
+        });
+
         // Admin notifications button
         document.getElementById('adminNotificationsBtn')?.addEventListener('click', () => {
             this.hideAllModals();
@@ -1117,7 +1133,16 @@ const App = {
             this.editNote(null);
         });
 
-        document.getElementById('createBackupBtn')?.addEventListener('click', () => {
+        document.getElementById('notesFileMenuBtn')?.addEventListener('click', () => {
+            // Show/hide backup button based on access
+            const backupBtn = document.getElementById('createBackupBtnModal');
+            if (backupBtn) {
+                backupBtn.classList.toggle('hide', !this.canBackupNotesToCloud());
+            }
+            this.showModal('notesFileMenuModal');
+        });
+
+        document.getElementById('createBackupBtnModal')?.addEventListener('click', () => {
             if (this.canBackupNotesToCloud()) {
                 this.backupNotesToServer();
             } else {
@@ -1125,12 +1150,13 @@ const App = {
             }
         });
 
-        document.getElementById('exportNotesBtn')?.addEventListener('click', () => {
+        document.getElementById('exportNotesBtnModal')?.addEventListener('click', () => {
             this.exportNotesToFile();
         });
 
-        document.getElementById('importNotesBtn')?.addEventListener('click', () => {
-            document.getElementById('importNotesFile').click();
+        document.getElementById('importNotesBtnModal')?.addEventListener('click', () => {
+            this.hideAllModals();
+            this.showModal('importNotesModal');
         });
 
         document.getElementById('importNotesFile')?.addEventListener('change', (e) => {
@@ -1162,6 +1188,62 @@ const App = {
 
         document.getElementById('notesFormattingGuideBtn')?.addEventListener('click', () => {
             this.showModal('formattingGuideModal');
+        });
+
+        // Notes edit mode button
+        document.getElementById('notesEditModeBtn')?.addEventListener('click', () => {
+            window.NotesModule.enterEditMode(false);
+        });
+
+        // Notes edit mode tabs
+        document.getElementById('notesTabYourNotes')?.addEventListener('click', () => {
+            window.NotesModule.switchToYourNotesTab();
+        });
+
+        document.getElementById('notesTabRecycleBin')?.addEventListener('click', () => {
+            window.NotesModule.switchToRecycleBinTab();
+        });
+
+        // Quit edit mode button
+        document.getElementById('notesQuitEditBtn')?.addEventListener('click', () => {
+            window.NotesModule.exitEditMode();
+        });        
+
+        // Import modal - file drop zone
+        const importDropZone = document.getElementById('importFileDropZone');
+        const importFileInput = document.getElementById('importNotesFile');
+
+        if (importDropZone) {
+            importDropZone.addEventListener('click', () => {
+                importFileInput.click();
+            });
+
+            importDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                importDropZone.classList.add('drag-over');
+            });
+
+            importDropZone.addEventListener('dragleave', () => {
+                importDropZone.classList.remove('drag-over');
+            });
+
+            importDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                importDropZone.classList.remove('drag-over');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    importFileInput.files = files;
+                    const event = new Event('change', { bubbles: true });
+                    importFileInput.dispatchEvent(event);
+                }
+            });
+        }
+
+        // Revive from deleted button
+        document.getElementById('reviveFromDeletedBtn')?.addEventListener('click', () => {
+            App.hideAllModals();
+            window.NotesModule.enterEditMode(true);
         });
 
         // Notes close confirmation
@@ -1663,8 +1745,8 @@ const App = {
         await window.NotesModule.backupNotesToServer();
     },
 
-    updateLastSyncDisplay() {
-        window.NotesModule.updateLastSyncDisplay();
+    updateUnsyncedCount() {
+        window.NotesModule.updateUnsyncedCount();
     },
 
     loadNotes() {
@@ -1715,6 +1797,26 @@ const App = {
         return window.NotesModule.checkUnsavedChanges();
     },
 
+    enterNotesEditMode(startInRecycleBin = false) {
+        window.NotesModule.enterEditMode(startInRecycleBin);
+    },
+
+    exitNotesEditMode() {
+        window.NotesModule.exitEditMode();
+    },
+
+    deleteSelectedNotes() {
+        window.NotesModule.deleteSelectedNotes();
+    },
+
+    deleteFromRecycleBin() {
+        window.NotesModule.deleteFromRecycleBin();
+    },
+
+    reviveSelectedNotes() {
+        window.NotesModule.reviveSelectedNotes();
+    },
+
     // --- UTILITIES ---
     showSection(sectionId) {
         this.state.activeSection = sectionId;
@@ -1724,6 +1826,14 @@ const App = {
             section.classList.remove('hide');
             section.classList.add('fade-in');
         }
+        
+        // Hide main navigation for special sections
+        const mainNav = document.getElementById('mainNavigation');
+        const specialSections = ['notifications', 'userMessages', 'adminMessages', 'notes'];
+        if (mainNav) {
+            mainNav.classList.toggle('hide', specialSections.includes(sectionId));
+        }
+        
         this.updateActiveTab();
 
         // Handle fund section display based on user role
@@ -2267,24 +2377,40 @@ const App = {
                 adminUsersBtn.innerHTML = isBn ? '👥 ইউজারস' : '👥 Users';
             }
             // Notes section buttons - update tooltips only
-            const exportNotesBtn = document.getElementById('exportNotesBtn');
-            if (exportNotesBtn) {
-                exportNotesBtn.title = isBn ? 'এক্সপোর্ট করুন' : 'Export to File';
+            const notesFileMenuBtn = document.getElementById('notesFileMenuBtn');
+            if (notesFileMenuBtn) {
+                notesFileMenuBtn.title = isBn ? 'ফাইল ম্যানেজমেন্ট' : 'File Management';
             }
 
-            const importNotesBtn = document.getElementById('importNotesBtn');
-            if (importNotesBtn) {
-                importNotesBtn.title = isBn ? 'ইম্পোর্ট করুন' : 'Import from File';
-            }
-
-            const createBackupBtn = document.getElementById('createBackupBtn');
-            if (createBackupBtn) {
-                createBackupBtn.title = isBn ? 'ক্লাউডে ব্যাকআপ' : 'Backup to Cloud';
+            const notesFormattingGuideBtn = document.getElementById('notesFormattingGuideBtn');
+            if (notesFormattingGuideBtn) {
+                notesFormattingGuideBtn.title = isBn ? 'ফরম্যাটিং গাইড' : 'Formatting Guide';
             }
 
             const createNoteBtn = document.getElementById('createNoteBtn');
             if (createNoteBtn) {
-                createNoteBtn.title = isBn ? 'নতুন নোট' : 'New Note';
+                createNoteBtn.textContent = isBn ? '+ নতুন নোট' : '+ New Note';
+            }
+
+            // Notes File Menu Modal
+            const notesFileMenuTitle = document.querySelector('#notesFileMenuModal h2');
+            if (notesFileMenuTitle) {
+                notesFileMenuTitle.textContent = isBn ? 'নোটস ডেটা ম্যানেজমেন্ট' : 'Notes Data Management';
+            }
+
+            const createBackupBtnModal = document.getElementById('createBackupBtnModal');
+            if (createBackupBtnModal) {
+                createBackupBtnModal.innerHTML = isBn ? '<img src="svgs/icon-backup.svg" style="width: 20px; height: 20px;" alt="Backup"> ক্লাউডে ব্যাকআপ' : '<img src="svgs/icon-backup.svg" style="width: 20px; height: 20px;" alt="Backup"> Backup to Cloud';
+            }
+
+            const exportNotesBtnModal = document.getElementById('exportNotesBtnModal');
+            if (exportNotesBtnModal) {
+                exportNotesBtnModal.innerHTML = isBn ? '<img src="svgs/icon-export.svg" style="width: 20px; height: 20px;" alt="Export"> ফাইলে এক্সপোর্ট' : '<img src="svgs/icon-export.svg" style="width: 20px; height: 20px;" alt="Export"> Export to File';
+            }
+
+            const importNotesBtnModal = document.getElementById('importNotesBtnModal');
+            if (importNotesBtnModal) {
+                importNotesBtnModal.innerHTML = isBn ? '<img src="svgs/icon-import.svg" style="width: 20px; height: 20px;" alt="Import"> ফাইল থেকে ইম্পোর্ট' : '<img src="svgs/icon-import.svg" style="width: 20px; height: 20px;" alt="Import"> Import from File';
             }
 
             // Admin Users Modal
@@ -2310,6 +2436,16 @@ const App = {
             if (talibMessageBtn) {
                 talibMessageBtn.innerHTML = isBn ? '💬 অ্যাডমিনকে মেসেজ করুন<span id="talibMessageAdminBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>' : '💬 Message Admin<span id="talibMessageAdminBadge" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full hide"></span>';
             }
+            
+            // Update back button tooltips
+            const backButtons = ['notificationsBackBtn', 'userMessagesBackBtn', 'adminMessagesBackBtn', 'notesBackBtn'];
+            backButtons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.title = isBn ? 'হোমে ফিরে যান' : 'Back to Home';
+                }
+            });
+            
             const adminNotifBtn = document.getElementById('adminNotificationsBtn');
             if (adminNotifBtn) {
                 adminNotifBtn.innerHTML = isBn ? '🔔 নোটিফিকেশন' : '🔔 Notifications';
@@ -2356,8 +2492,18 @@ const App = {
                 if (openModal) {
                     // Close the modal instead of exiting app
                     this.hideAllModals();
+                } else if (this.state.notesEditMode) {
+                    // In notes edit mode - exit to normal notes view
+                    this.exitNotesEditMode();
+                } else if (['notifications', 'userMessages', 'adminMessages', 'notes'].includes(this.state.activeSection)) {
+                    // In special sections - go back to homepage
+                    this.showSection('fund');
+                    // Stop cooldown interval if leaving user messages
+                    if (this.state.activeSection === 'userMessages' && window.MessagesModule.cooldownInterval) {
+                        clearInterval(window.MessagesModule.cooldownInterval);
+                    }
                 } else {
-                    // No modal open - allow default back behavior (exit app)
+                    // No modal open and not in special section - allow default back behavior (exit app)
                     CapApp.exitApp();
                 }
             });
@@ -2370,6 +2516,18 @@ const App = {
                     event.preventDefault();
                     this.hideAllModals();
                     // Push state back so we don't navigate away
+                    history.pushState(null, '', window.location.href);
+                } else if (this.state.notesEditMode) {
+                    event.preventDefault();
+                    this.exitNotesEditMode();
+                    history.pushState(null, '', window.location.href);
+                } else if (['notifications', 'userMessages', 'adminMessages', 'notes'].includes(this.state.activeSection)) {
+                    event.preventDefault();
+                    this.showSection('fund');
+                    // Stop cooldown interval if leaving user messages
+                    if (this.state.activeSection === 'userMessages' && window.MessagesModule.cooldownInterval) {
+                        clearInterval(window.MessagesModule.cooldownInterval);
+                    }
                     history.pushState(null, '', window.location.href);
                 }
             });

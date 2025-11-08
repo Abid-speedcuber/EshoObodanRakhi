@@ -138,14 +138,13 @@ img {
 #noteEditModal {
   padding: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  align-items: stretch;
 }
 
 #noteEditModal .modal-content {
   background: white;
   width: 100%;
   height: 100vh;
-  height: 100dvh;
+  height: 100svh; /* Small viewport height - excludes keyboard */
   max-height: none;
   margin: 0;
   border-radius: 0;
@@ -161,6 +160,13 @@ img {
     max-width: 480px;
     margin: 0 auto;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Tablet portrait - full width */
+@media (min-width: 481px) and (max-width: 767px) {
+  #noteEditModal .modal-content {
+    max-width: 100%;
   }
 }
 
@@ -180,15 +186,19 @@ img {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 #noteEditModal #noteContentInput {
-  min-height: 300px;
+  flex: 1;
+  min-height: 0;
   height: auto;
 }
 
 #noteEditModal .flex.gap-2 {
   flex-shrink: 0;
+  padding-top: 1rem;
 }
 
 .modal.hide {
@@ -506,4 +516,32 @@ input:checked + .slider:before {
 .month-slider.swiping * {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Notes Edit Mode */
+.note-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.note-selectable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.note-selectable:hover {
+  transform: translateX(4px);
+}
+
+.note-selected {
+  background-color: #dbeafe !important;
+  border-left: 4px solid #3b82f6;
+}
+
+#importFileDropZone.drag-over {
+  background-color: #fed7aa;
+  border-color: #f97316;
 }
