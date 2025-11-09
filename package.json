@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "serviceWorker.js",
   "scripts": {
-    "build:css": "npx @tailwindcss/cli -i ./tailwind.css -o ./style.css --minify"
+    "build:css": "npx @tailwindcss/cli -i ./css/input.css -o ./css/tailwind.css --minify"
   },
   "keywords": [],
   "author": "",
