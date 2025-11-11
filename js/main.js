@@ -38,7 +38,8 @@ const App = {
         currentNote: null, // Currently viewing/editing note
         notesNeedSync: false, // Track if local notes differ from server
         notesDeletedIds: [], // IDs of notes that user has deleted (prevent re-sync)
-        notesRecycleBin2: [], // Actual recycle bin for deleted notes (user-facing)
+        notesRecycleBin2: [], // Recycle bin tier 1 (visible) - deleted notes
+        notesRecycleBin: [], // Recycle bin tier 2 (permanent blocker) - just IDs
         notesEditMode: false, // Edit mode state for multi-select
     },
 
@@ -75,48 +76,33 @@ const App = {
     },
 
     // --- INITIALIZATION ---
+    async checkOnlineStatus() {
+        try {
+            // Try to ping Supabase
+            const { error } = await db.from('users').select('id').limit(1);
+            return !error;
+        } catch (err) {
+            return false;
+        }
+    },
+
     init() {
         this.registerServiceWorker();
         this.bindEvents();
         this.setupScrollBehavior();
 
-        // Initialize all data fetching at startup
-        this.initializeAllData();
+        // Don't load notes yet - wait until after auth is handled
 
-        // Load cached auth state for offline support
-        const cachedAuthState = localStorage.getItem('authState');
-        if (cachedAuthState) {
-            const authState = JSON.parse(cachedAuthState);
-            this.state.userProfile = authState.userProfile;
-            this.state.isAdmin = authState.isAdmin;
-            this.state.currentUser = { id: authState.userProfile?.id }; // Temporary user object
-            // Update UI based on cached state
-            this.updateUI();
-        } else {
-            // No cached state - show login button by default
-            document.getElementById('loginTopBtn').classList.remove('hide');
-        }
-
-        // Load cached total fund immediately for offline support
-        const cachedTotal = localStorage.getItem('totalFund');
-        if (cachedTotal) {
-            this.state.totalFund = parseFloat(cachedTotal);
-            this.elements.totalFundDisplay.textContent = `৳ ${parseFloat(cachedTotal).toLocaleString()}`;
-        }
-
-        // Load cached fund data
-        const cachedAllData = localStorage.getItem('allFundData');
-        if (cachedAllData) {
-            this.state.allFundData = JSON.parse(cachedAllData);
-        }
-
-        const cachedMonthly = localStorage.getItem('cachedMonthlyData');
-        if (cachedMonthly) {
-            this.state.cachedMonthlyData = JSON.parse(cachedMonthly);
-        }
-
-        // Load cached notes
-        this.loadNotesFromLocalStorage();
+        // Check if we have internet connection
+        this.checkOnlineStatus().then(isOnline => {
+            if (isOnline) {
+                // Online: Fetch everything fresh
+                this.initializeWithFreshData();
+            } else {
+                // Offline: Load from cache and restore last state
+                this.initializeFromCache();
+            }
+        });
 
         // --- Setup Deep Link Listener for Mobile App ---
         if (typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform?.()) {
@@ -210,11 +196,147 @@ const App = {
     },
 
     // --- AUTHENTICATION ---
-    async initializeAllData() {
-        // Mark that we should fetch fresh data (only during initialization)
+    async initializeWithFreshData() {
+        // Mark that we should fetch fresh data
         this.shouldFetchFreshData = true;
 
-        // Fetch all data in parallel
+        try {
+            // First, handle auth state - this will populate state.currentUser, state.userProfile, state.isAdmin
+            await this.handleAuthStateChange();
+
+            // Fetch all data in parallel (excluding notes - they are local-first)
+            const promises = [
+                this.fetchAllFundData(),
+                this.fetchAllDonors(),
+                this.fetchAllNotices()
+            ];
+
+            await Promise.all(promises);
+
+            // Now do all calculations and cache them
+            await this.processAndCacheAllCalculations();
+
+            // Update UI FIRST to ensure admin controls are visible
+            this.updateUI();
+            
+            // Load the appropriate section based on auth state
+            if (this.state.isAdmin) {
+                // Force admin view for fund section
+                if (this.elements.fundTabs) {
+                    this.elements.fundTabs.classList.add('hide');
+                }
+                if (this.elements.collectionView) {
+                    this.elements.collectionView.classList.remove('hide');
+                }
+                if (this.elements.sadakahListView) {
+                    this.elements.sadakahListView.classList.add('hide');
+                }
+                
+                // Show section
+                this.showSection('fund');
+            } else {
+                this.showSection('blood');
+            }
+
+            // Load data for active section
+            this.loadDataForActiveSection();
+            
+            // Calculate and display total fund
+            await this.calculateTotalFund();
+
+        } catch (err) {
+            console.error('Error initializing with fresh data:', err);
+            this.showNotification('Failed to load data. Using cached data.', true);
+            // Fall back to cached data
+            this.initializeFromCache();
+        }
+
+        // After initial fetch, disable automatic fetching
+        this.shouldFetchFreshData = false;
+    },
+
+    initializeFromCache() {
+        // Load cached auth state
+        const cachedAuthState = localStorage.getItem('authState');
+        if (cachedAuthState) {
+            const authState = JSON.parse(cachedAuthState);
+            this.state.userProfile = authState.userProfile;
+            this.state.isAdmin = authState.isAdmin;
+            this.state.currentUser = { id: authState.userProfile?.id };
+        } else {
+            // No cached state - show login button by default
+            this.state.userProfile = null;
+            this.state.isAdmin = false;
+            this.state.currentUser = null;
+            document.getElementById('loginTopBtn').classList.remove('hide');
+        }
+
+        // Load cached total fund
+        const cachedTotal = localStorage.getItem('totalFund');
+        if (cachedTotal) {
+            this.state.totalFund = parseFloat(cachedTotal);
+            this.elements.totalFundDisplay.textContent = `৳ ${parseFloat(cachedTotal).toLocaleString()}`;
+        }
+
+        // Load cached fund data
+        const cachedAllData = localStorage.getItem('allFundData');
+        if (cachedAllData) {
+            this.state.allFundData = JSON.parse(cachedAllData);
+        }
+
+        const cachedMonthly = localStorage.getItem('cachedMonthlyData');
+        if (cachedMonthly) {
+            this.state.cachedMonthlyData = JSON.parse(cachedMonthly);
+        }
+
+        // Load cached donors
+        const cachedDonors = localStorage.getItem('allDonorsData');
+        if (cachedDonors) {
+            this.state.allDonors = JSON.parse(cachedDonors);
+        }
+
+        // Load cached section state
+        const cachedSection = localStorage.getItem('activeSection');
+        if (cachedSection) {
+            this.state.activeSection = cachedSection;
+        }
+
+        // Update UI based on cached state
+        this.updateUI();
+
+        // Configure fund section for admin if needed
+        if (this.state.isAdmin) {
+            if (this.elements.fundTabs) {
+                this.elements.fundTabs.classList.add('hide');
+            }
+            if (this.elements.collectionView) {
+                this.elements.collectionView.classList.remove('hide');
+            }
+            if (this.elements.sadakahListView) {
+                this.elements.sadakahListView.classList.add('hide');
+            }
+        }
+        
+        // Show the last active section
+        if (this.state.activeSection && this.state.currentUser) {
+            this.showSection(this.state.activeSection);
+        } else if (this.state.isAdmin) {
+            this.showSection('fund');
+        } else {
+            this.showSection('blood');
+        }
+
+        // Load data for active section from cache
+        this.loadDataForActiveSection();
+
+        // Show offline indicator
+        this.showNotification('Offline mode - showing cached data');
+    },
+
+    async initializeAllData() {
+        // This is now only used for refresh
+        this.shouldFetchFreshData = true;
+
         const promises = [
             this.fetchAllFundData(),
             this.fetchAllDonors(),
@@ -223,16 +345,11 @@ const App = {
 
         try {
             await Promise.all(promises);
-
-            // Now do all calculations and cache them
             await this.processAndCacheAllCalculations();
-
         } catch (err) {
             console.error('Error initializing data:', err);
-            // Continue with cached data
         }
 
-        // After initial fetch, disable automatic fetching
         this.shouldFetchFreshData = false;
     },
 
@@ -772,6 +889,8 @@ const App = {
 
     // --- UI & RENDERING ---
     updateUI() {
+        console.log('updateUI called - isAdmin:', this.state.isAdmin, 'currentUser:', !!this.state.currentUser, 'userProfile:', this.state.userProfile);
+        
         // Auth controls are now inside Settings only
         document.getElementById('settingsBtn').classList.remove('hide');
         document.getElementById('loginTopBtn').classList.toggle('hide', this.state.currentUser);
@@ -793,13 +912,27 @@ const App = {
         // Show/hide fund tabs based on admin status
         this.elements.fundTabs.classList.toggle('hide', this.state.isAdmin);
 
-        // Admin controls
-        this.elements.adminControls.classList.toggle('hide', !this.state.isAdmin);
+        // Admin controls - force update visibility using display style and remove hide class
+        const adminControls = this.elements.adminControls;
+        if (adminControls) {
+            if (this.state.isAdmin) {
+                adminControls.style.display = 'block';
+                adminControls.classList.remove('hide');
+            } else {
+                adminControls.style.display = 'none';
+                adminControls.classList.add('hide');
+            }
+            console.log('Admin controls display set to:', adminControls.style.display);
+        }
 
         // Hide donation info for admins
         const donationInfoText = document.getElementById('donationInfoText');
         if (donationInfoText && donationInfoText.parentElement) {
-            donationInfoText.parentElement.classList.toggle('hide', this.state.isAdmin);
+            if (this.state.isAdmin) {
+                donationInfoText.parentElement.classList.add('hide');
+            } else {
+                donationInfoText.parentElement.classList.remove('hide');
+            }
         }
 
         // User-specific buttons
@@ -1188,6 +1321,80 @@ const App = {
 
         document.getElementById('notesFormattingGuideBtn')?.addEventListener('click', () => {
             this.showModal('formattingGuideModal');
+        });
+
+        // Notes search functionality (normal mode)
+        document.getElementById('notesSearchBtn')?.addEventListener('click', () => {
+            const searchInput = document.getElementById('notesSearchInput');
+            const searchBtn = document.getElementById('notesSearchBtn');
+            const clearBtn = document.getElementById('notesSearchClearBtn');
+            const editBtn = document.getElementById('notesEditModeBtn');
+            const fileBtn = document.getElementById('notesFileMenuBtn');
+
+            searchInput.classList.remove('hide');
+            searchBtn.classList.add('hide');
+            clearBtn.classList.remove('hide');
+            editBtn.classList.add('hide');
+            fileBtn.classList.add('hide');
+            searchInput.focus();
+        });
+
+        document.getElementById('notesSearchInput')?.addEventListener('input', (e) => {
+            window.NotesModule.filterNotes(e.target.value.trim());
+        });
+
+        document.getElementById('notesSearchClearBtn')?.addEventListener('click', () => {
+            const searchInput = document.getElementById('notesSearchInput');
+            const searchBtn = document.getElementById('notesSearchBtn');
+            const clearBtn = document.getElementById('notesSearchClearBtn');
+            const editBtn = document.getElementById('notesEditModeBtn');
+            const fileBtn = document.getElementById('notesFileMenuBtn');
+
+            searchInput.value = '';
+            searchInput.classList.add('hide');
+            searchBtn.classList.remove('hide');
+            clearBtn.classList.add('hide');
+            if (this.canAccessNotes()) {
+                editBtn.classList.remove('hide');
+            }
+            fileBtn.classList.remove('hide');
+            window.NotesModule.renderNotes();
+        });
+
+        // Notes search functionality (edit mode)
+        document.getElementById('notesEditSearchBtn')?.addEventListener('click', () => {
+            const searchInput = document.getElementById('notesEditSearchInput');
+            const searchBtn = document.getElementById('notesEditSearchBtn');
+            const clearBtn = document.getElementById('notesEditSearchClearBtn');
+            const actionsDiv = document.getElementById('notesEditActions');
+            const quitBtn = document.getElementById('notesQuitEditBtn');
+
+            searchInput.classList.remove('hide');
+            searchBtn.classList.add('hide');
+            clearBtn.classList.remove('hide');
+            actionsDiv.classList.add('hide');
+            quitBtn.classList.add('hide');
+            searchInput.focus();
+        });
+
+        document.getElementById('notesEditSearchInput')?.addEventListener('input', (e) => {
+            window.NotesModule.filterNotes(e.target.value.trim());
+        });
+
+        document.getElementById('notesEditSearchClearBtn')?.addEventListener('click', () => {
+            const searchInput = document.getElementById('notesEditSearchInput');
+            const searchBtn = document.getElementById('notesEditSearchBtn');
+            const clearBtn = document.getElementById('notesEditSearchClearBtn');
+            const actionsDiv = document.getElementById('notesEditActions');
+            const quitBtn = document.getElementById('notesQuitEditBtn');
+
+            searchInput.value = '';
+            searchInput.classList.add('hide');
+            searchBtn.classList.remove('hide');
+            clearBtn.classList.add('hide');
+            actionsDiv.classList.remove('hide');
+            quitBtn.classList.remove('hide');
+            window.NotesModule.renderNotes();
         });
 
         // Notes edit mode button
@@ -1820,6 +2027,10 @@ const App = {
     // --- UTILITIES ---
     showSection(sectionId) {
         this.state.activeSection = sectionId;
+        
+        // Save active section to cache
+        localStorage.setItem('activeSection', sectionId);
+        
         document.querySelectorAll('.section').forEach(s => s.classList.add('hide'));
         const section = document.getElementById(`${sectionId}Section`);
         if (section) {
@@ -1849,10 +2060,18 @@ const App = {
                 if (this.elements.sadakahListView) {
                     this.elements.sadakahListView.classList.add('hide');
                 }
+                // Force admin controls to show
+                if (this.elements.adminControls) {
+                    this.elements.adminControls.style.display = 'block';
+                }
             } else {
                 // Non-admin: show tabs, default to sadakah tab
                 this.state.activeFundTab = 'sadakah';
                 this.updateFundTabView();
+                // Force admin controls to hide
+                if (this.elements.adminControls) {
+                    this.elements.adminControls.style.display = 'none';
+                }
             }
         }
 
@@ -1926,12 +2145,12 @@ const App = {
         el.className = isError ? 'error' : 'success';
         el.classList.remove('hide');
         setTimeout(() => el.classList.add('hide'), 3000);
-    },
+    },  
 
     async refreshApp() {
         this.showNotification('Refreshing app...');
 
-        // Re-enable data fetching for next initialization
+        // Re-enable data fetching
         this.shouldFetchFreshData = true;
 
         // Clear service worker cache
@@ -2400,17 +2619,17 @@ const App = {
 
             const createBackupBtnModal = document.getElementById('createBackupBtnModal');
             if (createBackupBtnModal) {
-                createBackupBtnModal.innerHTML = isBn ? '<img src="svgs/icon-backup.svg" style="width: 20px; height: 20px;" alt="Backup"> ক্লাউডে ব্যাকআপ' : '<img src="svgs/icon-backup.svg" style="width: 20px; height: 20px;" alt="Backup"> Backup to Cloud';
+                createBackupBtnModal.innerHTML = isBn ? 'ক্লাউডে ব্যাকআপ' : 'Backup to Cloud';
             }
 
             const exportNotesBtnModal = document.getElementById('exportNotesBtnModal');
             if (exportNotesBtnModal) {
-                exportNotesBtnModal.innerHTML = isBn ? '<img src="svgs/icon-export.svg" style="width: 20px; height: 20px;" alt="Export"> ফাইলে এক্সপোর্ট' : '<img src="svgs/icon-export.svg" style="width: 20px; height: 20px;" alt="Export"> Export to File';
+                exportNotesBtnModal.innerHTML = isBn ? 'ফাইলে এক্সপোর্ট' : 'Export to File';
             }
 
             const importNotesBtnModal = document.getElementById('importNotesBtnModal');
             if (importNotesBtnModal) {
-                importNotesBtnModal.innerHTML = isBn ? '<img src="svgs/icon-import.svg" style="width: 20px; height: 20px;" alt="Import"> ফাইল থেকে ইম্পোর্ট' : '<img src="svgs/icon-import.svg" style="width: 20px; height: 20px;" alt="Import"> Import from File';
+                importNotesBtnModal.innerHTML = isBn ? 'ফাইল থেকে ইম্পোর্ট' : 'Import from File';
             }
 
             // Admin Users Modal

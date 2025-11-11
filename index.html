@@ -120,7 +120,7 @@
             <button id="nextMonthBtn" class="bg-white text-green-700 px-2 py-1 rounded-lg font-semibold"><img
                 src="svgs/icon-next.svg"></button>
           </div>
-          <div id="adminControls" class="hide mb-2 text-center">
+          <div id="adminControls" class="mb-2 text-center" style="display: none;">
             <button data-modal="addIncomeModal" class="bg-green-600 text-white px-4 py-2 rounded-lg mr-2 text-sm"
               id="addIncomeBtn">+Collection</button>
             <button data-modal="addExpenseModal" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
@@ -346,6 +346,17 @@
             <div class="flex gap-1">
               <!-- Normal Mode Buttons -->
               <div id="notesNormalButtons" class="flex gap-1">
+                <button id="notesSearchBtn"
+                  class="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition" title="Search Notes">
+                  <img src="svgs/icon-search.svg" style="width: 20px; height: 20px;" alt="Search">
+                </button>
+                <input type="text" id="notesSearchInput" placeholder="Search notes..."
+                  class="hide p-2 border border-gray-300 rounded-lg text-sm" style="width: 200px;">
+                <button id="notesSearchClearBtn"
+                  class="hide bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition"
+                  title="Clear Search">
+                  <img src="svgs/icon-close.svg" style="width: 20px; height: 20px;" alt="Clear">
+                </button>
                 <button id="notesEditModeBtn"
                   class="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition hide" title="Edit Mode">
                   <img src="svgs/icon-edit.svg" style="width: 20px; height: 20px;" alt="Edit Mode">
@@ -357,7 +368,19 @@
               </div>
 
               <!-- Edit Mode Buttons -->
+              <!-- Edit Mode Buttons -->
               <div id="notesEditButtons" class="hide flex gap-1">
+                <button id="notesEditSearchBtn"
+                  class="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition" title="Search Notes">
+                  <img src="svgs/icon-search.svg" style="width: 20px; height: 20px;" alt="Search">
+                </button>
+                <input type="text" id="notesEditSearchInput" placeholder="Search notes..."
+                  class="hide p-2 border border-gray-300 rounded-lg text-sm" style="width: 200px;">
+                <button id="notesEditSearchClearBtn"
+                  class="hide bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition"
+                  title="Clear Search">
+                  <img src="svgs/icon-close.svg" style="width: 20px; height: 20px;" alt="Clear">
+                </button>
                 <div id="notesEditActions" class="flex gap-1"></div>
                 <button id="notesQuitEditBtn" class="bg-gray-100 text-white p-2 rounded-lg hover:bg-gray-200 transition"
                   title="Quit Edit Mode">
@@ -372,8 +395,7 @@
             </div>
           </div>
 
-          <div id="notesUnsyncedCount"
-            class="text-xs text-gray-600 text-center"></div>
+          <div id="notesUnsyncedCount" class="text-xs text-gray-600 text-center"></div>
         </div>
 
         <!-- Add Note Button (Normal Mode Only) -->
@@ -817,7 +839,7 @@
             class="text-xl font-bold text-gray-800 bg-transparent border-none outline-none w-full focus:bg-white focus:px-2 focus:py-1 rounded"
             maxlength="100">
           <input type="date" id="noteDateInput"
-            class="text-sm text-gray-500 mt-1 bg-transparent border-none outline-none cursor-pointer hover:bg-white hover:px-2 hover:py-1 rounded"
+            class="text-sm text-gray-500 mt-1 bg-transparent border-none outline-none cursor-pointer hover:bg-white hover:px-2 hover:py-1 rounded hide"
             required>
         </div>
         <div class="flex gap-2">
@@ -830,7 +852,7 @@
 
       <form id="noteEditForm">
         <input type="hidden" id="noteEditId">
-        <div class="note-editor-wrapper px-4 py-4">
+        <div class="note-editor-wrapper px-4 py-4" style="position: relative;">
           <div id="noteContentInput" class="modal-input border border-gray-300" contenteditable="true"
             placeholder="Write your note here..."
             style="min-height: 300px; font-family: inherit; outline: none; cursor: text; white-space: pre-wrap; overflow-y: auto;"
@@ -918,8 +940,8 @@
         <select id="messageSubject" class="modal-input mb-4" required>
           <option value="" disabled selected>Select a subject</option>
           <option value="Add my donation to the list">Add my donation to the list</option>
-          <option value="Remove the admin blood donor account with my name">Remove the admin blood donor account with my
-            name</option>
+          <option value="Request for student access">Request for student access</option>
+          <option value="Remove the admin blood donor account with my name">Remove the admin blood donor account with my name</option>
           <option value="Suggest a feature">Suggest a feature</option>
           <option value="Other">Other</option>
         </select>

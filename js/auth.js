@@ -42,10 +42,8 @@ window.AuthModule = {
         isAdmin: App.state.isAdmin
       }));
 
-      // Sync notes from server if user has access to notes
-      if (App.canAccessNotes()) {
-        await App.syncNotesFromServer();
-      }
+      // Notes will be loaded when notes section is opened
+      // Don't sync here to avoid priority issues
     } else {
       App.state.userProfile = null;
       App.state.isAdmin = false;
@@ -53,27 +51,8 @@ window.AuthModule = {
       localStorage.removeItem('authState');
     }
 
-    App.updateUI();
-
-    // Set initial section based on admin status
-    if (App.state.isAdmin) {
-      App.showSection('fund');
-      // Force hide fund tabs and show collection view for admin
-      if (App.elements.fundTabs) {
-        App.elements.fundTabs.classList.add('hide');
-      }
-      if (App.elements.collectionView) {
-        App.elements.collectionView.classList.remove('hide');
-      }
-      if (App.elements.sadakahListView) {
-        App.elements.sadakahListView.classList.add('hide');
-      }
-    } else {
-      App.showSection('blood');
-    }
-
-    App.loadDataForActiveSection();
-    App.calculateTotalFund();
+    // Update UI will be called by the initialization flow
+    // Don't call it here to avoid double updates
   },
 
   async signup(name, emailOrPhone, password) {
@@ -133,7 +112,15 @@ window.AuthModule = {
     }
     App.hideAllModals();
     App.showNotification('Login successful!');
-    this.handleAuthStateChange();
+    
+    // Update auth state first
+    await App.handleAuthStateChange();
+    
+    // Update UI to show admin controls if applicable
+    App.updateUI();
+    
+    // Then reload the app with fresh data
+    await App.initializeWithFreshData();
   },
 
   // Start OAuth sign-in flow with Google
@@ -182,12 +169,40 @@ window.AuthModule = {
   },
 
   async logout() {
-    await db.auth.signOut();
-    App.showNotification('Logging out...');
-    // Refresh page and redirect to blood donation
+    try {
+      await db.auth.signOut();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    
+    // Clear ALL auth-related state immediately
+    App.state.currentUser = null;
+    App.state.userProfile = null;
+    App.state.isAdmin = false;
+    
+    // Clear all cached data except notes
+    localStorage.removeItem('authState');
+    localStorage.removeItem('totalFund');
+    localStorage.removeItem('allFundData');
+    localStorage.removeItem('cachedMonthlyData');
+    localStorage.removeItem('allDonorsData');
+    localStorage.removeItem('activeSection');
+    localStorage.removeItem('yearlyOverviewCache');
+    localStorage.removeItem('allSadakahCache');
+    localStorage.removeItem('completeHistoryCache');
+    localStorage.removeItem('collectionTabCache');
+    
+    // Update UI immediately to logged-out state
+    App.updateUI();
+    
+    // Go to blood section
+    App.showSection('blood');
+    
+    App.showNotification('Logged out successfully!');
+    
+    // Reload the app after a short delay to ensure clean state
     setTimeout(() => {
-      window.location.href = window.location.origin + '/?section=blood';
       window.location.reload();
-    }, 500);
+    }, 800);
   }
 };

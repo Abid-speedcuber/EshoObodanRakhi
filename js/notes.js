@@ -16,20 +16,45 @@ function loadNotesFromLocalStorage() {
         const cachedNotes = localStorage.getItem(notesKey);
         if (cachedNotes) {
             App.state.notes = JSON.parse(cachedNotes);
+        } else {
+            App.state.notes = [];
         }
 
+        // Recycle bin tier 1 (visible) - deletedIds for backwards compatibility
         const deletedIdsKey = `notes_deletedIds_${userId}`;
         const deletedIds = localStorage.getItem(deletedIdsKey);
         App.state.notesDeletedIds = deletedIds ? JSON.parse(deletedIds) : [];
 
+        // Recycle bin tier 1 (visible) - actual deleted notes
         const recycleBin2Key = `notes_recycleBin2_${userId}`;
         const recycleBin2 = localStorage.getItem(recycleBin2Key);
         App.state.notesRecycleBin2 = recycleBin2 ? JSON.parse(recycleBin2) : [];
+
+        // Recycle bin tier 2 (permanent deletion blocker) - just IDs
+        const recycleBinKey = `notes_recycleBin_${userId}`;
+        const recycleBin = localStorage.getItem(recycleBinKey);
+        App.state.notesRecycleBin = recycleBin ? JSON.parse(recycleBin) : [];
+        
+        console.log(`Loaded from localStorage [${userId}] - notes:`, App.state.notes.length, 'recycleBin tier1:', App.state.notesRecycleBin2.length, 'recycleBin tier2:', App.state.notesRecycleBin.length);
+        
+        // Ensure all notes have proper UUID format
+        let needsSave = false;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        App.state.notes.forEach(note => {
+            if (!note.id || !uuidRegex.test(note.id)) {
+                note.id = generateNoteId();
+                needsSave = true;
+            }
+        });
+        if (needsSave) {
+            saveNotesToLocalStorage();
+        }
     } catch (err) {
         console.error('Error loading notes from localStorage:', err);
         App.state.notes = [];
         App.state.notesDeletedIds = [];
         App.state.notesRecycleBin2 = [];
+        App.state.notesRecycleBin3 = [];
     }
 }
 
@@ -37,13 +62,18 @@ function saveNotesToLocalStorage() {
     try {
         const userId = App.state.userProfile?.id || 'guest';
         const notesKey = `notes_${userId}`;
-        localStorage.setItem(notesKey, JSON.stringify(App.state.notes));
+        localStorage.setItem(notesKey, JSON.stringify(App.state.notes || []));
 
         const deletedIdsKey = `notes_deletedIds_${userId}`;
         localStorage.setItem(deletedIdsKey, JSON.stringify(App.state.notesDeletedIds || []));
 
         const recycleBin2Key = `notes_recycleBin2_${userId}`;
         localStorage.setItem(recycleBin2Key, JSON.stringify(App.state.notesRecycleBin2 || []));
+
+        const recycleBinKey = `notes_recycleBin_${userId}`;
+        localStorage.setItem(recycleBinKey, JSON.stringify(App.state.notesRecycleBin || []));
+        
+        console.log(`Saved to localStorage [${userId}] - notes:`, App.state.notes.length, 'recycleBin tier1:', App.state.notesRecycleBin2.length, 'recycleBin tier2:', App.state.notesRecycleBin.length);
     } catch (err) {
         console.error('Error saving notes to localStorage:', err);
     }
@@ -58,50 +88,61 @@ async function syncNotesFromServer() {
         if (error) throw error;
 
         const serverNotes = data || [];
-        const localNotes = App.state.notes;
-        const deletedIds = new Set(App.state.notesDeletedIds || []);
+        
+        // 3 buckets: main notes, recycle bin tier 1, recycle bin tier 2 (permanent blocker)
+        const localNoteIds = new Set(App.state.notes.map(n => n.id));
+        const recycleBin1Ids = new Set((App.state.notesRecycleBin2 || []).map(n => n.id));
+        const recycleBin2Ids = new Set(App.state.notesRecycleBin || []);
 
-        // Create maps for easier lookup
-        const localNotesMap = new Map();
-        localNotes.forEach(note => {
-            localNotesMap.set(note.id, note);
-        });
+        let addedNotes = 0;
+        let addedToRecycleBin = 0;
+        let skipped = 0;
 
-        const mergedNotes = [];
-        const processedIds = new Set();
-
-        // First, keep all local notes (they have priority)
-        localNotes.forEach(note => {
-            mergedNotes.push(note);
-            processedIds.add(note.id);
-        });
-
-        // Then, add server notes that:
-        // 1. Don't exist locally (new notes from other devices)
-        // 2. Are not in the deleted IDs list
+        // Process server notes - only add notes we don't have in any bucket
         serverNotes.forEach(serverNote => {
             const noteId = serverNote.id;
             
-            if (!processedIds.has(noteId) && !deletedIds.has(noteId)) {
-                mergedNotes.push({
-                    id: noteId,
-                    title: serverNote.title,
-                    content: serverNote.content,
-                    datestamp: serverNote.datestamp,
-                    createdAt: serverNote.created_at,
-                    updatedAt: serverNote.updated_at
-                });
-                processedIds.add(noteId);
+            // Skip if exists in ANY bucket
+            if (localNoteIds.has(noteId) || recycleBin1Ids.has(noteId) || recycleBin2Ids.has(noteId)) {
+                skipped++;
+                return;
+            }
+            
+            // This is a new note from server - add it
+            const noteData = {
+                id: noteId,
+                title: serverNote.title,
+                content: serverNote.content,
+                datestamp: serverNote.datestamp,
+                createdAt: serverNote.created_at,
+                updatedAt: serverNote.updated_at
+            };
+
+            if (serverNote.is_deleted) {
+                // Add to recycle bin tier 1
+                noteData.deletedAt = serverNote.updated_at;
+                if (!App.state.notesRecycleBin2) {
+                    App.state.notesRecycleBin2 = [];
+                }
+                App.state.notesRecycleBin2.push(noteData);
+                addedToRecycleBin++;
+            } else {
+                // Add to active notes
+                App.state.notes.push(noteData);
+                addedNotes++;
             }
         });
-
-        App.state.notes = mergedNotes;
-        saveNotesToLocalStorage();
+        
+        // Only save if we actually added something
+        if (addedNotes > 0 || addedToRecycleBin > 0) {
+            saveNotesToLocalStorage();
+            console.log(`Sync: Added ${addedNotes} notes, ${addedToRecycleBin} to recycle bin (skipped ${skipped} existing). Total: ${App.state.notes.length} active, ${App.state.notesRecycleBin2.length} in tier1, ${App.state.notesRecycleBin.length} in tier2`);
+        } else {
+            console.log(`Sync: No new notes from server (skipped ${skipped} existing). Current: ${App.state.notes.length} active, ${App.state.notesRecycleBin2.length} in tier1, ${App.state.notesRecycleBin.length} in tier2`);
+        }
 
         const lastSyncKey = `notes_lastSync_${App.state.currentUser.id}`;
         localStorage.setItem(lastSyncKey, new Date().toISOString());
-
-        console.log(`Synced: ${localNotes.length} local + ${serverNotes.length} server = ${mergedNotes.length} total (${deletedIds.size} filtered)`);
 
     } catch (err) {
         console.error('Error syncing notes from server:', err);
@@ -113,11 +154,17 @@ function exportNotesToFile() {
         return App.showNotification('You need access to notes feature', true);
     }
 
-    if (App.state.notes.length === 0) {
+    if (App.state.notes.length === 0 && (!App.state.notesRecycleBin2 || App.state.notesRecycleBin2.length === 0)) {
         return App.showNotification('No notes to export', true);
     }
 
-    const dataStr = JSON.stringify(App.state.notes, null, 2);
+    // Combine active notes and deleted notes
+    const allNotes = [
+        ...App.state.notes.map(note => ({ ...note, isDeleted: false })),
+        ...(App.state.notesRecycleBin2 || []).map(note => ({ ...note, isDeleted: true }))
+    ];
+
+    const dataStr = JSON.stringify(allNotes, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -129,7 +176,7 @@ function exportNotesToFile() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    App.showNotification('Notes exported successfully!');
+    App.showNotification(`Exported ${App.state.notes.length} active and ${App.state.notesRecycleBin2?.length || 0} deleted notes!`);
 }
 
 async function importNotesFromFile(event) {
@@ -147,36 +194,72 @@ async function importNotesFromFile(event) {
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
-            const importedNotes = JSON.parse(e.target.result);
+            const importedData = JSON.parse(e.target.result);
 
-            if (!Array.isArray(importedNotes)) {
+            if (!Array.isArray(importedData)) {
                 throw new Error('Invalid notes format');
             }
 
-            const validNotes = importedNotes.filter(note => {
-                return note.id && note.content && note.datestamp;
+            // Separate active notes and deleted notes
+            const importedActiveNotes = [];
+            const importedDeletedNotes = [];
+            
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            
+            importedData.forEach(note => {
+                if (!note.id || !uuidRegex.test(note.id) || !note.content || !note.datestamp) {
+                    return; // Skip invalid notes
+                }
+                
+                if (note.isDeleted) {
+                    importedDeletedNotes.push(note);
+                } else {
+                    importedActiveNotes.push(note);
+                }
             });
 
-            if (validNotes.length === 0) {
+            if (importedActiveNotes.length === 0 && importedDeletedNotes.length === 0) {
                 throw new Error('No valid notes found in file');
             }
 
             const replace = confirm(
-                `Found ${validNotes.length} valid notes.\n\n` +
+                `Found ${importedActiveNotes.length} active notes and ${importedDeletedNotes.length} deleted notes.\n\n` +
                 `Replace existing notes? (OK = Replace, Cancel = Merge with existing)`
             );
 
+            const existingIds = new Set(App.state.notes.map(n => n.id));
+            const deletedIds = new Set(App.state.notesDeletedIds || []);
+            const recycleBinIds = new Set((App.state.notesRecycleBin2 || []).map(n => n.id));
+
             if (replace) {
-                App.state.notes = validNotes;
+                // Replace mode: clear everything and import
+                App.state.notes = importedActiveNotes;
+                App.state.notesRecycleBin2 = importedDeletedNotes;
+                App.state.notesDeletedIds = importedDeletedNotes.map(n => n.id);
             } else {
-                const existingIds = new Set(App.state.notes.map(n => n.id));
-                const newNotes = validNotes.filter(n => !existingIds.has(n.id));
-                App.state.notes = [...App.state.notes, ...newNotes];
+                // Merge mode: only add notes that don't exist
+                
+                // Merge active notes (skip if ID exists in active notes OR deleted IDs)
+                importedActiveNotes.forEach(note => {
+                    if (!existingIds.has(note.id) && !deletedIds.has(note.id)) {
+                        App.state.notes.push(note);
+                    }
+                });
+                
+                // Merge deleted notes (skip if ID exists in recycle bin OR deleted IDs)
+                importedDeletedNotes.forEach(note => {
+                    if (!recycleBinIds.has(note.id) && !deletedIds.has(note.id)) {
+                        App.state.notesRecycleBin2.push(note);
+                        if (!App.state.notesDeletedIds.includes(note.id)) {
+                            App.state.notesDeletedIds.push(note.id);
+                        }
+                    }
+                });
             }
 
             saveNotesToLocalStorage();
             renderNotes();
-            App.showNotification(`Successfully imported ${validNotes.length} notes!`);
+            App.showNotification(`Successfully imported ${importedActiveNotes.length} active and ${importedDeletedNotes.length} deleted notes!`);
 
             event.target.value = '';
         } catch (err) {
@@ -209,30 +292,58 @@ async function backupNotesToServer() {
 
         if (deleteError) throw deleteError;
 
-        // Upload current local notes to server
+        // Prepare all notes (active + recycle bin tier 1) for upload
+        const allNotesToInsert = [];
+        
+        // Add active notes
         if (App.state.notes.length > 0) {
-            const notesToInsert = App.state.notes.map(note => ({
-                id: note.id, // IMPORTANT: Keep the same ID
-                user_id: App.state.currentUser.id,
-                title: note.title || null,
-                content: note.content,
-                datestamp: note.datestamp,
-                created_at: note.createdAt || new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }));
+            App.state.notes.forEach(note => {
+                allNotesToInsert.push({
+                    id: note.id,
+                    user_id: App.state.currentUser.id,
+                    title: note.title || null,
+                    content: note.content,
+                    datestamp: note.datestamp,
+                    is_deleted: false,
+                    created_at: note.createdAt || new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            });
+        }
+        
+        // Add deleted notes from recycle bin tier 1
+        if (App.state.notesRecycleBin2 && App.state.notesRecycleBin2.length > 0) {
+            App.state.notesRecycleBin2.forEach(note => {
+                allNotesToInsert.push({
+                    id: note.id,
+                    user_id: App.state.currentUser.id,
+                    title: note.title || null,
+                    content: note.content,
+                    datestamp: note.datestamp,
+                    is_deleted: true,
+                    created_at: note.createdAt || new Date().toISOString(),
+                    updated_at: note.deletedAt || new Date().toISOString()
+                });
+            });
+        }
 
-            const { error: insertError } = await db.from('notes').insert(notesToInsert);
+        // Upload all notes to server
+        if (allNotesToInsert.length > 0) {
+            const { error: insertError } = await db.from('notes').insert(allNotesToInsert);
 
             if (insertError) throw insertError;
         }
 
-        // Keep deleted IDs list and recycle bin intact
+        // After successful upload, clear recycle bin tier 2 (no more garbage from supabase)
+        App.state.notesRecycleBin = [];
+        
         saveNotesToLocalStorage();
 
         const lastSyncKey = `notes_lastSync_${App.state.currentUser.id}`;
         localStorage.setItem(lastSyncKey, new Date().toISOString());
 
-        App.showNotification(`Successfully backed up ${App.state.notes.length} note(s) to cloud!`);
+        const totalBackedUp = allNotesToInsert.length;
+        App.showNotification(`Successfully backed up ${totalBackedUp} note(s) to cloud!`);
         updateUnsyncedCount();
         
     } catch (err) {
@@ -241,7 +352,7 @@ async function backupNotesToServer() {
     }
 }
 
-function updateUnsyncedCount() {
+async function updateUnsyncedCount() {
     const unsyncedElement = document.getElementById('notesUnsyncedCount');
     if (!unsyncedElement) return;
 
@@ -250,23 +361,49 @@ function updateUnsyncedCount() {
         return;
     }
 
-    const count = App.state.notes.length;
+    try {
+        // Fetch server notes to compare
+        const { data, error } = await db.from('notes').select('id').eq('user_id', App.state.currentUser.id);
+        
+        if (error) throw error;
 
-    if (count === 0) {
-        unsyncedElement.textContent = '';
-    } else if (count === 1) {
-        unsyncedElement.textContent = 'You have 1 note you haven\'t backed up';
-        unsyncedElement.style.display = 'block';
-    } else {
-        unsyncedElement.textContent = `You have ${count} notes you haven't backed up`;
-        unsyncedElement.style.display = 'block';
+        const serverNoteIds = new Set((data || []).map(n => n.id));
+        const localNoteIds = new Set(App.state.notes.map(n => n.id));
+        
+        // Count notes that are in local but not in server
+        const unsyncedCount = Array.from(localNoteIds).filter(id => !serverNoteIds.has(id)).length;
+
+        if (unsyncedCount === 0) {
+            unsyncedElement.textContent = '';
+            unsyncedElement.style.display = 'none';
+        } else if (unsyncedCount === 1) {
+            unsyncedElement.textContent = 'You have 1 note you haven\'t backed up';
+            unsyncedElement.style.display = 'block';
+        } else {
+            unsyncedElement.textContent = `You have ${unsyncedCount} notes you haven't backed up`;
+            unsyncedElement.style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Error checking unsynced count:', err);
+        // Fallback to local count
+        const count = App.state.notes.length;
+        if (count === 0) {
+            unsyncedElement.textContent = '';
+        } else if (count === 1) {
+            unsyncedElement.textContent = 'You have 1 note you haven\'t backed up';
+            unsyncedElement.style.display = 'block';
+        } else {
+            unsyncedElement.textContent = `You have ${count} notes you haven't backed up`;
+            unsyncedElement.style.display = 'block';
+        }
     }
 }
 
-function loadNotes() {
+async function loadNotes() {
     if (App.state.isLoading.notes) return;
     App.state.isLoading.notes = true;
 
+    // ALWAYS load from local storage first
     loadNotesFromLocalStorage();
 
     // Show edit mode button only if user has access
@@ -276,7 +413,24 @@ function loadNotes() {
     }
 
     renderNotes();
+
+    // Only sync from server if user is logged in (adds new notes from server, never removes local)
+    if (App.state.currentUser && canBackupNotesToCloud()) {
+        await syncNotesFromServer();
+        renderNotes(); // Re-render after sync
+    }
+
     updateUnsyncedCount();
+
+    // Start periodic unsynced count checker (every 45 seconds)
+    if (App.state.currentUser && canBackupNotesToCloud()) {
+        if (window.notesUnsyncedInterval) {
+            clearInterval(window.notesUnsyncedInterval);
+        }
+        window.notesUnsyncedInterval = setInterval(() => {
+            updateUnsyncedCount();
+        }, 45000);
+    }
 
     App.state.isLoading.notes = false;
 }
@@ -296,6 +450,58 @@ function renderNotes() {
         return;
     }
 
+    // In edit mode: flat list without grouping
+    if (isEditMode) {
+        const sortedNotes = [...App.state.notes].sort((a, b) => new Date(b.datestamp) - new Date(a.datestamp));
+        
+        let html = sortedNotes.map(note => {
+            const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
+            const preview = stripFormatting(note.content.substring(0, 100)) + (note.content.length > 100 ? '...' : '');
+            const date = new Date(note.datestamp);
+            const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            return `
+              <div class="bg-white rounded-xl shadow-lg p-4 note-selectable flex items-center transition" data-note-id="${note.id}">
+                <input type="checkbox" class="note-checkbox" data-note-id="${note.id}">
+                <div class="flex-1">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-bold text-gray-800">${title}</h3>
+                    <span class="text-xs text-gray-500">${formattedDate}</span>
+                  </div>
+                  <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
+                </div>
+              </div>
+            `;
+        }).join('');
+
+        notesList.innerHTML = html;
+
+        // Handle clicks and checkboxes in edit mode
+        notesList.querySelectorAll('[data-note-id]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('note-checkbox')) {
+                    const checkbox = el.querySelector('.note-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        el.classList.toggle('note-selected', checkbox.checked);
+                    }
+                }
+            });
+        });
+
+        notesList.querySelectorAll('.note-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const noteEl = e.target.closest('[data-note-id]');
+                if (noteEl) {
+                    noteEl.classList.toggle('note-selected', e.target.checked);
+                }
+            });
+        });
+
+        return;
+    }
+
+    // Normal mode: grouped by date
     const groupedNotes = {};
     App.state.notes.forEach(note => {
         const datestamp = note.datestamp;
@@ -320,22 +526,20 @@ function renderNotes() {
             const preview = stripFormatting(note.content.substring(0, 100)) + (note.content.length > 100 ? '...' : '');
 
             html += `
-          <div class="bg-white rounded-xl shadow-lg p-4 ${isEditMode ? 'note-selectable flex items-center' : 'cursor-pointer hover:shadow-xl'} transition" data-note-id="${note.id}">
-            ${isEditMode ? '<input type="checkbox" class="note-checkbox" data-note-id="' + note.id + '">' : ''}
+          <div class="bg-white rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition" data-note-id="${note.id}">
             <div class="flex-1">
-            <div class="flex justify-between items-start mb-2">
-              <h3 class="font-bold text-gray-800">${title}</h3>
-              <span class="text-xs text-gray-500">${formattedDate}</span>
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800">${title}</h3>
+                <span class="text-xs text-gray-500">${formattedDate}</span>
+              </div>
+              <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
             </div>
-            <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
-          </div>
           </div>
         `;
         } else {
             html += `
           <div class="bg-blue-50 rounded-xl shadow-lg p-4 border-l-4 border-blue-400">
             <div class="flex justify-between items-center mb-3">
-              ${isEditMode ? '<input type="checkbox" class="note-checkbox group-checkbox" data-date="' + datestamp + '">' : ''}
               <h3 class="font-bold text-gray-800">📅 ${formattedDate}</h3>
               <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">${notes.length} notes</span>
             </div>
@@ -343,8 +547,7 @@ function renderNotes() {
               ${notes.map(note => {
                 const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
                 return `
-                  <div class="bg-white rounded-lg p-3 ${isEditMode ? 'note-selectable flex items-center' : 'cursor-pointer hover:shadow-md'} transition" data-note-id="${note.id}">
-                    ${isEditMode ? '<input type="checkbox" class="note-checkbox" data-note-id="' + note.id + '">' : ''}
+                  <div class="bg-white rounded-lg p-3 cursor-pointer hover:shadow-md transition" data-note-id="${note.id}">
                     <p class="text-sm font-semibold text-gray-700 flex-1">${title}</p>
                   </div>
                 `;
@@ -358,15 +561,68 @@ function renderNotes() {
     notesList.innerHTML = html;
 
     notesList.querySelectorAll('[data-note-id]').forEach(el => {
-        if (!isEditMode) {
-            el.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('note-checkbox')) {
-                    const noteId = el.dataset.noteId;
-                    viewNote(noteId);
-                }
-            });
-        } else {
-            // In edit mode, clicking selects the note
+        el.addEventListener('click', (e) => {
+            const noteId = el.dataset.noteId;
+            viewNote(noteId);
+        });
+    });
+}
+
+function filterNotes(searchTerm) {
+    if (!searchTerm) {
+        renderNotes();
+        return;
+    }
+
+    const term = searchTerm.toLowerCase();
+    const filtered = App.state.notes.filter(note => {
+        const title = (note.title || '').toLowerCase();
+        const content = note.content.toLowerCase();
+        const datestamp = note.datestamp.toLowerCase();
+        const id = note.id.toLowerCase();
+        
+        return title.includes(term) || 
+               content.includes(term) || 
+               datestamp.includes(term) || 
+               id.includes(term);
+    });
+
+    const notesList = App.elements.notesList;
+    const isEditMode = App.state.notesEditMode || false;
+
+    if (filtered.length === 0) {
+        const isBn = localStorage.getItem('lang') === 'bn';
+        notesList.innerHTML = `<div class="text-gray-400 text-center py-8">${isBn ? 'কোনো নোট পাওয়া যায়নি' : 'No notes found'}</div>`;
+        return;
+    }
+
+    // In edit mode: flat list without grouping
+    if (isEditMode) {
+        const sortedNotes = [...filtered].sort((a, b) => new Date(b.datestamp) - new Date(a.datestamp));
+        
+        let html = sortedNotes.map(note => {
+            const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
+            const preview = stripFormatting(note.content.substring(0, 100)) + (note.content.length > 100 ? '...' : '');
+            const date = new Date(note.datestamp);
+            const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            return `
+              <div class="bg-white rounded-xl shadow-lg p-4 note-selectable flex items-center transition" data-note-id="${note.id}">
+                <input type="checkbox" class="note-checkbox" data-note-id="${note.id}">
+                <div class="flex-1">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-bold text-gray-800">${title}</h3>
+                    <span class="text-xs text-gray-500">${formattedDate}</span>
+                  </div>
+                  <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
+                </div>
+              </div>
+            `;
+        }).join('');
+
+        notesList.innerHTML = html;
+
+        notesList.querySelectorAll('[data-note-id]').forEach(el => {
             el.addEventListener('click', (e) => {
                 if (!e.target.classList.contains('note-checkbox')) {
                     const checkbox = el.querySelector('.note-checkbox');
@@ -376,11 +632,8 @@ function renderNotes() {
                     }
                 }
             });
-        }
-    });
+        });
 
-    // Handle checkbox changes
-    if (isEditMode) {
         notesList.querySelectorAll('.note-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 const noteEl = e.target.closest('[data-note-id]');
@@ -390,22 +643,74 @@ function renderNotes() {
             });
         });
 
-        // Handle group checkboxes
-        notesList.querySelectorAll('.group-checkbox').forEach(groupCheckbox => {
-            groupCheckbox.addEventListener('change', (e) => {
-                const date = e.target.dataset.date;
-                const container = e.target.closest('.bg-blue-50');
-                const noteCheckboxes = container.querySelectorAll('.note-checkbox:not(.group-checkbox)');
-                noteCheckboxes.forEach(cb => {
-                    cb.checked = e.target.checked;
-                    const noteEl = cb.closest('[data-note-id]');
-                    if (noteEl) {
-                        noteEl.classList.toggle('note-selected', e.target.checked);
-                    }
-                });
-            });
-        });
+        return;
     }
+
+    // Normal mode: grouped by date
+    const groupedNotes = {};
+    filtered.forEach(note => {
+        const datestamp = note.datestamp;
+        if (!groupedNotes[datestamp]) {
+            groupedNotes[datestamp] = [];
+        }
+        groupedNotes[datestamp].push(note);
+    });
+
+    const sortedDatestamps = Object.keys(groupedNotes).sort((a, b) => new Date(b) - new Date(a));
+
+    let html = '';
+
+    sortedDatestamps.forEach(datestamp => {
+        const notes = groupedNotes[datestamp];
+        const date = new Date(datestamp);
+        const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        if (notes.length === 1) {
+            const note = notes[0];
+            const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
+            const preview = stripFormatting(note.content.substring(0, 100)) + (note.content.length > 100 ? '...' : '');
+
+            html += `
+          <div class="bg-white rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition" data-note-id="${note.id}">
+            <div class="flex-1">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800">${title}</h3>
+                <span class="text-xs text-gray-500">${formattedDate}</span>
+              </div>
+              <p class="text-sm text-gray-600 line-clamp-2">${preview}</p>
+            </div>
+          </div>
+        `;
+        } else {
+            html += `
+          <div class="bg-blue-50 rounded-xl shadow-lg p-4 border-l-4 border-blue-400">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-bold text-gray-800">📅 ${formattedDate}</h3>
+              <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">${notes.length} notes</span>
+            </div>
+            <div class="space-y-2">
+              ${notes.map(note => {
+                const title = stripFormatting(note.title || note.content.split('\n')[0].substring(0, 50) || 'Untitled');
+                return `
+                  <div class="bg-white rounded-lg p-3 cursor-pointer hover:shadow-md transition" data-note-id="${note.id}">
+                    <p class="text-sm font-semibold text-gray-700 flex-1">${title}</p>
+                  </div>
+                `;
+            }).join('')}
+            </div>
+          </div>
+        `;
+        }
+    });
+
+    notesList.innerHTML = html;
+
+    notesList.querySelectorAll('[data-note-id]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            const noteId = el.dataset.noteId;
+            viewNote(noteId);
+        });
+    });
 }
 
 function renderRecycleBin() {
@@ -586,7 +891,9 @@ function deleteSelectedNotes() {
         return App.showNotification('Please select notes to delete', true);
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} note(s)?`)) {
+    const actualCount = selectedIds.length;
+    
+    if (!confirm(`Are you sure you want to delete ${actualCount} note(s)?`)) {
         return;
     }
 
@@ -598,6 +905,7 @@ function deleteSelectedNotes() {
         App.state.notesRecycleBin2 = [];
     }
 
+    let deletedCount = 0;
     selectedIds.forEach(noteId => {
         const noteIndex = App.state.notes.findIndex(n => n.id === noteId);
         if (noteIndex !== -1) {
@@ -615,18 +923,19 @@ function deleteSelectedNotes() {
             });
             
             App.state.notes.splice(noteIndex, 1);
+            deletedCount++;
         }
     });
 
     saveNotesToLocalStorage();
-    updateUnsyncedCount();
+    console.log('After delete - notes:', App.state.notes.length, 'recycleBin:', App.state.notesRecycleBin2.length);
 
     // Update tab count
     document.getElementById('notesTabYourNotesCount').textContent = App.state.notes.length;
     document.getElementById('notesTabRecycleBinCount').textContent = App.state.notesRecycleBin2.length;
 
     renderNotes();
-    App.showNotification(`Deleted ${selectedIds.length} note(s)`);
+    App.showNotification(`Deleted ${deletedCount} note(s)`);
 }
 
 function deleteFromRecycleBin() {
@@ -640,12 +949,21 @@ function deleteFromRecycleBin() {
         return;
     }
 
+    // Move to recycle bin tier 2 (permanent deletion blocker)
+    if (!App.state.notesRecycleBin) {
+        App.state.notesRecycleBin = [];
+    }
+
     selectedIds.forEach(noteId => {
         const noteIndex = App.state.notesRecycleBin2.findIndex(n => n.id === noteId);
         if (noteIndex !== -1) {
             App.state.notesRecycleBin2.splice(noteIndex, 1);
         }
-        // Keep the ID in deletedIds list to prevent re-sync permanently
+        
+        // Add to tier 2 to block re-sync
+        if (!App.state.notesRecycleBin.includes(noteId)) {
+            App.state.notesRecycleBin.push(noteId);
+        }
     });
 
     saveNotesToLocalStorage();
@@ -673,10 +991,10 @@ function reviveSelectedNotes() {
             // Add back to active notes
             App.state.notes.push(revivedNote);
             
-            // Remove from recycle bin
+            // Remove from recycle bin tier 1
             App.state.notesRecycleBin2.splice(noteIndex, 1);
             
-            // Remove from deleted IDs list (allow re-sync)
+            // Remove from deleted IDs list
             if (App.state.notesDeletedIds) {
                 const deletedIndex = App.state.notesDeletedIds.indexOf(noteId);
                 if (deletedIndex !== -1) {
@@ -914,6 +1232,9 @@ function editNote(noteId = null) {
             range.collapse(false);
             sel.removeAllRanges();
             sel.addRange(range);
+            
+            // Show scroll-to-bottom button if content is long
+            updateScrollToBottomButton();
         }, 100);
     } else {
         document.getElementById('noteEditId').value = '';
@@ -927,6 +1248,9 @@ function editNote(noteId = null) {
             editor.innerHTML = '';
             setupNoteEditorEventListeners(editor);
             editor.focus();
+            
+            // Hide scroll-to-bottom button for new notes
+            updateScrollToBottomButton();
         }, 100);
     }
 
@@ -967,6 +1291,7 @@ function setupNoteEditorEventListeners(editor) {
             editor.innerHTML = parseFormattingForEditor(plainText);
 
             setCaretCharacterOffsetWithin(editor, cursorPos);
+            updateScrollToBottomButton();
         }, 500);
     };
 
@@ -985,16 +1310,24 @@ function setupNoteEditorEventListeners(editor) {
 
                 editor.innerHTML = parseFormattingForEditor(plainText);
                 setCaretCharacterOffsetWithin(editor, cursorPos);
+                updateScrollToBottomButton();
             }, 10);
 
             return false;
         }
     };
 
+    // Handle scroll events to update button visibility
+    const handleScroll = () => {
+        updateScrollToBottomButton();
+    };
+
     editor.removeEventListener('input', handleInput);
     editor.removeEventListener('keydown', handleKeyDown);
+    editor.removeEventListener('scroll', handleScroll);
     editor.addEventListener('input', handleInput);
     editor.addEventListener('keydown', handleKeyDown);
+    editor.addEventListener('scroll', handleScroll);
 }
 
 function getCaretCharacterOffsetWithin(element) {
@@ -1107,17 +1440,6 @@ async function saveNote() {
     if (noteId) {
         const index = App.state.notes.findIndex(n => n.id === noteId);
         if (index !== -1) {
-            // Add old version to recycle bin before updating
-            const oldNote = App.state.notes[index];
-            if (!App.state.notesRecycleBin) {
-                App.state.notesRecycleBin = [];
-            }
-            App.state.notesRecycleBin.push({
-                ...oldNote,
-                deletedAt: new Date().toISOString(),
-                reason: 'edited'
-            });
-
             App.state.notes[index] = noteData;
         }
     } else {
@@ -1125,18 +1447,19 @@ async function saveNote() {
     }
 
     saveNotesToLocalStorage();
+    updateUnsyncedCount();
     App.hideAllModals();
     renderNotes();
     App.showNotification(noteId ? 'Note updated!' : 'Note created!');
 }
 
 function generateNoteId() {
-    // Generate a 32-character unique ID
-    const timestamp = Date.now().toString(36);
-    const randomPart1 = Math.random().toString(36).substring(2, 15);
-    const randomPart2 = Math.random().toString(36).substring(2, 15);
-    const id = (timestamp + randomPart1 + randomPart2).substring(0, 32).padEnd(32, '0');
-    return id;
+    // Generate a proper UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 async function deleteNote(noteId) {
@@ -1197,6 +1520,58 @@ function checkUnsavedChanges() {
     return false;
 }
 
+function updateScrollToBottomButton() {
+    const editor = document.getElementById('noteContentInput');
+    if (!editor) return;
+    
+    let scrollBtn = document.getElementById('scrollToBottomBtn');
+    
+    // Check if editor is scrollable and not at bottom
+    const isScrollable = editor.scrollHeight > editor.clientHeight;
+    const isAtBottom = Math.abs(editor.scrollHeight - editor.clientHeight - editor.scrollTop) < 5;
+    
+    if (isScrollable && !isAtBottom) {
+        // Show button
+        if (!scrollBtn) {
+            // Create button if it doesn't exist
+            scrollBtn = document.createElement('button');
+            scrollBtn.id = 'scrollToBottomBtn';
+            scrollBtn.type = 'button';
+            scrollBtn.className = 'scroll-to-bottom-btn';
+            scrollBtn.innerHTML = '⬇';
+            scrollBtn.title = 'Scroll to bottom';
+            scrollBtn.addEventListener('click', scrollToBottom);
+            
+            // Insert button inside note-editor-wrapper
+            const wrapper = document.querySelector('.note-editor-wrapper');
+            if (wrapper) {
+                wrapper.appendChild(scrollBtn);
+            }
+        }
+        scrollBtn.style.display = 'block';
+    } else {
+        // Hide button
+        if (scrollBtn) {
+            scrollBtn.style.display = 'none';
+        }
+    }
+}
+
+function scrollToBottom() {
+    const editor = document.getElementById('noteContentInput');
+    if (editor) {
+        editor.scrollTo({
+            top: editor.scrollHeight,
+            behavior: 'smooth'
+        });
+        
+        // Update button visibility after scroll completes
+        setTimeout(() => {
+            updateScrollToBottomButton();
+        }, 300);
+    }
+}
+
 // Expose functions to App
 window.NotesModule = {
     canAccessNotes,
@@ -1211,6 +1586,7 @@ window.NotesModule = {
     loadNotes,
     renderNotes,
     renderRecycleBin,
+    filterNotes,
     stripFormatting,
     parseFormatting: parseFormattingForDisplay,
     viewNote,
