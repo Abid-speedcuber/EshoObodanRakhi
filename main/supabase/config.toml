@@ -1,0 +1,15 @@
+# CLI configuration for the existing hosted project.
+# Only redirect settings are declared for production; other hosted settings are
+# managed in Supabase and remain unchanged by config push.
+project_id = "esho-obodan-rakhi"
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://127.0.0.1:5173"]
+
+[remotes.production]
+project_id = "kszhmrhlsoqfxkcopvoe"
+
+[remotes.production.auth]
+site_url = "https://eshoobodanrakhi.web.app"
+additional_redirect_urls = ["https://eshoobodanrakhi.web.app", "com.eor.app://oauth", "com.eor.app://reset-password", "com.eor.app://login-callback", "com.eor.app://**", "http://localhost:5173", "http://127.0.0.1:5173", "https://eshoobodanrakhi.firebaseapp.com"]

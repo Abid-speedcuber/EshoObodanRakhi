@@ -1,23 +1,27 @@
-name: Deploy to Firebase Hosting
-
+name: Build and deploy React app
 on:
   push:
-    branches:
-      - main  # deploy when code is pushed to main branch
-
+    branches: [main]
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: main/package-lock.json
+      - run: npm ci
+        working-directory: main
+      - run: npm test
+        working-directory: main
+      - run: npm run build
+        working-directory: main
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_ESHOOOBODANRAKHI }}"
           channelId: live
           projectId: eshoobodanrakhi
-          entryPoint: "."  # ensure it deploys from the repo root
+          entryPoint: .

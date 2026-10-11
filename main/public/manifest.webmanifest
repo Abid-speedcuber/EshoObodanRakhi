@@ -1,0 +1,19 @@
+{
+  "id": "com.eor.app",
+  "name": "Esho Obodan Rakhi",
+  "short_name": "Obodan Rakhi",
+  "description": "Community funds and blood donation",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9f6",
+  "theme_color": "#175b44",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
