@@ -1,19 +1,12 @@
 import { useState } from "react";
-import {
-  HeartHandshake,
-  Wallet,
-  Droplets,
-  RefreshCw,
-  LogOut,
-  UserRound,
-  ShieldCheck,
-} from "lucide-react";
 import { AppProvider, useApp } from "./context";
 import { db } from "./supabase";
+import { balance } from "./domain";
 import Fund from "./components/Fund";
 import Blood from "./components/Blood";
 import { AuthForm, FundForm, DonorForm, DeleteForm } from "./components/Forms";
 import { CompleteHistory, Overview } from "./components/History";
+import { Modal, Icon } from "./components/UI";
 import Users from "./components/Users";
 function Shell() {
   const {
@@ -21,7 +14,6 @@ function Shell() {
     lang,
     setLang,
     user,
-    profile,
     isAdmin,
     authLoading,
     loading,
@@ -31,6 +23,8 @@ function Shell() {
     setModal,
     refresh,
     run,
+    fund,
+    money,
   } = useApp();
   const [section, setSection] = useState(() =>
     localStorage.getItem("eor:section") === "fund" ? "fund" : "blood",
@@ -42,100 +36,63 @@ function Shell() {
   return (
     <div className="app">
       <header className="site-header">
-        <div className="header-inner">
-          <a
-            className="brand"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("blood");
-            }}
-          >
-            <span className="brand-symbol">
-              <HeartHandshake size={27} strokeWidth={1.7} />
-            </span>
-            <span>
-              <strong>{t("Esho Obodan Rakhi", "এসো অবদান রাখি")}</strong>
-              <small>
-                {t("For the sake of Allah", "একমাত্র আল্লাহর জন্য")}
-              </small>
-            </span>
-          </a>
-          <div className="header-actions">
+        <button
+          className="brand"
+          aria-label={t("Complete history", "সম্পূর্ণ তথ্য")}
+          onClick={() => setModal({ kind: "history" })}
+        >
+          <strong>
+            Esho Obodan Rakhi
+            <br />
+            <span>আসো অবদান রাখি</span>
+          </strong>
+          <small className="balance-stat">{money(balance(fund))}</small>
+        </button>
+        <div className="header-actions">
+          {(!user || isAdmin) && (
             <button
-              className="language"
-              onClick={() => setLang(lang === "en" ? "bn" : "en")}
+              disabled={authLoading}
+              onClick={() =>
+                setModal({
+                  kind: user ? "menu" : "auth",
+                  mode: "login",
+                })
+              }
             >
-              {lang === "en" ? "বাংলা" : "English"}
-            </button>
-            <button
-              className={`icon-button ${loading ? "spinning" : ""}`}
-              disabled={loading}
-              aria-label={t("Refresh data", "তথ্য রিফ্রেশ")}
-              onClick={refresh}
-            >
-              <RefreshCw size={17} />
-            </button>
-            {user ? (
-              <>
-                <span className="account-name">
-                  {profile?.name || user.email || user.phone}
-                  {isAdmin && <small>{t("Admin", "অ্যাডমিন")}</small>}
-                </span>
-                <button
-                  className="icon-button"
-                  aria-label={t("Sign out", "লগআউট")}
-                  onClick={() =>
-                    run(async () => {
-                      const { error } = await db.auth.signOut();
-                      if (error) throw error;
-                      setModal(null);
-                    })
-                  }
-                >
-                  <LogOut size={18} />
-                </button>
-              </>
-            ) : (
-              <button
-                className="primary sign-in"
-                disabled={authLoading}
-                onClick={() => setModal({ kind: "auth", mode: "login" })}
-              >
-                <UserRound size={16} />
-                {t("Sign in", "লগইন")}
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-      <div className="nav-wrap">
-        <nav aria-label={t("Main navigation", "মূল মেনু")}>
-          <button
-            className={section === "fund" ? "active" : ""}
-            onClick={() => navigate("fund")}
-          >
-            <Wallet size={19} />
-            {t("Community fund", "ফান্ড")}
-          </button>
-          <button
-            className={section === "blood" ? "active" : ""}
-            onClick={() => navigate("blood")}
-          >
-            <Droplets size={19} />
-            {t("Blood donation", "রক্তদান")}
-          </button>
-          {isAdmin && (
-            <button
-              className="manage-access"
-              onClick={() => setModal({ kind: "users" })}
-            >
-              <ShieldCheck size={17} />
-              {t("Manage access", "অনুমতি নিয়ন্ত্রণ")}
+              {user ? t("Admin", "অ্যাডমিন") : t("Login", "লগইন")}
             </button>
           )}
-        </nav>
-      </div>
+          <button
+            disabled={loading}
+            aria-label={t("Refresh data", "তথ্য রিফ্রেশ")}
+            onClick={refresh}
+          >
+            <Icon name="refresh" />
+          </button>
+          <button
+            aria-label={t("Settings", "সেটিংস")}
+            onClick={() => setModal({ kind: "settings" })}
+          >
+            <Icon name="settings" />
+          </button>
+        </div>
+      </header>
+      <nav aria-label={t("Main navigation", "মূল মেনু")}>
+        <button
+          className={section === "fund" ? "active" : ""}
+          onClick={() => navigate("fund")}
+        >
+          <Icon name="fund" size={45} />
+          <span>{t("Fund History", "ফান্ডের তথ্য")}</span>
+        </button>
+        <button
+          className={section === "blood" ? "active" : ""}
+          onClick={() => navigate("blood")}
+        >
+          <Icon name="blood-donation-icon" size={45} />
+          <span>{t("Blood Donors", "রক্তদাতা")}</span>
+        </button>
+      </nav>
       <main className="main-content">
         {stale && (
           <div className="offline-banner" role="status">
@@ -154,18 +111,6 @@ function Shell() {
         )}
         {section === "fund" ? <Fund /> : <Blood />}
       </main>
-      <footer>
-        <div className="footer-brand">
-          <HeartHandshake size={17} />
-          {t("Esho Obodan Rakhi", "এসো অবদান রাখি")}
-        </div>
-        <span>
-          {t(
-            "Small contributions. Lasting change.",
-            "ছোট অবদান। দীর্ঘস্থায়ী পরিবর্তন।",
-          )}
-        </span>
-      </footer>
       {status && (
         <div
           className={`status ${status.error ? "error" : ""}`}
@@ -173,6 +118,52 @@ function Shell() {
         >
           {status.text}
         </div>
+      )}
+      {modal?.kind === "settings" && (
+        <Modal title={t("Settings", "সেটিংস")}>
+          <div className="settings-language">
+            <strong>{t("Bengali Mode", "বাংলা মোড")}</strong>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={lang === "bn"}
+                onChange={(e) => setLang(e.target.checked ? "bn" : "en")}
+              />
+              {t("Enable", "চালু করুন")}
+            </label>
+          </div>
+          {user ? (
+            <button
+              className="primary destructive full"
+              onClick={() =>
+                run(async () => {
+                  const { error } = await db.auth.signOut();
+                  if (error) throw error;
+                  setModal(null);
+                })
+              }
+            >
+              {t("Logout", "লগআউট")}
+            </button>
+          ) : (
+            <button
+              className="primary full"
+              onClick={() => setModal({ kind: "auth", mode: "login" })}
+            >
+              {t("Login", "লগইন")}
+            </button>
+          )}
+        </Modal>
+      )}
+      {modal?.kind === "menu" && isAdmin && (
+        <Modal title={t("Admin Menu", "অ্যাডমিন মেনু")}>
+          <button
+            className="primary blue-button full"
+            onClick={() => setModal({ kind: "users" })}
+          >
+            👥 {t("Users", "ব্যবহারকারী")}
+          </button>
+        </Modal>
       )}
       {modal?.kind === "auth" && <AuthForm initialMode={modal.mode} />}
       {modal?.kind === "fund" && isAdmin && <FundForm row={modal.row} />}

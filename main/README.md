@@ -1,6 +1,6 @@
 # React app
 
-React + Vite + Supabase. Run commands inside this directory.
+React + Vite + Supabase. The interface preserves the original narrow layout, green header, icons, stacked panels, compact donor cards, search toggle, settings, and forms using plain CSS (no Tailwind). Run commands inside this directory.
 
 - `npm run dev` — local development
 - `npm run build` — production bundle in `dist/`
@@ -13,9 +13,9 @@ Browser tests use Playwright Chromium. Install it with `npx playwright install c
 
 ## Ported functionality
 
-**Fund:** monthly collection/Sadakah lists; month picker, previous/next controls and swipe navigation (June 2017 through current month); collection totals including current month; public Sadakah history; totals from fund versus dedicated contributions; monthly economy and cumulative balance; annual income/expense/balance chart with values and accessible table; complete history in yearly brief or all-time elaborate mode with opening/closing balances; copy collection/history including admin contribution text; Nagad/bKash donation numbers with copy; admin entry create/edit/delete, highlighting, additional details with safe clickable URLs and preserved line breaks, and independent display/calculation flags.
+**Fund:** monthly collection/Sadakah lists; previous/next controls and swipe navigation (June 2017 through current month); collection totals including current month; public Sadakah history; totals from fund versus dedicated contributions; monthly economy and cumulative balance; annual income/expense/balance line chart with selectable values; complete history in yearly brief or all-time elaborate mode with opening/closing balances; copy collection/history including admin contribution text; Nagad/bKash donation numbers with copy; admin entry create/edit/delete, highlighting, additional details with safe clickable URLs and preserved line breaks, and independent display/calculation flags.
 
-**Blood:** searchable donor directory by name, phone, location and group; all eight blood groups; availability filter; available donors first; randomized ordering for public browsing; donor phone calls and copying; own profile create/edit/delete; admin profile create/edit/delete; admin-created marker; last donation date; automatic 100-day pause after donation.
+**Blood:** searchable donor directory by name, phone, location and group; all eight blood groups; available donors first; randomized ordering for public browsing; donor phone calls and copying; own profile create/edit/delete; admin profile create/edit/delete; last donation date; automatic 100-day pause after donation.
 
 **Accounts:** email/phone signup and password login; Google OAuth; phone code verification; email reset and new password form; session persistence; admin search and user/admin role changes with consequences and confirmation. The SQL migration converts existing non-admin roles to user. No service-role browser access or auth admin API calls.
 

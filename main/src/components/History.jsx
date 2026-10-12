@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
+
 import { useApp } from "../context";
 import { history, yearOverview, currentMonth, balance } from "../domain";
-import { Modal, Empty } from "./UI";
+import { Modal, Empty, Icon } from "./UI";
 export function CompleteHistory() {
   const { t, fund, money, monthLabel, copy } = useApp();
   const [brief, setBrief] = useState(true);
-  const [year, setYear] = useState(Number(currentMonth().slice(0, 4)));
+  const year = Number(currentMonth().slice(0, 4));
   const all = history(fund);
   const rows = brief
     ? all.filter((r) => r.month.startsWith(String(year)))
@@ -17,34 +17,35 @@ export function CompleteHistory() {
     copy(text);
   }
   return (
-    <Modal title={t("Complete fund history", "ফান্ডের সম্পূর্ণ তথ্য")} wide>
-      <div className="history-controls">
-        <div className="tabs">
-          <button
-            className={brief ? "active" : ""}
-            onClick={() => setBrief(true)}
-          >
-            {t("Yearly brief", "সংক্ষিপ্ত")}
-          </button>
-          <button
-            className={!brief ? "active" : ""}
-            onClick={() => setBrief(false)}
-          >
-            {t("Elaborate", "বিস্তারিত")}
-          </button>
-        </div>
+    <Modal
+      title={t("Complete fund history", "ফান্ডের সম্পূর্ণ তথ্য")}
+      wide
+      headerAction={
         <button
-          className="secondary"
+          className="history-copy"
           onClick={copyHistory}
           disabled={!rows.length}
         >
-          <Copy size={16} />
-          {t("Copy history", "তথ্য কপি")}
+          <Icon name="copy" />
+          {t("Copy", "কপি")}
         </button>
+      }
+    >
+      <div className="history-controls">
+        <div className="history-mode">
+          <span>{t("History Mode:", "তথ্য প্রদর্শন:")}</span>
+          <button
+            className="primary blue-button"
+            onClick={() => setBrief(!brief)}
+          >
+            {brief
+              ? t("Yearly Brief", "সংক্ষিপ্ত")
+              : t("Elaborate", "বিস্তারিত")}
+          </button>
+        </div>
       </div>
       {brief && (
         <>
-          <YearPicker year={year} setYear={setYear} />
           <div className="history-opening">
             {t("Opening balance", "শুরুতে অবশিষ্ট")}{" "}
             <strong>{money(opening)}</strong>
@@ -90,7 +91,7 @@ function YearPicker({ year, setYear }) {
         disabled={year <= 2017}
         onClick={() => setYear(year - 1)}
       >
-        <ChevronLeft size={20} />
+        ←
       </button>
       <strong>{year}</strong>
       <button
@@ -99,7 +100,7 @@ function YearPicker({ year, setYear }) {
         disabled={year >= maxYear}
         onClick={() => setYear(year + 1)}
       >
-        <ChevronRight size={20} />
+        →
       </button>
     </div>
   );
@@ -108,136 +109,188 @@ export function Overview({ initialYear }) {
   const { t, money, fund, monthLabel } = useApp();
   const [year, setYear] = useState(initialYear);
   const rows = yearOverview(fund, year);
-  const max = Math.max(
-    1,
-    ...rows.flatMap((r) => [r.collection, r.sadakah, r.closing]),
-  );
-  const min = Math.min(0, ...rows.map((r) => r.closing));
-  const y = (value) => 230 - ((value - min) / (max - min)) * 185;
-  const points = rows.map((r, i) => `${60 + i * 51},${y(r.closing)}`).join(" ");
+  const [selected, setSelected] = useState(null);
+  const max =
+    Math.max(
+      1,
+      ...rows.flatMap((r) => [r.collection, r.sadakah, Math.abs(r.closing)]),
+    ) * 1.1;
+  const min = Math.min(0, ...rows.map((r) => r.closing)) * 1.1;
+  const y = (value) => 950 - ((value - min) / (max - min)) * 870;
+  const x = (i) => 80 + (i * 870) / 11;
+  const series = [
+    { key: "collection", label: t("Collection", "কালেকশন"), color: "#10b981" },
+    { key: "sadakah", label: t("Sadakah", "সাদাকাহ"), color: "#ef4444" },
+    {
+      key: "closing",
+      label: t("Total Fund", "ফান্ডে মোট অর্থ"),
+      color: "#3b82f6",
+    },
+  ];
   return (
-    <Modal title={t("Yearly overview", "বার্ষিক তথ্য")} wide>
-      <YearPicker year={year} setYear={setYear} />
-      <div className="chart-legend">
-        <span className="green">● {t("Collection", "কালেকশন")}</span>
-        <span className="red">● {t("Sadakah", "সাদাকাহ")}</span>
-        <span className="blue">● {t("Fund balance", "ফান্ডে অবশিষ্ট")}</span>
-      </div>
+    <Modal title={t("Yearly Overview", "বার্ষিক তথ্য")} wide>
+      <YearPicker
+        year={year}
+        setYear={(value) => {
+          setYear(value);
+          setSelected(null);
+        }}
+      />
       <svg
         className="chart"
-        viewBox="0 0 680 280"
+        viewBox="0 0 1000 1000"
         role="img"
         aria-label={t(
           `Monthly collections, Sadakah and fund balance in ${year}`,
           `${year} সালের মাসিক কালেকশন, সাদাকাহ ও ফান্ডের অবশিষ্ট`,
         )}
       >
-        {[0, 1, 2, 3, 4].map((i) => {
-          const value = min + ((max - min) * i) / 4;
+        {Array.from({ length: 6 }, (_, i) => {
+          const value = min + ((max - min) * i) / 5;
           return (
             <g key={i}>
               <line
-                x1="45"
-                x2="650"
+                x1="80"
+                x2="950"
                 y1={y(value)}
                 y2={y(value)}
-                stroke="#e5e9e5"
+                stroke="#e5e7eb"
               />
               <text
-                x="38"
+                x="70"
                 y={y(value) + 4}
                 textAnchor="end"
-                fontSize="10"
-                fill="#6e7d73"
+                fontSize="18"
+                fontWeight="bold"
+                fill="#6b7280"
               >
                 {Math.round(value).toLocaleString()}
               </text>
             </g>
           );
         })}
-        {rows.map((r, i) => (
-          <g key={r.month}>
-            <rect
-              x={49 + i * 51}
-              y={y(r.collection)}
-              width="10"
-              height={Math.max(0, y(0) - y(r.collection))}
-              rx="2"
-              fill="#239c70"
-            >
-              <title>
-                {monthLabel(r.month)} · {t("Collection", "কালেকশন")}:{" "}
-                {money(r.collection)}
-              </title>
-            </rect>
-            <rect
-              x={61 + i * 51}
-              y={y(r.sadakah)}
-              width="10"
-              height={Math.max(0, y(0) - y(r.sadakah))}
-              rx="2"
-              fill="#d56c63"
-            >
-              <title>
-                {monthLabel(r.month)} · {t("Sadakah", "সাদাকাহ")}:{" "}
-                {money(r.sadakah)}
-              </title>
-            </rect>
-            <text
-              x={60 + i * 51}
-              y="255"
-              textAnchor="middle"
-              fontSize="10"
-              fill="#6e7d73"
-            >
-              {new Date(`${r.month}-01`).toLocaleDateString("en-GB", {
-                month: "short",
-              })}
-            </text>
+        {min < 0 && (
+          <line
+            x1="80"
+            x2="950"
+            y1={y(0)}
+            y2={y(0)}
+            stroke="#9ca3af"
+            strokeWidth="2"
+          />
+        )}
+        {series.map((series) => (
+          <g key={series.key}>
+            <polyline
+              points={rows
+                .map((r, i) => `${x(i)},${y(r[series.key])}`)
+                .join(" ")}
+              fill="none"
+              stroke={series.color}
+              strokeWidth="3"
+            />
+            {rows.map((r, i) => (
+              <g key={r.month}>
+                <circle
+                  cx={x(i)}
+                  cy={y(r[series.key])}
+                  r="4"
+                  fill={series.color}
+                />
+                <circle
+                  cx={x(i)}
+                  cy={y(r[series.key])}
+                  r="24"
+                  fill="transparent"
+                  role="button"
+                  tabIndex="0"
+                  aria-label={`${monthLabel(r.month)} ${series.label}: ${money(r[series.key])}`}
+                  onClick={() =>
+                    setSelected({
+                      i,
+                      value: r[series.key],
+                      label: series.label,
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelected({
+                        i,
+                        value: r[series.key],
+                        label: series.label,
+                      });
+                    }
+                  }}
+                >
+                  <title>
+                    {monthLabel(r.month)} · {series.label}:{" "}
+                    {money(r[series.key])}
+                  </title>
+                </circle>
+              </g>
+            ))}
           </g>
         ))}
-        <polyline
-          points={points}
-          fill="none"
-          stroke="#437ab4"
-          strokeWidth="2.5"
-        />
         {rows.map((r, i) => (
-          <circle
+          <text
             key={r.month}
-            cx={60 + i * 51}
-            cy={y(r.closing)}
-            r="4"
-            fill="#437ab4"
+            x={x(i)}
+            y="970"
+            textAnchor="middle"
+            fontSize="20"
+            fontWeight="bold"
+            fill="#6b7280"
           >
-            <title>
-              {monthLabel(r.month)} · {t("Balance", "অবশিষ্ট")}:{" "}
-              {money(r.closing)}
-            </title>
-          </circle>
+            {new Date(`${r.month}-01`).toLocaleDateString("en-GB", {
+              month: "short",
+            })}
+          </text>
         ))}
+        {selected && (
+          <g>
+            <circle
+              cx={x(selected.i)}
+              cy={y(selected.value)}
+              r="8"
+              fill="#ffd70080"
+            />
+            <circle
+              cx={x(selected.i)}
+              cy={y(selected.value)}
+              r="5"
+              fill="#111"
+            />
+            <rect
+              x={Math.max(10, Math.min(740, x(selected.i) - 100))}
+              y={Math.max(10, y(selected.value) - 50)}
+              width="240"
+              height="35"
+              rx="5"
+              fill="#111"
+            />
+            <text
+              x={Math.max(20, Math.min(750, x(selected.i) - 90))}
+              y={Math.max(35, y(selected.value) - 25)}
+              fill="white"
+              fontSize="20"
+            >
+              {new Date(rows[selected.i].month + "-01").toLocaleDateString(
+                "en-GB",
+                { month: "short" },
+              )}
+              : {money(selected.value)}
+            </text>
+          </g>
+        )}
       </svg>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>{t("Month", "মাস")}</th>
-              <th>{t("Collection", "কালেকশন")}</th>
-              <th>{t("Sadakah", "সাদাকাহ")}</th>
-              <th>{t("Fund balance", "অবশিষ্ট")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.month}>
-                <td>{monthLabel(r.month)}</td>
-                <td className="green">{money(r.collection)}</td>
-                <td className="red">{money(r.sadakah)}</td>
-                <td>{money(r.closing)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="chart-legend">
+        {series.map((s) => (
+          <span key={s.key}>
+            <i style={{ background: s.color }} />
+            {s.label}
+          </span>
+        ))}
       </div>
     </Modal>
   );

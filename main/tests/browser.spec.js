@@ -200,7 +200,7 @@ async function setup(page, role = null, fail = false) {
   ).toBeEnabled();
   return { writes, errors };
 }
-test("public directory filters availability, group, and search without unrelated features", async ({
+test("public directory retains the original search toggle and group filter without unrelated features", async ({
   page,
 }) => {
   const { errors } = await setup(page);
@@ -212,17 +212,20 @@ test("public directory filters availability, group, and search without unrelated
     .getByRole("combobox", { name: "Blood group", exact: true })
     .selectOption("B+");
   await expect(page.locator(".donor-card")).toHaveCount(1);
-  await expect(page.locator(".donor-card")).toContainText("Not available");
-  await page.getByLabel("Available only").check();
+  await expect(page.locator(".donor-card")).toContainText("not available");
   await expect(
-    page.getByText("No donors found. Try another group or location."),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Clear", exact: true }).click();
+    page.getByRole("textbox", { name: "Search donors" }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("combobox", { name: "Blood group", exact: true })
+    .selectOption("all");
+  await page.getByRole("button", { name: "Search donors" }).click();
   await page.getByRole("textbox", { name: "Search donors" }).fill("Dhaka");
   await expect(page.locator(".donor-card")).toHaveCount(2);
   await expect(page.locator("nav")).not.toContainText(
     /Notes|Messages|Notifications|Student|Moderator/,
   );
+  await page.getByRole("button", { name: "Clear search" }).click();
   await page.screenshot({ path: "/tmp/eor-blood-desktop.png", fullPage: true });
   expect(errors).toEqual([]);
 });
@@ -230,10 +233,15 @@ test("fund totals, inverted flags, linked details, chart, and history", async ({
   page,
 }) => {
   const { errors } = await setup(page);
-  await page
-    .getByRole("button", { name: "Community fund", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Fund History", exact: true }).click();
   await expect(page.locator(".balance-stat")).toContainText("1,350");
+  await expect(page.locator(".main-content")).toContainText(
+    "All Sadakah History",
+  );
+  await page
+    .locator(".fund-tabs")
+    .getByRole("button", { name: /Collection/ })
+    .click();
   await expect(page.locator(".ledger-grid")).toContainText(
     "Operating expenses",
   );
@@ -243,26 +251,37 @@ test("fund totals, inverted flags, linked details, chart, and history", async ({
   await expect(page.locator(".ledger-grid")).not.toContainText(
     "Future project",
   );
+  await page
+    .locator(".fund-tabs")
+    .getByRole("button", { name: /Sadakah/ })
+    .click();
+  await expect(page.locator(".main-content")).toContainText(
+    "Dedicated fundraiser",
+  );
+  await expect(page.locator(".main-content")).not.toContainText(
+    "Operating expenses",
+  );
   await expect(
     page.getByRole("link", { name: "https://example.com/receipts" }),
   ).toHaveAttribute("rel", "noopener noreferrer");
-  await page.getByRole("button", { name: "All Sadakah", exact: true }).click();
-  await expect(page.locator(".panel")).toContainText("Dedicated fundraiser");
-  await expect(page.locator(".panel")).not.toContainText("Operating expenses");
+  await page
+    .locator(".fund-tabs")
+    .getByRole("button", { name: /Collection/ })
+    .click();
   await page.getByRole("button", { name: "Yearly overview" }).click();
-  await expect(page.locator("dialog table tbody tr")).toHaveCount(12);
-  await expect(page.locator("dialog table tbody tr").last()).toContainText(
-    "1,350",
-  );
+  await expect(page.locator("dialog .chart polyline")).toHaveCount(3);
+  await page.getByRole("button", { name: /December 2026 Total Fund/ }).click();
+  await expect(page.locator("dialog .chart")).toContainText("1,350");
   await page.getByRole("button", { name: "Close", exact: true }).click();
   await page.getByRole("button", { name: "Complete history" }).click();
   await expect(page.locator(".history-opening")).toContainText("1,000");
   await expect(page.locator(".history-month")).toHaveCount(1);
-  await page.getByRole("button", { name: "Elaborate", exact: true }).click();
+  await page.getByRole("button", { name: "Yearly Brief", exact: true }).click();
   await expect(page.locator(".history-month")).toHaveCount(2);
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Monthly collection" }).click();
+
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "/tmp/eor-fund-desktop.png", fullPage: true });
   expect(errors).toEqual([]);
 });
@@ -270,18 +289,16 @@ test("user manages only their own donor profile, including clearing last donatio
   page,
 }) => {
   const { writes, errors } = await setup(page, "user");
-  await expect(
-    page.getByRole("button", { name: "My donor profile" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "My Profile" })).toBeEnabled();
   await expect(
     page.getByRole("button", { name: "Edit donor", exact: true }),
-  ).toHaveCount(1);
-  await page.getByRole("button", { name: "My donor profile" }).click();
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "My Profile" }).click();
   await expect(page.locator("dialog")).toBeVisible();
   await page.getByLabel("Has donated before").check();
   await page.getByLabel("Last donation date").fill("2026-09-10");
   await page.getByLabel("Has donated before").uncheck();
-  await page.getByRole("button", { name: "Save profile" }).click();
+  await page.getByRole("button", { name: "Save" }).click();
   await expect(page.locator("dialog")).toHaveCount(0);
   expect(writes.find((w) => w.path.endsWith("/donors")).body.last_donated).toBe(
     null,
@@ -294,21 +311,29 @@ test("admin edits full fund flags and confirms role changes", async ({
 }) => {
   const { writes, errors } = await setup(page, "admin");
   await expect(
-    page.getByRole("button", { name: "Manage access" }),
+    page.getByRole("button", { name: "Admin", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Community fund", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Fund History", exact: true }).click();
   await expect(page.locator(".ledger-grid")).toContainText("Future project");
   await page
     .locator(".month-toolbar")
-    .getByRole("button", { name: "Sadakah", exact: true })
+    .getByRole("button", { name: "+ Sadakah", exact: true })
     .click();
   await page.getByLabel("Sadakah title").fill("Test charity");
-  await page.getByLabel("Amount (৳)", { exact: true }).fill("275.50");
+  const amount = page.getByLabel("Amount (৳)", { exact: true });
+  await amount.fill("২7৫.৫০");
+  await expect(amount).toHaveValue("275.50");
+  await amount.fill("০");
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.locator(".form-error")).toContainText(
+    "Enter a positive amount",
+  );
+  expect(writes.filter((w) => w.path.endsWith("/fund"))).toHaveLength(0);
+  await amount.fill("২৭৫.৫০");
+  await expect(amount).toHaveValue("275.50");
   await page.getByText("Advanced options", { exact: true }).click();
-  await page.getByLabel("Show in public Sadakah history").uncheck();
-  await page.getByRole("button", { name: "Save entry" }).click();
+  await page.getByLabel("Show in Sadakah Tab").uncheck();
+  await page.getByRole("button", { name: "Add" }).click();
   await expect(page.locator("dialog")).toHaveCount(0);
   const write = writes.find((w) => w.path.endsWith("/fund"));
   expect(write.body).toMatchObject({
@@ -317,7 +342,8 @@ test("admin edits full fund flags and confirms role changes", async ({
     amount: 275.5,
     updated_by: adminId,
   });
-  await page.getByRole("button", { name: "Manage access" }).click();
+  await page.getByRole("button", { name: "Admin", exact: true }).click();
+  await page.getByRole("button", { name: "👥 Users" }).click();
   await page
     .getByRole("combobox", { name: "Role for Test user" })
     .selectOption("admin");
@@ -333,12 +359,12 @@ test("admin edits full fund flags and confirms role changes", async ({
 });
 test("phone password login normalizes Bangladesh number", async ({ page }) => {
   const { writes, errors } = await setup(page);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Login", exact: true }).click();
   await page.getByLabel("Email or phone number").fill("01712-345678");
   await page.getByLabel("Password", { exact: true }).fill("password123");
   await page
     .locator("dialog")
-    .getByRole("button", { name: "Sign in", exact: true })
+    .getByRole("button", { name: "Login", exact: true })
     .click();
   await expect(page.locator("dialog")).toHaveCount(0);
   expect(writes.find((w) => w.path.endsWith("/token")).body.phone).toBe(
@@ -358,13 +384,13 @@ test("mobile layout, Bengali, and dialog keyboard navigation", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const { errors } = await setup(page);
-  await page.getByRole("button", { name: "বাংলা", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByLabel("Enable", { exact: true }).check();
+  await page.getByRole("button", { name: "বন্ধ করুন", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "রক্তদাতা" })).toBeVisible();
+  await page.getByRole("button", { name: "ফান্ডের তথ্য", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "রক্তদাতা খুঁজুন" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "ফান্ড", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "আমাদের ফান্ড" }),
+    page.getByRole("heading", { name: "সব সাদাকাহ তথ্য" }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -405,9 +431,7 @@ test("long fund histories paginate beyond the first thousand records", async ({
     });
   });
   await page.getByRole("button", { name: "Refresh data" }).click();
-  await page
-    .getByRole("button", { name: "Community fund", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Fund History", exact: true }).click();
   await expect(page.locator(".balance-stat")).toContainText("1,002");
 });
 
@@ -415,12 +439,10 @@ test("rejected writes keep the editor open and show the server error", async ({
   page,
 }) => {
   await setup(page, "admin");
-  await page
-    .getByRole("button", { name: "Community fund", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Fund History", exact: true }).click();
   await page
     .locator(".month-toolbar")
-    .getByRole("button", { name: "Collection", exact: true })
+    .getByRole("button", { name: "+ Collection", exact: true })
     .click();
   await page.getByLabel("Contributor name").fill("Test contributor");
   await page.getByLabel("Amount (৳)", { exact: true }).fill("50");
@@ -430,10 +452,37 @@ test("rejected writes keep the editor open and show the server error", async ({
       json: { message: "Access denied by database policy" },
     }),
   );
-  await page.getByRole("button", { name: "Save entry" }).click();
+  await page.getByRole("button", { name: "Add" }).click();
   await expect(page.locator("dialog")).toBeVisible();
   await expect(page.locator(".form-error")).toContainText(
     "Access denied by database policy",
   );
   await expect(page.locator(".status")).toHaveCount(0);
+});
+
+test("collection accepts Bangla keyboard input and submits an English numeric amount", async ({
+  page,
+}) => {
+  const { writes, errors } = await setup(page, "admin");
+  await page.getByRole("button", { name: "Fund History", exact: true }).click();
+  await page
+    .locator(".month-toolbar")
+    .getByRole("button", { name: "+ Collection", exact: true })
+    .click();
+  await page.getByLabel("Contributor name").fill("রনি");
+  const amount = page.getByLabel("Amount (৳)", { exact: true });
+  await expect(amount).toHaveAttribute("type", "text");
+  await amount.focus();
+  await page.keyboard.insertText("১০০");
+  await expect(amount).toHaveValue("100");
+  expect(await amount.evaluate((input) => input.validity.valid)).toBe(true);
+  await page.screenshot({ path: "/tmp/eor-bangla-collection.png" });
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.locator("dialog")).toHaveCount(0);
+  expect(writes.find((w) => w.path.endsWith("/fund")).body).toMatchObject({
+    name: "রনি",
+    amount: 100,
+    type: "income",
+  });
+  expect(errors).toEqual([]);
 });

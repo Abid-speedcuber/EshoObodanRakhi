@@ -50,7 +50,7 @@ export default function Users() {
     setBusy(null);
   }
   return (
-    <Modal title={t("Manage access", "অনুমতি নিয়ন্ত্রণ")} wide>
+    <Modal title={t("Manage Users", "ব্যবহারকারী নিয়ন্ত্রণ")} wide>
       <p className="subtle">
         {t(
           "Admins manage the fund, all blood donor profiles, and account roles.",

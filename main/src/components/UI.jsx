@@ -1,15 +1,28 @@
 import { useEffect, useRef } from "react";
-import { X, Heart, Copy } from "lucide-react";
+
 import { useApp } from "../context";
-export function Empty({ children }) {
+export function Icon({ name, size = 16 }) {
   return (
-    <div className="empty">
-      <Heart size={25} strokeWidth={1.4} />
-      <p>{children}</p>
-    </div>
+    <img
+      className="svg-icon"
+      src={`/svgs/${name.endsWith("icon") || name === "overview-icon" ? name : `icon-${name}`}.svg`}
+      width={size}
+      height={size}
+      alt=""
+    />
   );
 }
-export function Modal({ title, children, wide = false }) {
+export function Empty({ children }) {
+  return <div className="empty">{children}</div>;
+}
+export function Modal({
+  title,
+  children,
+  wide = false,
+  form = false,
+  footer = true,
+  headerAction,
+}) {
   const { setModal, t } = useApp();
   const ref = useRef(null);
   useEffect(() => {
@@ -29,7 +42,7 @@ export function Modal({ title, children, wide = false }) {
       className={wide ? "modal wide" : "modal"}
       onCancel={() => setModal(null)}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (!form && e.target === e.currentTarget) {
           const r = e.currentTarget.getBoundingClientRect();
           if (
             e.clientX < r.left ||
@@ -44,23 +57,32 @@ export function Modal({ title, children, wide = false }) {
     >
       <div className="modal-head">
         <h2 id="modal-title">{title}</h2>
-        <button
-          className="icon-button"
-          aria-label={t("Close", "বন্ধ করুন")}
-          onClick={() => setModal(null)}
-        >
-          <X size={21} />
-        </button>
+        {headerAction}
       </div>
       {children}
+      {footer && (
+        <button
+          className={form ? "form-close full" : "modal-close full"}
+          onClick={() => setModal(null)}
+        >
+          {form ? t("Cancel", "বাতিল") : t("Close", "বন্ধ করুন")}
+        </button>
+      )}
     </dialog>
   );
 }
 export function Field({ label, children }) {
   return (
     <label className="field">
-      <span>{label}</span>
-      {children}
+      <span className="sr-only">{label}</span>
+      {children.type === "input" || children.type === "textarea" ? (
+        <children.type
+          {...children.props}
+          placeholder={children.props.placeholder || label}
+        />
+      ) : (
+        children
+      )}
     </label>
   );
 }
@@ -68,33 +90,20 @@ export function DonationBox() {
   const { t, copy } = useApp();
   return (
     <aside className="donation-box">
-      <div>
-        <Heart size={21} />
-        <strong>
-          {t(
-            "Every contribution makes a difference.",
-            "প্রতিটি অবদান মূল্যবান।",
-          )}
-        </strong>
-      </div>
       <p>
         {t(
-          "Contribute to our community fund through these accounts. Tap to copy.",
-          "এই অ্যাকাউন্টে সাদাকাহ করে অবদান রাখুন। কপি করতে ক্লিক করুন।",
+          "You can also contribute by donating to:",
+          "আপনিও অনুদান দিয়ে অবদান রাখতে পারেন:",
         )}
       </p>
-      <div className="payment-options">
-        {[
-          ["Nagad", "নগদ", "+880 1937-222273"],
-          ["bKash", "বিকাশ", "+880 1515-214867"],
-        ].map(([name, bn, number]) => (
-          <button key={name} onClick={() => copy(number)}>
-            <span>{t(name, bn)}</span>
-            <strong>{number}</strong>
-            <Copy size={15} />
-          </button>
-        ))}
-      </div>
+      {[
+        ["nogod", "নগদ", "+880 1937-222273"],
+        ["bkash", "বিকাশ", "+880 1515-214867"],
+      ].map(([en, bn, number]) => (
+        <button key={en} onClick={() => copy(number)}>
+          {number} - {t(en, bn)}
+        </button>
+      ))}
     </aside>
   );
 }

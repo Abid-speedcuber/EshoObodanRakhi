@@ -14,6 +14,25 @@ self.addEventListener("install", (event) => {
         ...new Set(assets),
         "/icon.png",
         "/manifest.webmanifest",
+        ...[
+          "fund",
+          "refresh",
+          "settings",
+          "previous",
+          "next",
+          "search",
+          "close",
+          "location",
+          "call",
+          "copy",
+          "edit",
+          "delete",
+          "google",
+          "eye",
+          "eye-slash",
+        ].map((name) => `/svgs/icon-${name}.svg`),
+        "/svgs/blood-donation-icon.svg",
+        "/svgs/overview-icon.svg",
       ]);
       await self.skipWaiting();
     })(),
@@ -39,6 +58,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(fetch(request).catch(() => caches.match("/index.html")));
   } else if (
     url.pathname.startsWith("/assets/") ||
+    url.pathname.startsWith("/svgs/") ||
     ["/icon.png", "/manifest.webmanifest"].includes(url.pathname)
   ) {
     event.respondWith(

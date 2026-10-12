@@ -13,6 +13,7 @@ import {
   shiftMonth,
   currentMonth,
   credentials,
+  normalizeDigits,
 } from "../src/domain.js";
 const rows = [
   { id: 1, type: "income", amount: "1000", month: "2024-12" },
@@ -106,4 +107,14 @@ test("authentication supports email and local/international phone numbers", () =
   assert.deepEqual(credentials("user@example.com"), {
     email: "user@example.com",
   });
+});
+
+test("Bangla digits normalize without altering names, decimals, or punctuation", () => {
+  assert.equal(normalizeDigits("০১২৩৪৫৬৭৮৯"), "0123456789");
+  assert.equal(normalizeDigits("২7৫.৫০"), "275.50");
+  assert.equal(
+    normalizeDigits("রহিম +৮৮০ ১৭১২-৩৪৫৬৭৮"),
+    "রহিম +880 1712-345678",
+  );
+  assert.deepEqual(credentials("০১৭১২-৩৪৫৬৭৮"), { phone: "+8801712345678" });
 });

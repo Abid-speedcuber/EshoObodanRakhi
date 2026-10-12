@@ -63,13 +63,25 @@ test("production PWA retires legacy caches and reloads the fund and blood sectio
   await context.setOffline(true);
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Find a blood donor" }),
+    page.getByRole("heading", { name: "Blood Donors" }),
   ).toBeVisible();
   await expect(page.locator(".donor-card")).toContainText("Cached donor");
-  await page
-    .getByRole("button", { name: "Community fund", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Fund History", exact: true }).click();
   await expect(page.locator(".balance-stat")).toContainText("456");
-  await expect(page.locator(".ledger-grid")).toContainText("Cached Sadakah");
+  await expect(page.locator(".main-content")).toContainText("Cached Sadakah");
+  await page
+    .locator(".fund-tabs")
+    .getByRole("button", { name: /Collection/ })
+    .click();
+  await expect(page.locator(".ledger-grid")).toContainText("Cached collection");
+  await expect
+    .poll(() =>
+      page
+        .locator("nav img")
+        .evaluateAll((images) =>
+          images.every((image) => image.complete && image.naturalWidth > 0),
+        ),
+    )
+    .toBe(true);
   expect(errors).toEqual([]);
 });

@@ -77,15 +77,21 @@ export function shuffle(rows) {
   }
   return result;
 }
+export function normalizeDigits(value) {
+  return String(value).replace(/[০-৯]/g, (digit) =>
+    String(digit.charCodeAt(0) - "০".charCodeAt(0)),
+  );
+}
 export function credentials(value) {
-  const input = value.trim();
+  const original = value.trim();
+  const input = normalizeDigits(original);
   return /^[+\d][\d\s-]*$/.test(input)
     ? {
         phone: input.startsWith("+")
           ? input.replace(/[\s-]/g, "")
           : `+88${input.replace(/[\s-]/g, "")}`,
       }
-    : { email: input };
+    : { email: original };
 }
 export function readCache(key, fallback = []) {
   try {

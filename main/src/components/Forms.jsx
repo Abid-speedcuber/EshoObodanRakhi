@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+
 import { db } from "../supabase";
 import { useApp } from "../context";
-import {
-  GROUPS,
-  MIN_MONTH,
-  currentMonth,
-  currentDate,
-  credentials,
-} from "../domain";
-import { Modal, Field } from "./UI";
+import { GROUPS, currentDate, credentials, normalizeDigits } from "../domain";
+import { Modal, Field, Icon } from "./UI";
+function normalizeNumberInput(event) {
+  const input = event.currentTarget;
+  const normalized = normalizeDigits(input.value);
+  if (normalized === input.value) return;
+  const { selectionStart, selectionEnd } = input;
+  input.value = normalized;
+  if (selectionStart !== null)
+    input.setSelectionRange(selectionStart, selectionEnd);
+}
 function useSubmission() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -45,15 +48,17 @@ export function AuthForm({ initialMode }) {
   const [phone, setPhone] = useState("");
   const { busy, error, submit } = useSubmission();
   const titles = {
-    login: t("Welcome back", "আবারও স্বাগতম"),
-    signup: t("Join our community", "আমাদের সাথে যুক্ত হোন"),
-    forgot: t("Reset your password", "পাসওয়ার্ড রিসেট"),
+    login: t("Login", "লগইন করুন"),
+    signup: t("Sign Up", "সাইন আপ"),
+    forgot: t("Forgot Password", "পাসওয়ার্ড ভুলে গেছেন"),
     reset: t("Set a new password", "নতুন পাসওয়ার্ড দিন"),
     verify: t("Verify your phone", "ফোন যাচাই করুন"),
   };
   async function handle(data) {
     const identity = credentials(String(data.get("identity") || ""));
     const password = data.get("password");
+    if (mode === "signup" && password !== data.get("confirm"))
+      throw new Error(t("Passwords do not match.", "পাসওয়ার্ড মিলছে না।"));
     let result;
     if (mode === "signup") {
       result = await db.auth.signUp({
@@ -120,10 +125,7 @@ export function AuthForm({ initialMode }) {
     }
   }
   return (
-    <Modal title={titles[mode]}>
-      <p className="subtle">
-        {t("For a community that gives together.", "একসাথে অবদান রাখার জন্য।")}
-      </p>
+    <Modal title={titles[mode]} form>
       {info && (
         <p className="form-info" role="status">
           {info}
@@ -158,6 +160,7 @@ export function AuthForm({ initialMode }) {
               <div className="password-field">
                 <input
                   name="password"
+                  placeholder={t("Password", "পাসওয়ার্ড")}
                   type={show ? "text" : "password"}
                   required
                   minLength={mode === "login" ? 1 : 6}
@@ -174,12 +177,12 @@ export function AuthForm({ initialMode }) {
                   )}
                   onClick={() => setShow(!show)}
                 >
-                  {show ? <EyeOff size={17} /> : <Eye size={17} />}
+                  <Icon name={show ? "eye-slash" : "eye"} size={20} />
                 </button>
               </div>
             </Field>
           )}
-          {mode === "reset" && (
+          {["reset", "signup"].includes(mode) && (
             <Field label={t("Confirm password", "পাসওয়ার্ড আবার দিন")}>
               <input
                 name="confirm"
@@ -195,14 +198,16 @@ export function AuthForm({ initialMode }) {
               <Field label={t("Phone number", "ফোন নম্বর")}>
                 <input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(normalizeDigits(e.target.value))}
                   required
                   type="tel"
+                  onInput={normalizeNumberInput}
                 />
               </Field>
               <Field label={t("Verification code", "যাচাই কোড")}>
                 <input
                   name="token"
+                  onInput={normalizeNumberInput}
                   required
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -211,17 +216,6 @@ export function AuthForm({ initialMode }) {
             </>
           )}
           <FormError error={error} />
-          <button className="primary full" type="submit">
-            {busy
-              ? t("Please wait…", "অপেক্ষা করুন…")
-              : mode === "login"
-                ? t("Sign in", "লগইন")
-                : mode === "signup"
-                  ? t("Create account", "অ্যাকাউন্ট তৈরি")
-                  : mode === "verify"
-                    ? t("Verify", "যাচাই করুন")
-                    : t("Continue", "এগিয়ে যান")}
-          </button>
           {mode === "login" && (
             <button
               type="button"
@@ -234,25 +228,45 @@ export function AuthForm({ initialMode }) {
               {t("Forgot password?", "পাসওয়ার্ড ভুলে গেছেন?")}
             </button>
           )}
+          <button
+            className={`primary full ${mode === "signup" ? "blue-button" : ""}`}
+            type="submit"
+          >
+            {busy
+              ? t("Please wait…", "অপেক্ষা করুন…")
+              : mode === "login"
+                ? t("Login", "লগইন")
+                : mode === "signup"
+                  ? t("Sign Up", "সাইন আপ")
+                  : mode === "verify"
+                    ? t("Verify", "যাচাই করুন")
+                    : t("Continue", "এগিয়ে যান")}
+          </button>
           {["login", "signup"].includes(mode) && (
             <>
-              <div className="divider">{t("or", "অথবা")}</div>
-              <button
-                className="secondary full"
-                type="button"
-                onClick={async () => {
-                  const result = await db.auth.signInWithOAuth({
-                    provider: "google",
-                    options: { redirectTo: window.location.origin },
-                  });
-                  if (result.error) setInfo(result.error.message);
-                }}
-              >
-                {t("Continue with Google", "গুগল দিয়ে লগইন")}
-              </button>
+              {mode === "login" && (
+                <>
+                  {" "}
+                  <div className="divider">{t("or", "অথবা")}</div>
+                  <button
+                    className="secondary full"
+                    type="button"
+                    onClick={async () => {
+                      const result = await db.auth.signInWithOAuth({
+                        provider: "google",
+                        options: { redirectTo: window.location.origin },
+                      });
+                      if (result.error) setInfo(result.error.message);
+                    }}
+                  >
+                    <Icon name="google" size={18} />
+                    {t("Continue with Google", "গুগল দিয়ে লগইন")}
+                  </button>
+                </>
+              )}{" "}
               <p className="auth-switch">
                 {mode === "login"
-                  ? t("New here?", "নতুন সদস্য?")
+                  ? t("Don't have an account?", "অ্যাকাউন্ট নেই?")
                   : t("Already have an account?", "অ্যাকাউন্ট আছে?")}{" "}
                 <button
                   className="text-button"
@@ -263,8 +277,8 @@ export function AuthForm({ initialMode }) {
                   }}
                 >
                   {mode === "login"
-                    ? t("Create account", "অ্যাকাউন্ট তৈরি")
-                    : t("Sign in", "লগইন")}
+                    ? t("Sign Up", "সাইন আপ")
+                    : t("Login", "লগইন")}
                 </button>
               </p>
             </>
@@ -287,13 +301,15 @@ export function AuthForm({ initialMode }) {
   );
 }
 export function FundForm({ row }) {
-  const { t, isAdmin, user, mutate } = useApp();
+  const { t, isAdmin, user, mutate, setModal } = useApp();
   const { busy, error, submit } = useSubmission();
   const expense = row.type === "expense";
   const title = expense ? t("Sadakah", "সাদাকাহ") : t("Collection", "কালেকশন");
   return (
     <Modal
       title={`${row.id ? t("Edit", "এডিট") : t("Add", "যোগ করুন")} ${title}`}
+      form
+      footer={false}
     >
       <form
         onSubmit={submit(async (data) => {
@@ -301,7 +317,7 @@ export function FundForm({ row }) {
             throw new Error(
               t("Admin access required.", "অ্যাডমিন অনুমতি প্রয়োজন।"),
             );
-          const amount = Number(data.get("amount"));
+          const amount = Number(normalizeDigits(data.get("amount")));
           if (!Number.isFinite(amount) || amount <= 0)
             throw new Error(t("Enter a positive amount.", "সঠিক পরিমাণ দিন।"));
           const payload = {
@@ -332,16 +348,7 @@ export function FundForm({ row }) {
         })}
       >
         <fieldset disabled={busy}>
-          <Field label={t("Month", "মাস")}>
-            <input
-              name="month"
-              type="month"
-              required
-              min={MIN_MONTH}
-              max={currentMonth()}
-              defaultValue={row.month}
-            />
-          </Field>
+          <input type="hidden" name="month" value={row.month} />
           <Field
             label={
               expense
@@ -359,10 +366,11 @@ export function FundForm({ row }) {
           <Field label={t("Amount (৳)", "পরিমাণ (৳)")}>
             <input
               name="amount"
-              type="number"
+              type="text"
+              inputMode="decimal"
+              onInput={normalizeNumberInput}
+              pattern="(?:[0-9]+(?:\.[0-9]{1,2})?|\.[0-9]{1,2})"
               required
-              min="0.01"
-              step="0.01"
               defaultValue={row.amount || ""}
             />
           </Field>
@@ -375,13 +383,7 @@ export function FundForm({ row }) {
               />
             </Field>
           )}
-          <details
-            className="advanced"
-            open={Boolean(
-              row.highlighted || row.is_display || row.is_calculation,
-            )}
-          >
-            <summary>{t("Advanced options", "আরও অপশন")}</summary>
+          {!expense && (
             <label className="check">
               <input
                 name="highlighted"
@@ -390,31 +392,66 @@ export function FundForm({ row }) {
               />
               {t("Highlight this entry", "এই এন্ট্রি হাইলাইট করুন")}
             </label>
-            {expense && (
-              <>
-                <label className="check">
-                  <input
-                    name="display"
-                    type="checkbox"
-                    defaultChecked={!row.is_display}
-                  />
-                  {t("Show in public Sadakah history", "সাদাকাহ তথ্যে দেখান")}
-                </label>
-                <label className="check">
-                  <input
-                    name="calculation"
-                    type="checkbox"
-                    defaultChecked={!row.is_calculation}
-                  />
-                  {t("Deduct from fund balance", "ফান্ডের হিসাব থেকে বাদ দিন")}
-                </label>
-              </>
-            )}
-          </details>
+          )}
+          {expense && (
+            <details
+              className="advanced"
+              open={Boolean(
+                row.highlighted || row.is_display || row.is_calculation,
+              )}
+            >
+              <summary>{t("Advanced options", "আরও অপশন")}</summary>
+              <label className="check">
+                <input
+                  name="highlighted"
+                  type="checkbox"
+                  defaultChecked={row.highlighted}
+                />
+                {t("Highlight this entry", "এই এন্ট্রি হাইলাইট করুন")}
+              </label>
+              {expense && (
+                <>
+                  <label className="check">
+                    <input
+                      name="display"
+                      type="checkbox"
+                      defaultChecked={!row.is_display}
+                    />
+                    {t("Show in Sadakah Tab", "সাদাকাহ তথ্যে দেখান")}
+                  </label>
+                  <label className="check">
+                    <input
+                      name="calculation"
+                      type="checkbox"
+                      defaultChecked={!row.is_calculation}
+                    />
+                    {t("Include in Calculations", "ফান্ডের হিসাব থেকে বাদ দিন")}
+                  </label>
+                </>
+              )}
+            </details>
+          )}
           <FormError error={error} />
-          <button type="submit" className="primary full">
-            {busy ? t("Saving…", "সেভ হচ্ছে…") : t("Save entry", "সেভ করুন")}
-          </button>
+          <div className="actions form-actions">
+            {" "}
+            <button
+              type="submit"
+              className={expense ? "primary destructive" : "primary"}
+            >
+              {busy
+                ? t("Saving…", "সেভ হচ্ছে…")
+                : row.id
+                  ? t("Save", "সেভ করুন")
+                  : t("Add", "যোগ করুন")}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setModal(null)}
+            >
+              {t("Cancel", "বাতিল")}
+            </button>
+          </div>
         </fieldset>
       </form>
     </Modal>
@@ -427,6 +464,7 @@ export function DonorForm({ row }) {
   const today = currentDate();
   return (
     <Modal
+      form
       title={
         isAdmin
           ? row?.id
@@ -446,7 +484,7 @@ export function DonorForm({ row }) {
             );
           const payload = {
             name: data.get("name").trim(),
-            phone: data.get("phone").trim(),
+            phone: normalizeDigits(data.get("phone").trim()),
             location: data.get("location").trim(),
             blood_group: data.get("blood_group"),
             available: data.has("available"),
@@ -489,6 +527,7 @@ export function DonorForm({ row }) {
             <input
               name="phone"
               type="tel"
+              onInput={normalizeNumberInput}
               defaultValue={row?.phone || ""}
               required
               pattern={"\\+?[0-9][0-9\\s\\-]{6,19}"}
@@ -544,27 +583,24 @@ export function DonorForm({ row }) {
               />
             </Field>
           )}
-          <p className="subtle">
-            {t(
-              "Your contact details will be public. After donating, your availability pauses for 100 days.",
-              "যোগাযোগের তথ্য সবার জন্য উন্মুক্ত থাকবে। রক্তদানের পর ১০০ দিন অ্যাভেইলেবল বন্ধ থাকে।",
-            )}
-          </p>
           <FormError error={error} />
-          <button type="submit" className="primary full">
-            {busy
-              ? t("Saving…", "সেভ হচ্ছে…")
-              : t("Save profile", "প্রোফাইল সেভ")}
-          </button>
-          {row?.id && (
-            <button
-              type="button"
-              className="text-button danger centered"
-              onClick={() => setModal({ kind: "delete", table: "donors", row })}
-            >
-              {t("Delete donor profile", "ডোনার প্রোফাইল মুছুন")}
+          <div className="actions form-actions">
+            {" "}
+            <button type="submit" className="primary full">
+              {busy ? t("Saving…", "সেভ হচ্ছে…") : t("Save", "সেভ করুন")}
             </button>
-          )}
+            {row?.id && (
+              <button
+                type="button"
+                className="primary destructive"
+                onClick={() =>
+                  setModal({ kind: "delete", table: "donors", row })
+                }
+              >
+                {t("Delete donor profile", "ডোনার প্রোফাইল মুছুন")}
+              </button>
+            )}
+          </div>{" "}
         </fieldset>
       </form>
     </Modal>
