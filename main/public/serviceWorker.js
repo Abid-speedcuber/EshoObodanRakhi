@@ -1,4 +1,4 @@
-const CACHE = "eor-react-v1";
+const CACHE = "eor-react-v2";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {

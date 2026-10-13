@@ -304,6 +304,7 @@ export function FundForm({ row }) {
   const { t, isAdmin, user, mutate, setModal } = useApp();
   const { busy, error, submit } = useSubmission();
   const expense = row.type === "expense";
+  const [dedicated, setDedicated] = useState(Boolean(row.is_dedicated));
   const title = expense ? t("Sadakah", "সাদাকাহ") : t("Collection", "কালেকশন");
   return (
     <Modal
@@ -318,7 +319,10 @@ export function FundForm({ row }) {
               t("Admin access required.", "অ্যাডমিন অনুমতি প্রয়োজন।"),
             );
           const amount = Number(normalizeDigits(data.get("amount")));
-          if (!Number.isFinite(amount) || amount <= 0)
+          if (
+            !Number.isFinite(amount) ||
+            (dedicated && !expense ? amount < 0 : amount <= 0)
+          )
             throw new Error(t("Enter a positive amount.", "সঠিক পরিমাণ দিন।"));
           const payload = {
             month: data.get("month"),
@@ -333,8 +337,23 @@ export function FundForm({ row }) {
                   is_display: !data.has("display"),
                   is_calculation: !data.has("calculation"),
                 }
-              : { name: data.get("name").trim() }),
+              : {
+                  name: data.get("name").trim(),
+                  is_dedicated: dedicated,
+                  dedicated_donation: dedicated
+                    ? Number(normalizeDigits(data.get("dedicated_donation")))
+                    : null,
+                }),
           };
+          if (
+            !expense &&
+            dedicated &&
+            (!Number.isFinite(payload.dedicated_donation) ||
+              payload.dedicated_donation < 0)
+          )
+            throw new Error(
+              t("Enter a valid donation amount.", "অনুদানের সঠিক পরিমাণ দিন।"),
+            );
           if (!(expense ? payload.description : payload.name))
             throw new Error(
               t("A name or title is required.", "নাম বা শিরোনাম দিন।"),
@@ -353,7 +372,9 @@ export function FundForm({ row }) {
             label={
               expense
                 ? t("Sadakah title", "সাদাকাহ শিরোনাম")
-                : t("Contributor name", "অবদানকারীর নাম")
+                : dedicated
+                  ? t("Collection purpose", "বিষয় / উদ্দেশ্য")
+                  : t("Contributor name", "অবদানকারীর নাম")
             }
           >
             <input
@@ -371,9 +392,40 @@ export function FundForm({ row }) {
               onInput={normalizeNumberInput}
               pattern="(?:[0-9]+(?:\.[0-9]{1,2})?|\.[0-9]{1,2})"
               required
-              defaultValue={row.amount || ""}
+              defaultValue={row.amount ?? ""}
             />
           </Field>
+          {!expense && (
+            <>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  name="dedicated"
+                  checked={dedicated}
+                  onChange={(event) => setDedicated(event.target.checked)}
+                />
+                {t("Dedicated collection", "বিষয় ভিত্তিক কালেকশন")}
+              </label>
+              {dedicated && (
+                <Field
+                  label={t(
+                    "Donation on this collection (৳)",
+                    "এই কালেকশনে অনুদান (৳)",
+                  )}
+                >
+                  <input
+                    name="dedicated_donation"
+                    type="text"
+                    inputMode="decimal"
+                    onInput={normalizeNumberInput}
+                    pattern="(?:[0-9]+(?:\.[0-9]{1,2})?|\.[0-9]{1,2})"
+                    required
+                    defaultValue={row.dedicated_donation ?? ""}
+                  />
+                </Field>
+              )}
+            </>
+          )}
           {expense && (
             <Field label={t("Additional information", "আরও তথ্য")}>
               <textarea

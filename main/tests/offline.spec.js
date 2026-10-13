@@ -3,6 +3,7 @@ test("production PWA retires legacy caches and reloads the fund and blood sectio
   page,
   context,
 }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T06:00:00Z"));
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.route("https://fonts.googleapis.com/**", (route) => route.abort());
@@ -48,6 +49,7 @@ test("production PWA retires legacy caches and reloads the fund and blood sectio
         ]),
       );
       caches.open("eor-v10-static");
+      caches.open("eor-react-v1");
     }
   });
   await page.goto("/");
@@ -60,6 +62,7 @@ test("production PWA retires legacy caches and reloads the fund and blood sectio
   const names = await page.evaluate(() => caches.keys());
   expect(names.some((name) => name.startsWith("eor-react-"))).toBe(true);
   expect(names).not.toContain("eor-v10-static");
+  expect(names).not.toContain("eor-react-v1");
   await context.setOffline(true);
   await page.reload();
   await expect(
@@ -67,7 +70,7 @@ test("production PWA retires legacy caches and reloads the fund and blood sectio
   ).toBeVisible();
   await expect(page.locator(".donor-card")).toContainText("Cached donor");
   await page.getByRole("button", { name: "Fund History", exact: true }).click();
-  await expect(page.locator(".balance-stat")).toContainText("456");
+  await expect(page.locator(".balance-stat")).toContainText("44");
   await expect(page.locator(".main-content")).toContainText("Cached Sadakah");
   await page
     .locator(".fund-tabs")
@@ -83,5 +86,19 @@ test("production PWA retires legacy caches and reloads the fund and blood sectio
         ),
     )
     .toBe(true);
+  await page
+    .getByRole("button", { name: "Complete history", exact: true })
+    .click();
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.getByRole("button", { name: "Copy", exact: true }).click();
+  await expect(
+    page.getByText("History image copied.", { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(async () => {
+      const items = await navigator.clipboard.read();
+      return items.some((item) => item.types.includes("image/png"));
+    }),
+  ).toBe(true);
   expect(errors).toEqual([]);
 });

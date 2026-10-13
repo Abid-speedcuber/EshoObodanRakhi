@@ -1,20 +1,81 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useApp } from "../context";
 import { history, yearOverview, currentMonth, balance } from "../domain";
 import { Modal, Empty, Icon } from "./UI";
+import DedicatedEntry from "./Dedicated";
+import { renderHistoryImage, downloadHistoryImage } from "../historyImage";
 export function CompleteHistory() {
-  const { t, fund, money, monthLabel, copy } = useApp();
+  const { t, fund, money, monthLabel, report } = useApp();
   const [brief, setBrief] = useState(true);
+  const [copying, setCopying] = useState(false);
+  const contentRef = useRef(null);
   const year = Number(currentMonth().slice(0, 4));
   const all = history(fund);
   const rows = brief
     ? all.filter((r) => r.month.startsWith(String(year)))
     : all;
   const opening = balance(fund.filter((r) => r.month < `${year}-01`));
-  function copyHistory() {
-    const text = `${t("Complete fund history", "ফান্ডের সম্পূর্ণ তথ্য")}\n\n${brief ? `${year}\n${t("Opening balance", "শুরুতে অবশিষ্ট")}: ${money(opening)}\n\n` : ""}${rows.map((r) => `${monthLabel(r.month)}\n${t("Collection", "কালেকশন")}: ${money(r.collection)}\n${r.expenses.map((e) => `${t("Sadakah", "সাদাকাহ")} (${e.description}): ${money(e.amount)}`).join("\n")}\n${t("Closing balance", "অবশিষ্ট")}: ${money(r.closing)}`).join("\n\n")}`;
-    copy(text);
+  function collectionLabel(month) {
+    const name = new Intl.DateTimeFormat("bn-BD", {
+      month: "long",
+      timeZone: "Asia/Dhaka",
+    }).format(new Date(`${month}-01T00:00:00+06:00`));
+    return t("Total collection (month end)", `${name} মাসে মোট কালেকশন`);
+  }
+  function closingLabel(row) {
+    return row.collectionReleased
+      ? t("Closing balance", "মাস শেষে ব্যাল্যান্স")
+      : t("Current fund balance", "ফান্ডে বর্তমান ব্যাল্যান্স");
+  }
+  async function copyHistory() {
+    if (copying || !contentRef.current) return;
+    setCopying(true);
+    try {
+      const png = renderHistoryImage({
+        source: contentRef.current,
+        year,
+        title: t("Complete fund history", "ফান্ডের সম্পূর্ণ তথ্য"),
+        openingLabel: t("Opening balance", "শুরুতে ব্যাল্যান্স"),
+        openingBalance: money(opening),
+      });
+      if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+        try {
+          // Start the clipboard write during the click. Safari requires the user
+          // gesture even when rasterization is still resolving the PNG promise.
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": png }),
+          ]);
+          report(t("History image copied.", "হিস্টরির ছবি কপি হয়েছে।"));
+        } catch {
+          downloadHistoryImage(await png, year);
+          report(
+            t(
+              "Image copying was blocked. PNG downloaded instead.",
+              "ছবি কপি করা যায়নি। PNG ডাউনলোড হয়েছে।",
+            ),
+          );
+        }
+      } else {
+        downloadHistoryImage(await png, year);
+        report(
+          t(
+            "Image copying is unavailable here. PNG downloaded instead.",
+            "এখানে ছবি কপি করা যায় না। PNG ডাউনলোড হয়েছে।",
+          ),
+        );
+      }
+    } catch {
+      report(
+        t(
+          "Could not create the history image. Please try again.",
+          "হিস্টরির ছবি তৈরি করা যায়নি। আবার চেষ্টা করুন।",
+        ),
+        true,
+      );
+    } finally {
+      setCopying(false);
+    }
   }
   return (
     <Modal
@@ -24,10 +85,12 @@ export function CompleteHistory() {
         <button
           className="history-copy"
           onClick={copyHistory}
-          disabled={!rows.length}
+          disabled={
+            copying || !all.some((row) => row.month.startsWith(String(year)))
+          }
         >
           <Icon name="copy" />
-          {t("Copy", "কপি")}
+          {copying ? t("Copying…", "কপি হচ্ছে…") : t("Copy", "কপি")}
         </button>
       }
     >
@@ -47,36 +110,47 @@ export function CompleteHistory() {
       {brief && (
         <>
           <div className="history-opening">
-            {t("Opening balance", "শুরুতে অবশিষ্ট")}{" "}
+            {t("Opening balance", "শুরুতে ব্যাল্যান্স")}{" "}
             <strong>{money(opening)}</strong>
           </div>
         </>
       )}
-      {rows.length ? (
-        rows.map((row) => (
-          <section className="history-month" key={row.month}>
-            <h3>{monthLabel(row.month)}</h3>
-            <div>
-              <span>{t("Total collection", "মোট কালেকশন")}</span>
-              <strong className="green">{money(row.collection)}</strong>
-            </div>
-            {row.expenses.map((expense) => (
-              <div key={expense.id}>
-                <span>{expense.description}</span>
-                <span className="red">− {money(expense.amount)}</span>
+      <div className="history-content" ref={contentRef}>
+        {rows.length ? (
+          rows.map((row) => (
+            <section
+              className="history-month"
+              key={row.month}
+              data-month={row.month}
+            >
+              <h3>{monthLabel(row.month)}</h3>
+              {row.dedicated.map((entry) => (
+                <DedicatedEntry key={entry.id} row={entry} />
+              ))}
+              {row.expenses.map((expense) => (
+                <div key={expense.id}>
+                  <span>{expense.description}</span>
+                  <span className="red">− {money(expense.amount)}</span>
+                </div>
+              ))}
+              {row.collectionReleased && (
+                <div className="history-collection">
+                  <span>{collectionLabel(row.month)}</span>
+                  <strong className="green">{money(row.collection)}</strong>
+                </div>
+              )}
+              <div className="history-closing">
+                <span>{closingLabel(row)}</span>
+                <strong>{money(row.closing)}</strong>
               </div>
-            ))}
-            <div className="history-closing">
-              <span>{t("Closing balance", "অবশিষ্ট")}</span>
-              <strong>{money(row.closing)}</strong>
-            </div>
-          </section>
-        ))
-      ) : (
-        <Empty>
-          {t("No history for this period.", "এই সময়ে কোনো তথ্য নেই।")}
-        </Empty>
-      )}
+            </section>
+          ))
+        ) : (
+          <Empty>
+            {t("No history for this period.", "এই সময়ে কোনো তথ্য নেই।")}
+          </Empty>
+        )}
+      </div>
     </Modal>
   );
 }
@@ -113,14 +187,22 @@ export function Overview({ initialYear }) {
   const max =
     Math.max(
       1,
-      ...rows.flatMap((r) => [r.collection, r.sadakah, Math.abs(r.closing)]),
+      ...rows.flatMap((r) => [
+        r.recognizedCollection,
+        r.fundExpenses,
+        Math.abs(r.closing),
+      ]),
     ) * 1.1;
   const min = Math.min(0, ...rows.map((r) => r.closing)) * 1.1;
   const y = (value) => 950 - ((value - min) / (max - min)) * 870;
   const x = (i) => 80 + (i * 870) / 11;
   const series = [
-    { key: "collection", label: t("Collection", "কালেকশন"), color: "#10b981" },
-    { key: "sadakah", label: t("Sadakah", "সাদাকাহ"), color: "#ef4444" },
+    {
+      key: "recognizedCollection",
+      label: t("Collection", "কালেকশন"),
+      color: "#10b981",
+    },
+    { key: "fundExpenses", label: t("Sadakah", "সাদাকাহ"), color: "#ef4444" },
     {
       key: "closing",
       label: t("Total Fund", "ফান্ডে মোট অর্থ"),
@@ -142,7 +224,7 @@ export function Overview({ initialYear }) {
         role="img"
         aria-label={t(
           `Monthly collections, Sadakah and fund balance in ${year}`,
-          `${year} সালের মাসিক কালেকশন, সাদাকাহ ও ফান্ডের অবশিষ্ট`,
+          `${year} সালের মাসিক কালেকশন, সাদাকাহ ও ফান্ডের ব্যাল্যান্স`,
         )}
       >
         {Array.from({ length: 6 }, (_, i) => {

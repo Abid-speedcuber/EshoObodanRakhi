@@ -25,31 +25,72 @@ export const countedExpense = (row) =>
   row.type === "expense" && !row.is_calculation;
 export const visibleSadakah = (row) =>
   row.type === "expense" && !row.is_display;
-export const balance = (rows) =>
-  sum(rows.filter((r) => r.type === "income")) -
-  sum(rows.filter(countedExpense));
-export function monthSummary(rows, month) {
-  const entries = rows.filter((r) => r.month === month);
-  const income = entries.filter((r) => r.type === "income");
+export const isDedicated = (row) =>
+  row.type === "income" && row.is_dedicated === true;
+export const regularIncome = (row) =>
+  row.type === "income" && !isDedicated(row);
+export const dedicatedContribution = (row) =>
+  isDedicated(row)
+    ? Math.max(0, Number(row.dedicated_donation || 0) - Number(row.amount || 0))
+    : 0;
+export const dedicatedTotal = (rows) =>
+  rows.reduce((total, row) => total + dedicatedContribution(row), 0);
+// Regular collections are released only when their Bangladesh calendar month closes.
+// Dedicated collections stay separate; only their donation shortfall uses the fund.
+export function balance(rows, asOfMonth = currentMonth()) {
+  const active = rows.filter((row) => row.month <= asOfMonth);
+  return (
+    sum(active.filter((row) => regularIncome(row) && row.month < asOfMonth)) -
+    sum(active.filter(countedExpense)) -
+    dedicatedTotal(active)
+  );
+}
+export function monthSummary(rows, month, asOfMonth = currentMonth()) {
+  const entries = rows.filter((row) => row.month === month);
+  const income = entries.filter(regularIncome);
   const expenses = entries.filter(countedExpense);
+  const dedicated = entries.filter(isDedicated);
+  const collection = sum(income);
+  const recognizedCollection = month < asOfMonth ? collection : 0;
+  const sadakah = sum(expenses);
+  const contribution = dedicatedTotal(dedicated);
+  const opening = balance(
+    rows.filter((row) => row.month < month),
+    asOfMonth,
+  );
   return {
     income,
     expenses,
-    collection: sum(income),
-    sadakah: sum(expenses),
-    balance: balance(entries),
-    closing: balance(rows.filter((r) => r.month <= month)),
+    dedicated,
+    collection,
+    recognizedCollection,
+    sadakah,
+    dedicatedContribution: contribution,
+    fundExpenses: sadakah + contribution,
+    collectionReleased: month < asOfMonth,
+    opening,
+    afterExpenses: opening - sadakah - contribution,
+    balance:
+      month > asOfMonth ? 0 : recognizedCollection - sadakah - contribution,
+    closing: balance(
+      rows.filter((row) => row.month <= month),
+      asOfMonth,
+    ),
   };
 }
-export function history(rows) {
-  return [...new Set(rows.map((r) => r.month))]
+export function history(rows, asOfMonth = currentMonth()) {
+  return [
+    ...new Set(
+      rows.filter((row) => row.month <= asOfMonth).map((row) => row.month),
+    ),
+  ]
     .sort()
-    .map((month) => ({ month, ...monthSummary(rows, month) }));
+    .map((month) => ({ month, ...monthSummary(rows, month, asOfMonth) }));
 }
-export function yearOverview(rows, year) {
+export function yearOverview(rows, year, asOfMonth = currentMonth()) {
   return Array.from({ length: 12 }, (_, i) => {
     const month = `${year}-${String(i + 1).padStart(2, "0")}`;
-    return { month, ...monthSummary(rows, month) };
+    return { month, ...monthSummary(rows, month, asOfMonth) };
   });
 }
 export function donationDays(donor, now = new Date()) {

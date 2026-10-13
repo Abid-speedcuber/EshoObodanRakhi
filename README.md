@@ -8,7 +8,7 @@ npm install
 npm run dev
 ```
 
-Production: `npm run build`. Tests: `npm test`. Firebase serves `main/dist`; the root workflow builds and tests before deployment. The rewritten website has not been deployed to Firebase.
+Production: `npm run build`. Tests: `npm test`. Firebase serves `main/dist`; the root workflow builds and tests before deployment. The React app is deployed at https://eshoobodanrakhi.web.app (updated 2026-10-12).
 
 **Supabase setup complete for the existing project (2026-10-11).** The role/profile migration has been applied to `kszhmrhlsoqfxkcopvoe`: roles are limited to user/admin, signup automatically creates profiles, and profile/role permissions are secured. The legacy `"Email"` column was normalized to `email`, preserving its values. Existing admins, login accounts, fund and donor records are preserved. Missing profiles for eight existing login accounts were repaired. Production and local authentication redirects are configured. For another existing installation, run [the SQL Editor version](main/supabase/001_user_admin_roles.sql), or apply the versioned CLI migration.
 

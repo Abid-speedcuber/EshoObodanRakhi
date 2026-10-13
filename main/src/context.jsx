@@ -7,7 +7,7 @@ import {
   useRef,
 } from "react";
 import { db } from "./supabase";
-import { readCache } from "./domain";
+import { currentMonth, readCache } from "./domain";
 const Context = createContext(null);
 export const useApp = () => useContext(Context);
 async function fetchRows(table, ordering, signal) {
@@ -32,6 +32,18 @@ export function AppProvider({ children }) {
   const [lang, setLang] = useState(() =>
     localStorage.getItem("lang") === "bn" ? "bn" : "en",
   );
+  const [accountingMonth, setAccountingMonth] = useState(currentMonth);
+  useEffect(() => {
+    const updateMonth = () => setAccountingMonth(currentMonth());
+    const timer = setInterval(updateMonth, 60000);
+    window.addEventListener("focus", updateMonth);
+    document.addEventListener("visibilitychange", updateMonth);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", updateMonth);
+      document.removeEventListener("visibilitychange", updateMonth);
+    };
+  }, []);
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -201,6 +213,7 @@ export function AppProvider({ children }) {
   return (
     <Context.Provider
       value={{
+        accountingMonth,
         lang,
         setLang,
         t,

@@ -7,9 +7,12 @@ import {
   sum,
   visibleSadakah,
   countedExpense,
+  regularIncome,
+  dedicatedTotal,
   monthSummary,
 } from "../domain";
 import { Empty, DonationBox, RichText, Icon } from "./UI";
+import DedicatedEntry from "./Dedicated";
 export function FundEntry({ row, index, details = false }) {
   const { t, money, monthLabel, isAdmin, setModal } = useApp();
   const category =
@@ -104,9 +107,7 @@ export default function Fund() {
             onClick={() => setTab("collection")}
           >
             <strong className="green">{t("Collection", "কালেকশন")}</strong>
-            <b className="green">
-              {money(sum(fund.filter((r) => r.type === "income")))}
-            </b>
+            <b className="green">{money(sum(fund.filter(regularIncome)))}</b>
             <small>
               {money(monthSummary(fund, currentMonth()).collection)}{" "}
               {t("this month", "এই মাসে")}
@@ -119,7 +120,7 @@ export default function Fund() {
             <strong className="red">{t("Sadakah", "সাদাকাহ")}</strong>
             <b className="red">{money(sum(allExpenses))}</b>
             <small>
-              {money(sum(fund.filter(countedExpense)))}{" "}
+              {money(sum(fund.filter(countedExpense)) + dedicatedTotal(fund))}{" "}
               {t("from fund", "ফান্ড থেকে")}
             </small>
           </button>
@@ -230,6 +231,18 @@ export default function Fund() {
                 <strong>{money(totals.sadakah)}</strong>
               </div>
             </section>
+            {totals.dedicated.length > 0 && (
+              <section className="panel dedicated-panel">
+                <div className="panel-title">
+                  <h2>{t("Dedicated Collections", "বিষয় ভিত্তিক কালেকশন")}</h2>
+                </div>
+                <div className="entries">
+                  {totals.dedicated.map((row) => (
+                    <DedicatedEntry key={row.id} row={row} editable />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
           <div className="month-summary panel">
             <div>
@@ -240,7 +253,9 @@ export default function Fund() {
             </div>
             <div>
               <strong>
-                {t("Net Worth at Month End:", "মাস শেষে অবশিষ্ট:")}
+                {totals.collectionReleased
+                  ? t("Net Worth at Month End:", "মাস শেষে ব্যাল্যান্স:")
+                  : t("Available Fund:", "ফান্ডে বর্তমান ব্যাল্যান্স:")}
               </strong>
               <strong className="blue">{money(totals.closing)}</strong>
             </div>

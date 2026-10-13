@@ -1070,3 +1070,142 @@ h2 {
 .modal:has(input[name="identity"]) .modal-head h2 {
   font-size: 1.5rem;
 }
+
+/* Dedicated collection and donation remain a single compact unit. */
+.dedicated-entry {
+  background: oklch(97% 0.014 254.604);
+  border-left: 4px solid oklch(80.9% 0.105 251.813);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+.dedicated-entry > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.dedicated-entry > div + div {
+  margin-top: 0.25rem;
+}
+.dedicated-entry strong {
+  white-space: nowrap;
+}
+.dedicated-entry .dedicated-title {
+  margin-bottom: 0.5rem;
+}
+.dedicated-title > strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.dedicated-fund {
+  border-top: 1px solid oklch(88.2% 0.059 254.128);
+  padding-top: 0.25rem;
+}
+.history-month > .dedicated-entry {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+.history-collection {
+  margin-top: 0.5rem;
+}
+
+/* History keeps dedicated pairs quiet and aligned with ordinary ledger rows. */
+.history-month > .dedicated-entry {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+.history-month .dedicated-entry strong {
+  font-weight: 400;
+}
+.history-month .dedicated-entry .dedicated-title {
+  margin-bottom: 0;
+}
+.history-month .dedicated-entry > div + div {
+  margin-top: 0;
+}
+.history-month .dedicated-entry .dedicated-fund {
+  border: 0;
+  padding: 0;
+}
+
+/* Export at a fixed reading width with natural height, independent of the screen. */
+.history-image-host {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  pointer-events: none;
+}
+.history-export {
+  width: 480px;
+  box-sizing: border-box;
+  background: white;
+  color: #1f2937;
+  padding: 24px;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.history-export-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 4px;
+}
+.history-export > h2 {
+  font-size: 18px;
+  line-height: 26px;
+  margin-bottom: 16px;
+}
+.history-export .history-opening {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+}
+.history-export .history-month {
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 16px;
+  break-inside: avoid;
+}
+.history-export .history-month:last-child {
+  margin-bottom: 0;
+}
+.history-export .history-month h3 {
+  font-size: 16px;
+  line-height: 24px;
+  margin-bottom: 8px;
+}
+.history-export .history-month > div {
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.history-export .history-month span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.history-export .history-month > div > span:last-child,
+.history-export .history-month > div > strong {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.history-export .dedicated-entry {
+  font-size: 14px;
+  line-height: 20px;
+}
+.history-export .history-closing {
+  padding-top: 4px;
+}
+.history-export .history-collection {
+  margin-top: 8px;
+}
