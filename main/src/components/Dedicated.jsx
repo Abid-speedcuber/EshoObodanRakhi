@@ -6,9 +6,9 @@ export default function DedicatedEntry({ row, editable = false }) {
   return (
     <div className="dedicated-entry">
       <div className="dedicated-title">
-        <strong className={row.highlighted ? "highlighted" : ""}>
-          {row.name}
-        </strong>
+        <span className={row.highlighted ? "highlighted" : ""}>
+          <strong>{t("Project:", "প্রোজেক্ট:")}</strong> {row.name}
+        </span>
         {editable && isAdmin && (
           <div className="entry-actions">
             <button
@@ -33,16 +33,16 @@ export default function DedicatedEntry({ row, editable = false }) {
         )}
       </div>
       <div>
-        <span>{t("Dedicated collection", "বিষয় ভিত্তিক কালেকশন")}</span>
+        <span>{t("Total collection:", "মোট কালেকশন:")}</span>
         <strong className="green">{money(row.amount)}</strong>
       </div>
       <div>
-        <span>{t("Donation on this collection", "এই কালেকশনে অনুদান")}</span>
+        <span>{t("Cost:", "খরচ:")}</span>
         <strong className="red">{money(row.dedicated_donation)}</strong>
       </div>
       <div className="dedicated-fund">
-        <span>{t("From fund", "ফান্ড থেকে")}</span>
-        <strong className="red">− {money(dedicatedContribution(row))}</strong>
+        <span>{t("From fund:", "ফান্ড থেকে:")}</span>
+        <strong className="red">{money(dedicatedContribution(row))}</strong>
       </div>
     </div>
   );

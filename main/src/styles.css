@@ -1094,7 +1094,7 @@ h2 {
 .dedicated-entry .dedicated-title {
   margin-bottom: 0.5rem;
 }
-.dedicated-title > strong {
+.dedicated-title > span {
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -1120,6 +1120,10 @@ h2 {
 }
 .history-month .dedicated-entry strong {
   font-weight: 400;
+}
+.dedicated-entry .dedicated-title strong {
+  font-weight: 700;
+  white-space: normal;
 }
 .history-month .dedicated-entry .dedicated-title {
   margin-bottom: 0;
